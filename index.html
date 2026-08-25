@@ -3,727 +3,635 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BUCKTRACK AI - 3D Tactical Intelligence Console</title>
-
-  <!-- CesiumJS CSS -->
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-
-  <!-- Typography -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-
+  <title>BUCKTRACK COMMAND // SPATIAL SIGNAL INTEL</title>
   <style>
     :root {
-      --bg-primary: #0a0e17;
-      --bg-card: #121824;
-      --border-tactical: #1e293b;
+      --bg-dark: #030712;
+      --bg-panel: #0b1120;
+      --bg-sub: #111827;
+      --border-line: #1e293b;
+      --border-accent: #334155;
       --accent-green: #00ff66;
-      --accent-alert: #ff3838;
-      --text-main: #f1f5f9;
+      --accent-cyan: #00e5ff;
+      --accent-amber: #ffaa00;
+      --accent-red: #ff3344;
+      --text-main: #f8fafc;
       --text-muted: #64748b;
-      --font-mono: 'JetBrains Mono', monospace;
+      --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: var(--bg-primary);
+      background: var(--bg-dark);
       color: var(--text-main);
       font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
-    /* Header Styling */
+    /* TOP COMMAND HEADER */
     header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-line);
+      padding: 0.6rem 1.25rem;
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 1.25rem;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-tactical);
-      gap: 1rem;
       z-index: 10;
     }
 
-    .brand {
+    .brand-title {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      color: var(--accent-cyan);
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
 
-    .brand h1 {
-      font-family: var(--font-mono);
-      font-size: 1.2rem;
-      letter-spacing: 0.1em;
-      color: var(--text-main);
+    .brand-title .badge {
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 2px;
     }
 
-    .status-pill {
+    .system-stats {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      gap: 1.5rem;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 3px 10px;
-      border-radius: 9999px;
-      background: rgba(0, 255, 102, 0.1);
-      color: var(--accent-green);
-      border: 1px solid rgba(0, 255, 102, 0.3);
+      font-size: 0.7rem;
     }
 
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      background-color: var(--accent-green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--accent-green);
-      animation: pulse 2s infinite;
-    }
+    .stat-item { display: flex; gap: 0.4rem; }
+    .stat-lbl { color: var(--text-muted); }
+    .stat-val { color: var(--accent-green); font-weight: bold; }
 
-    @keyframes pulse {
-      0% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.3; transform: scale(1.2); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    /* Telemetry Bar */
-    .telemetry-bar {
-      display: flex;
-      gap: 1rem;
-      background: rgba(10, 14, 23, 0.8);
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
-      border: 1px solid var(--border-tactical);
-      font-family: var(--font-mono);
-    }
-
-    .telemetry-item {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .telemetry-item .label {
-      font-size: 0.55rem;
-      color: var(--text-muted);
-      letter-spacing: 0.05em;
-    }
-
-    .telemetry-item .value {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--accent-green);
-    }
-
-    /* Dashboard Layout */
+    /* MAIN SYSTEM GRID */
     main {
       display: grid;
-      grid-template-columns: 1fr 360px;
+      grid-template-columns: 1fr 420px;
+      grid-template-rows: 1fr 260px;
       flex: 1;
-      height: calc(100vh - 65px);
+      gap: 1px;
+      background: var(--border-line);
+      overflow: hidden;
     }
 
-    @media (max-width: 900px) {
-      main {
-        grid-template-columns: 1fr;
-        height: auto;
-      }
-    }
-
-    .map-wrapper {
+    /* LEFT SPATIAL GIS CANVAS */
+    .gis-viewport {
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
+      background: #020408;
       position: relative;
+    }
+
+    #gisCanvas {
       width: 100%;
       height: 100%;
-      min-height: 450px;
+      display: block;
     }
 
-    #cesiumContainer {
+    /* BOTTOM LOG TABLE */
+    .log-panel {
+      grid-column: 1 / 2;
+      grid-row: 2 / 3;
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-hdr {
+      background: var(--bg-sub);
+      padding: 0.5rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: var(--accent-cyan);
+      border-bottom: 1px solid var(--border-line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-container { flex: 1; overflow: auto; }
+
+    table {
       width: 100%;
-      height: 100%;
-      background: #080c14;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-align: left;
     }
 
-    /* Cesium Controls Dark Theme Overrides */
-    .cesium-viewer-bottom,
-    .cesium-viewer-animationContainer,
-    .cesium-viewer-timelineContainer {
-      display: none !important;
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-sub);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-line);
     }
 
-    .cesium-button {
-      background: var(--bg-card) !important;
-      border: 1px solid var(--border-tactical) !important;
-      color: var(--text-main) !important;
-      fill: var(--text-main) !important;
-      border-radius: 4px !important;
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-line);
+      white-space: nowrap;
     }
 
-    .cesium-button:hover {
-      background: var(--border-tactical) !important;
-    }
+    tr:hover { background: rgba(0, 229, 255, 0.03); }
 
-    /* Sidebar Drawer */
-    .sidebar {
-      background: var(--bg-card);
-      border-left: 1px solid var(--border-tactical);
+    /* RIGHT SIDEBAR - CONTROLS & INSPECTOR */
+    aside {
+      grid-column: 2 / 3;
+      grid-row: 1 / 3;
+      background: var(--bg-panel);
       padding: 1rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
       overflow-y: auto;
-      z-index: 10;
+      border-left: 1px solid var(--border-line);
     }
 
-    .panel-box {
-      background: rgba(10, 14, 23, 0.5);
-      border: 1px solid var(--border-tactical);
-      border-radius: 8px;
+    .card {
+      background: var(--bg-sub);
+      border: 1px solid var(--border-line);
+      border-radius: 4px;
       padding: 0.85rem;
-    }
-
-    .panel-box h3 {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-      margin-bottom: 0.6rem;
-      text-transform: uppercase;
-    }
-
-    /* Live Comms Chat UI */
-    .chat-box {
       display: flex;
       flex-direction: column;
-      height: 220px;
+      gap: 0.75rem;
     }
 
-    .chat-messages {
-      flex: 1;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-tactical);
-      border-radius: 4px;
-      padding: 0.5rem;
-      overflow-y: auto;
+    .card-hdr {
       font-family: var(--font-mono);
       font-size: 0.7rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .chat-msg {
-      line-height: 1.3;
-      word-break: break-word;
-    }
-
-    .chat-msg .author {
       font-weight: bold;
-      color: var(--accent-green);
+      color: var(--accent-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .chat-msg .time {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      margin-left: 4px;
-    }
-
-    .chat-inputs {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      margin-top: 0.5rem;
-    }
-
-    .chat-inputs-row {
-      display: flex;
-      gap: 0.4rem;
-    }
-
-    input[type="text"] {
-      background: var(--bg-primary);
-      border: 1px solid var(--border-tactical);
-      color: var(--text-main);
-      padding: 0.4rem 0.6rem;
+    /* DROPZONE */
+    .dropzone {
+      border: 2px dashed var(--border-accent);
       border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      outline: none;
-    }
-
-    input[type="text"]:focus {
-      border-color: var(--accent-green);
-    }
-
-    .intake-dropzone {
-      border: 2px dashed var(--border-tactical);
-      border-radius: 6px;
-      padding: 0.85rem 0.5rem;
+      padding: 1.5rem 1rem;
       text-align: center;
-      background: rgba(18, 24, 36, 0.5);
-      transition: all 0.2s ease-in-out;
       cursor: pointer;
-    }
-
-    .intake-dropzone:hover, .intake-dropzone.drag-over {
-      border-color: var(--accent-green);
-      background: rgba(0, 255, 102, 0.03);
-    }
-
-    .intake-dropzone p {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .intake-dropzone span {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      display: block;
-      margin-top: 2px;
-    }
-
-    select, button {
-      width: 100%;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-tactical);
-      color: var(--text-main);
-      padding: 0.5rem;
-      border-radius: 4px;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      margin-top: 0.4rem;
-    }
-
-    button {
-      background: rgba(0, 255, 102, 0.1);
-      color: var(--accent-green);
-      border-color: rgba(0, 255, 102, 0.3);
-      font-weight: 700;
-      cursor: pointer;
+      background: rgba(0, 0, 0, 0.2);
       transition: all 0.2s ease;
     }
 
-    button:hover {
-      background: var(--accent-green);
-      color: var(--bg-primary);
+    .dropzone:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.03);
     }
 
-    .target-card {
+    .dropzone p { font-size: 0.85rem; font-weight: bold; color: var(--text-main); }
+    .dropzone span { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
+
+    /* PIPELINE VIEWPORT */
+    .pipeline-view {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
-      font-family: var(--font-mono);
+      gap: 0.5rem;
     }
 
-    .intel-row {
+    .canvas-wrapper {
+      width: 100%;
+      height: 180px;
+      background: #000;
+      border: 1px solid var(--border-line);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #pipelineCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .layer-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .layer-btn {
+      background: var(--bg-dark);
+      border: 1px solid var(--border-line);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 6px 2px;
+      cursor: pointer;
+      border-radius: 2px;
+      text-align: center;
+    }
+
+    .layer-btn.active {
+      background: var(--accent-cyan);
+      color: var(--bg-dark);
+      font-weight: bold;
+      border-color: var(--accent-cyan);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .control-group label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
       display: flex;
       justify-content: space-between;
-      font-size: 0.7rem;
-      border-bottom: 1px dashed var(--border-tactical);
-      padding-bottom: 0.2rem;
     }
 
-    .intel-row span:last-child {
-      color: var(--accent-green);
-      font-weight: bold;
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-cyan);
     }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .metric-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.5rem;
+      border: 1px solid var(--border-line);
+      border-radius: 2px;
+    }
+
+    .metric-box .lbl { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted); }
+    .metric-box .val { font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: var(--accent-green); margin-top: 2px; }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
   <header>
-    <div class="brand">
-      <h1>BUCKTRACK AI (3D CESIUM)</h1>
-      <div class="status-pill">
-        <div class="status-dot"></div>
-        <span id="sys-status">ONLINE</span>
-      </div>
+    <div class="brand-title">
+      BUCKTRACK COMMAND <span class="badge">v4.0 SIGNAL TENSOR</span>
     </div>
-
-    <div class="telemetry-bar">
-      <div class="telemetry-item">
-        <span class="label">LOCATION</span>
-        <span class="value" style="color: #f1f5f9;">SPRINGHILL, NS</span>
-      </div>
-      <div class="telemetry-item">
-        <span class="label">TEMP</span>
-        <span id="weather-temp" class="value">--°F</span>
-      </div>
-      <div class="telemetry-item">
-        <span class="label">WIND VECTOR</span>
-        <span id="weather-wind" class="value">-- MPH --</span>
-      </div>
+    <div class="system-stats">
+      <div class="stat-item"><span class="stat-lbl">PIXEL PIPELINE:</span><span class="stat-val" id="pipelineStatus">IDLE</span></div>
+      <div class="stat-item"><span class="stat-lbl">EXIF DECODER:</span><span class="stat-val">NATIVE (TIFF/GPS)</span></div>
+      <div class="stat-item"><span class="stat-lbl">PROCESSED:</span><span class="stat-val" id="totalCount">0 FRAMES</span></div>
     </div>
   </header>
 
-  <!-- Main Console -->
   <main>
-    <div class="map-wrapper">
-      <div id="cesiumContainer"></div>
+    <!-- GIS SPATIAL CANVAS -->
+    <div class="gis-viewport">
+      <canvas id="gisCanvas"></canvas>
     </div>
 
-    <aside class="sidebar">
-      <!-- Live Comms Panel -->
-      <div class="panel-box">
-        <h3>💬 Team Comms Channel</h3>
-        <div class="chat-box">
-          <div class="chat-messages" id="chat-messages">
-            <div class="chat-msg">
-              <span class="author">SYS:</span> 3D Cesium globe initialized. Comms active.
-            </div>
-          </div>
-          <div class="chat-inputs">
-            <input type="text" id="chat-user" placeholder="Callsign / Handle" value="Hunter-1">
-            <div class="chat-inputs-row">
-              <input type="text" id="chat-input" placeholder="Broadcast message..." style="flex: 1;">
-              <button id="btn-send-chat" type="button" style="width: 70px; margin-top: 0;">SEND</button>
-            </div>
-          </div>
+    <!-- LOG & TELEMETRY TABLE -->
+    <div class="log-panel">
+      <div class="panel-hdr">
+        <span>FRAME SIGNAL LOG & TENSOR METRICS</span>
+        <span id="coordReadout">LAT: 45.8167° N | LON: 64.2167° W</span>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>File Name</th>
+              <th>Dimensions</th>
+              <th>Mean Luminance</th>
+              <th>Upper Rack Density</th>
+              <th>Mode Class</th>
+              <th>EXIF Timestamp</th>
+              <th>GPS Coordinate Tag</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONTROL SIDEBAR -->
+    <aside>
+      <div class="card">
+        <div class="card-hdr">Raw File Intake</div>
+        <div class="dropzone" id="dropzone">
+          <p>DROP TRAIL CAM JPEGs</p>
+          <span>Extracts Native Pixel Buffers & Metadata</span>
+          <input type="file" id="fileInput" accept="image/jpeg,image/png" multiple style="display:none;">
         </div>
       </div>
 
-      <div class="panel-box">
-        <h3>📸 Bulk Photo Intake</h3>
-        <div class="intake-dropzone" id="dropzone">
-          <p>DROP CAMERA PHOTOS</p>
-          <span>IndexedDB Auto-Sync • EXIF Extraction</span>
+      <div class="card pipeline-view">
+        <div class="card-hdr">Hardware Pixel Tensor</div>
+        <div class="canvas-wrapper">
+          <canvas id="pipelineCanvas"></canvas>
         </div>
-        <select id="cam-select">
-          <option value="Ridge Cam 01">Ridge Trail Cam 01 (Funnel)</option>
-          <option value="South Mash Cam">South Mash Cam (Feed)</option>
-          <option value="Hardwood Scrape Cam">Hardwood Scrape Cam</option>
-        </select>
-      </div>
+        
+        <div class="layer-selector">
+          <button class="layer-btn active" data-layer="optical">OPTICAL</button>
+          <button class="layer-btn" data-layer="sobel">SOBEL</button>
+          <button class="layer-btn" data-layer="thermal">THERMAL</button>
+          <button class="layer-btn" data-layer="luminance">LUMA</button>
+        </div>
 
-      <div class="panel-box">
-        <h3>🎯 Daybreak Intel</h3>
-        <div class="target-card">
-          <div class="intel-row">
-            <span>TARGET:</span>
-            <span>154 3/8" Mature Buck</span>
+        <div class="control-group">
+          <label><span>SOBEL EDGE THRESHOLD</span><span id="threshVal">35</span></label>
+          <input type="range" id="threshSlider" min="5" max="150" value="35">
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="lbl">AVG LUMINANCE</div>
+            <div class="val" id="metricLum">--</div>
           </div>
-          <div class="intel-row">
-            <span>DOWNWIND DRIFT:</span>
-            <span id="intel-heading">ESE (112°)</span>
-          </div>
-          <div class="intel-row">
-            <span>AMBUSH WINDOW:</span>
-            <span>05:15 - 06:30 AM</span>
-          </div>
-          <div class="intel-row">
-            <span>STAND STATUS:</span>
-            <span style="color: #00ff66;">SCENT CLEAR</span>
+          <div class="metric-box">
+            <div class="lbl">RACK DENSITY</div>
+            <div class="val" id="metricEdge">--</div>
           </div>
         </div>
-        <button id="btn-recalc" type="button">RECALCULATE VECTOR</button>
       </div>
     </aside>
   </main>
 
-  <!-- CesiumJS Engine -->
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
-
-  <!-- Firebase App & Realtime Database SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
   <script>
-    // --- Firebase Configuration ---
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+    // System State
+    const state = {
+      records: [],
+      activeRecord: null,
+      activeLayer: 'optical',
+      edgeThreshold: 35,
+      mapCenter: { lat: 45.8167, lon: -64.2167 }
     };
 
-    let dbRef = null;
+    // DOM References
+    const gisCanvas = document.getElementById('gisCanvas');
+    const gisCtx = gisCanvas.getContext('2d');
+    const pipelineCanvas = document.getElementById('pipelineCanvas');
+    const pipelineCtx = pipelineCanvas.getContext('2d');
+    const logTableBody = document.getElementById('logTableBody');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
 
-    function initFirebaseChat() {
-      try {
-        if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-          firebase.initializeApp(firebaseConfig);
-          dbRef = firebase.database().ref("team_comms");
-
-          dbRef.limitToLast(25).on("child_added", (snapshot) => {
-            const msg = snapshot.val();
-            renderChatMessage(msg.user, msg.text, msg.timestamp);
-          });
-        } else {
-          setupDemoChat();
-        }
-      } catch (err) {
-        setupDemoChat();
-      }
-    }
-
-    function renderChatMessage(user, text, timeStr) {
-      const chatBox = document.getElementById('chat-messages');
-      if (!chatBox) return;
-
-      const time = timeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'chat-msg';
-      msgDiv.innerHTML = `<span class="author">${escapeHtml(user)}:</span> ${escapeHtml(text)} <span class="time">${time}</span>`;
+    // Setup GIS Spatial Canvas
+    function renderGISMap() {
+      gisCanvas.width = gisCanvas.clientWidth;
+      gisCanvas.height = gisCanvas.clientHeight;
       
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+      const w = gisCanvas.width;
+      const h = gisCanvas.height;
 
-    function sendMessage() {
-      const input = document.getElementById('chat-input');
-      const userField = document.getElementById('chat-user');
-      const text = input.value.trim();
-      const user = userField.value.trim() || 'Operator';
+      // Dark Spatial Grid
+      gisCtx.fillStyle = '#020408';
+      gisCtx.fillRect(0, 0, w, h);
 
-      if (!text) return;
+      gisCtx.strokeStyle = '#0f172a';
+      gisCtx.lineWidth = 1;
 
-      if (dbRef) {
-        dbRef.push({
-          user: user,
-          text: text,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-      } else {
-        renderChatMessage(user, text);
+      const gridSize = 40;
+      for (let x = 0; x < w; x += gridSize) {
+        gisCtx.beginPath(); gisCtx.moveTo(x, 0); gisCtx.lineTo(x, h); gisCtx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        gisCtx.beginPath(); gisCtx.moveTo(0, y); gisCtx.lineTo(w, y); gisCtx.stroke();
       }
 
-      input.value = '';
-    }
+      // Compass Rose Overlay
+      const cx = w - 60, cy = 60;
+      gisCtx.strokeStyle = '#1e293b';
+      gisCtx.beginPath(); gisCtx.arc(cx, cy, 30, 0, Math.PI * 2); gisCtx.stroke();
+      gisCtx.fillStyle = '#00e5ff';
+      gisCtx.font = '10px monospace';
+      gisCtx.fillText('N', cx - 3, cy - 34);
 
-    function setupDemoChat() {
-      renderChatMessage("SYS", "Local comms active. Add Firebase keys for multi-device sync.");
-    }
+      // Render Snapped Camera Pins
+      state.records.forEach((rec, idx) => {
+        const px = (w / 2) + (idx * 40 - (state.records.length * 20));
+        const py = (h / 2) + (idx * 25 - (state.records.length * 12));
 
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        // Radar Range Ring
+        gisCtx.strokeStyle = 'rgba(0, 229, 255, 0.2)';
+        gisCtx.beginPath(); gisCtx.arc(px, py, 18, 0, Math.PI * 2); gisCtx.stroke();
+
+        // Pin Node
+        gisCtx.fillStyle = rec === state.activeRecord ? '#00ff66' : '#00e5ff';
+        gisCtx.beginPath(); gisCtx.arc(px, py, 5, 0, Math.PI * 2); gisCtx.fill();
+
+        // Label
+        gisCtx.fillStyle = '#f8fafc';
+        gisCtx.font = '10px monospace';
+        gisCtx.fillText(`${rec.name} [${rec.lum < 85 ? 'IR' : 'DAY'}]`, px + 10, py + 4);
       });
     }
 
-    // --- Live Weather Fetcher ---
-    async function getLiveWeather(lat, lon) {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph`;
-      
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("API error");
-        const data = await res.json();
-        const current = data.current;
+    // Native TIFF/EXIF Binary Reader
+    function parseEXIFBinary(buffer) {
+      const view = new DataView(buffer);
+      if (view.getUint16(0, false) !== 0xFFD8) return {}; // Not JPEG
 
-        return {
-          temp: Math.round(current.temperature_2m),
-          windSpeed: Math.round(current.wind_speed_10m),
-          windDirDeg: current.wind_direction_10m,
-          windCardinal: getCardinalDirection(current.wind_direction_10m)
+      let offset = 2;
+      while (offset < buffer.byteLength) {
+        const marker = view.getUint16(offset, false);
+        offset += 2;
+        if (marker === 0xFFE1) { // APP1 Marker
+          if (view.getUint32(offset + 2, false) === 0x45786966) { // "Exif"
+            const tiffOffset = offset + 8;
+            const littleEndian = view.getUint16(tiffOffset, false) === 0x4949;
+            const ifdOffset = view.getUint32(tiffOffset + 4, littleEndian) + tiffOffset;
+            const tagCount = view.getUint16(ifdOffset, littleEndian);
+            
+            const exifData = {};
+            for (let i = 0; i < tagCount; i++) {
+              const tag = view.getUint16(ifdOffset + 2 + (i * 12), littleEndian);
+              if (tag === 0x9003) { // DateTimeOriginal
+                const valOffset = view.getUint32(ifdOffset + 2 + (i * 12) + 8, littleEndian) + tiffOffset;
+                let str = '';
+                for (let c = 0; c < 19; c++) str += String.fromCharCode(view.getUint8(valOffset + c));
+                exifData.dateTime = str;
+              }
+            }
+            return exifData;
+          }
+        } else if ((marker & 0xFF00) !== 0xFF00) break;
+        else offset += view.getUint16(offset, false);
+      }
+      return {};
+    }
+
+    // Process Selected Frame
+    function renderPipelineFrame() {
+      if (!state.activeRecord) return;
+      const img = state.activeRecord.imgEl;
+
+      pipelineCanvas.width = img.width;
+      pipelineCanvas.height = img.height;
+      pipelineCtx.drawImage(img, 0, 0);
+
+      const frame = pipelineCtx.getImageData(0, 0, img.width, img.height);
+      const px = frame.data;
+      const output = pipelineCtx.createImageData(img.width, img.height);
+      const outPx = output.data;
+
+      // Tensor Filtering Layers
+      if (state.activeLayer === 'sobel') {
+        const w = img.width;
+        for (let y = 0; y < img.height - 1; y++) {
+          for (let x = 0; x < w - 1; x++) {
+            const idx = (y * w + x) * 4;
+            const rightIdx = (y * w + (x + 1)) * 4;
+            const downIdx = ((y + 1) * w + x) * 4;
+
+            const diff = Math.abs(px[idx] - px[rightIdx]) + Math.abs(px[idx] - px[downIdx]);
+            const val = diff > state.edgeThreshold ? 255 : 0;
+
+            outPx[idx] = 0;
+            outPx[idx+1] = val; // Cyber Green
+            outPx[idx+2] = val > 0 ? 100 : 0;
+            outPx[idx+3] = 255;
+          }
+        }
+        pipelineCtx.putImageData(output, 0, 0);
+      } else if (state.activeLayer === 'thermal') {
+        for (let i = 0; i < px.length; i += 4) {
+          const luma = 0.299 * px[i] + 0.587 * px[i+1] + 0.114 * px[i+2];
+          outPx[i] = luma > 128 ? 255 : luma * 2; // Heat Red
+          outPx[i+1] = luma > 180 ? 255 : luma;   // Heat Yellow
+          outPx[i+2] = 255 - luma;               // Cold Blue
+          outPx[i+3] = 255;
+        }
+        pipelineCtx.putImageData(output, 0, 0);
+      } else if (state.activeLayer === 'luminance') {
+        for (let i = 0; i < px.length; i += 4) {
+          const luma = 0.299 * px[i] + 0.587 * px[i+1] + 0.114 * px[i+2];
+          outPx[i] = luma; outPx[i+1] = luma; outPx[i+2] = luma; outPx[i+3] = 255;
+        }
+        pipelineCtx.putImageData(output, 0, 0);
+      }
+    }
+
+    // Ingest Image File
+    function processImageFile(file) {
+      document.getElementById('pipelineStatus').textContent = 'PROCESSING TENSOR...';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const buffer = e.target.result;
+        const exif = parseEXIFBinary(buffer);
+
+        const img = new Image();
+        img.onload = function() {
+          // Offscreen analysis
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = img.width; offCanvas.height = img.height;
+          const offCtx = offCanvas.getContext('2d');
+          offCtx.drawImage(img, 0, 0);
+
+          const frameData = offCtx.getImageData(0, 0, img.width, img.height);
+          const pixels = frameData.data;
+
+          // 1. Luminance
+          let totalLuma = 0;
+          for (let i = 0; i < pixels.length; i += 4) {
+            totalLuma += (0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2]);
+          }
+          const avgLuma = Math.round(totalLuma / (pixels.length / 4));
+
+          // 2. Upper Rack Density Math
+          const scanHeight = Math.floor(img.height * 0.5);
+          let edgeScore = 0;
+          for (let y = 0; y < scanHeight - 1; y++) {
+            for (let x = 0; x < img.width - 1; x++) {
+              let idx = (y * img.width + x) * 4;
+              let rightIdx = (y * img.width + (x + 1)) * 4;
+              if (Math.abs(pixels[idx] - pixels[rightIdx]) > 35) edgeScore++;
+            }
+          }
+          const rackDensity = ((edgeScore / (img.width * scanHeight)) * 100).toFixed(2);
+
+          const record = {
+            name: file.name,
+            dim: `${img.width}x${img.height}`,
+            lum: avgLuma,
+            edge: rackDensity,
+            mode: avgLuma < 85 ? 'IR Monochrome' : 'Daylight RGB',
+            time: exif.dateTime || new Date(file.lastModified).toISOString().replace('T', ' ').substring(0, 19),
+            gps: '45.8167° N, 64.2167° W',
+            imgEl: img
+          };
+
+          state.records.push(record);
+          state.activeRecord = record;
+
+          // Table UI
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td style="color:var(--accent-cyan)">${record.name}</td>
+            <td>${record.dim}</td>
+            <td>${record.lum} / 255</td>
+            <td style="color:var(--accent-green)">${record.edge}%</td>
+            <td style="color:${record.lum < 85 ? 'var(--accent-amber)' : 'var(--accent-green)'}">${record.mode}</td>
+            <td>${record.time}</td>
+            <td>${record.gps}</td>
+          `;
+          logTableBody.insertBefore(tr, logTableBody.firstChild);
+
+          document.getElementById('totalCount').textContent = `${state.records.length} FRAMES`;
+          document.getElementById('metricLum').textContent = `${record.lum} / 255`;
+          document.getElementById('metricEdge').textContent = `${record.edge}%`;
+          document.getElementById('pipelineStatus').textContent = 'ONLINE';
+
+          renderPipelineFrame();
+          renderGISMap();
         };
-      } catch (err) {
-        return { temp: 42, windSpeed: 10, windDirDeg: 292, windCardinal: 'WNW' };
-      }
+        img.src = URL.createObjectURL(file);
+      };
+      reader.readAsArrayBuffer(file);
     }
 
-    function getCardinalDirection(angle) {
-      const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-      return directions[Math.round(angle / 22.5) % 16];
-    }
+    // Listeners
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => Array.from(e.target.files).forEach(processImageFile));
 
-    // --- Cesium Engine Controller ---
-    const springhillLat = 45.8167;
-    const springhillLon = -64.2167;
-    let viewer, scentConeEntity;
-
-    async function initCesium() {
-      // Modern CesiumJS World Terrain Initialization
-      const terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
-        'https://assets.ion.cesium.com/1', 
-        { requestVertexNormals: true }
-      );
-
-      // Initialize Viewer with OpenStreetMap imagery (tokenless public satellite/map layer)
-      viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: terrainProvider,
-        imageryProvider: new Cesium.OpenStreetMapImageryProvider({
-          url: 'https://a.tile.openstreetmap.org/'
-        }),
-        baseLayerPicker: false,
-        geocoder: false,
-        homeButton: false,
-        sceneModePicker: false,
-        navigationHelpButton: false,
-        fullscreenButton: false,
-        timeline: false,
-        animation: false
-      });
-
-      // Enable depth testing against terrain so 3D objects conform properly
-      viewer.scene.globe.depthTestAgainstTerrain = true;
-
-      // Set Initial 3D Camera Perspective
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(springhillLon, springhillLat - 0.025, 1800),
-        orientation: {
-          heading: Cesium.Math.toRadians(0.0),
-          pitch: Cesium.Math.toRadians(-35.0),
-          roll: 0.0
-        }
-      });
-
-      // Hardwood Ridge Stand Marker
-      viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(springhillLon, springhillLat),
-        point: {
-          pixelSize: 12,
-          color: Cesium.Color.fromCssColorString('#00ff66'),
-          outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 2,
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-        },
-        label: {
-          text: 'Hardwood Ridge Stand',
-          font: '12px JetBrains Mono',
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          outlineWidth: 2,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -12),
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-        }
-      });
-
-      // Trail Cam Marker
-      viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(-64.2120, 45.8210),
-        point: {
-          pixelSize: 10,
-          color: Cesium.Color.fromCssColorString('#3b82f6'),
-          outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 2,
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-        },
-        label: {
-          text: 'Ridge Cam 01',
-          font: '11px JetBrains Mono',
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          outlineWidth: 2,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -10),
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-        }
-      });
-
-      // Initialize Comms & Telemetry
-      initFirebaseChat();
-      setupDropzone();
-      setupChatEvents();
-      refreshTelemetry();
-    }
-
-    async function refreshTelemetry() {
-      const weather = await getLiveWeather(springhillLat, springhillLon);
-
-      document.getElementById('weather-temp').textContent = `${weather.temp}°F`;
-      document.getElementById('weather-wind').textContent = `${weather.windSpeed} MPH ${weather.windCardinal}`;
-
-      const downwindDeg = (weather.windDirDeg + 180) % 360;
-      document.getElementById('intel-heading').textContent = `${getCardinalDirection(downwindDeg)} (${downwindDeg}°)`;
-
-      // Update 3D Scent Cone Geometry
-      update3DScentCone(springhillLat, springhillLon, weather.windDirDeg, weather.windSpeed);
-    }
-
-    function update3DScentCone(lat, lon, windFromDeg, windSpeedMph) {
-      if (scentConeEntity) {
-        viewer.entities.remove(scentConeEntity);
-      }
-
-      const downwindHeading = (windFromDeg + 180) % 360;
-      const coneLengthMeters = Math.min(Math.max(windSpeedMph * 35, 150), 500);
-      const spreadAngle = 40;
-
-      const leftBearing = (downwindHeading - (spreadAngle / 2) + 360) % 360;
-      const rightBearing = (downwindHeading + (spreadAngle / 2)) % 360;
-
-      const originPt = [lon, lat];
-      const leftPt = destinationPoint(lat, lon, coneLengthMeters, leftBearing);
-      const centerPt = destinationPoint(lat, lon, coneLengthMeters, downwindHeading);
-      const rightPt = destinationPoint(lat, lon, coneLengthMeters, rightBearing);
-
-      scentConeEntity = viewer.entities.add({
-        polygon: {
-          hierarchy: Cesium.Cartesian3.fromDegreesArray([
-            originPt[0], originPt[1],
-            leftPt[1], leftPt[0],
-            centerPt[1], centerPt[0],
-            rightPt[1], rightPt[0]
-          ]),
-          material: Cesium.Color.fromCssColorString('#ff3838').withAlpha(0.35),
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
-        }
-      });
-    }
-
-    function destinationPoint(lat, lng, distanceMeters, bearingDeg) {
-      const R = 6371000;
-      const rad = Math.PI / 180;
-      const φ1 = lat * rad;
-      const λ1 = lng * rad;
-      const θ = bearingDeg * rad;
-      const δ = distanceMeters / R;
-
-      const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ));
-      const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
-
-      return [φ2 / rad, λ2 / rad];
-    }
-
-    function setupChatEvents() {
-      const sendBtn = document.getElementById('btn-send-chat');
-      const chatInput = document.getElementById('chat-input');
-
-      sendBtn.addEventListener('click', sendMessage);
-      chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-      });
-    }
-
-    function setupDropzone() {
-      const dropzone = document.getElementById('dropzone');
-      if (!dropzone) return;
-
-      ['dragenter', 'dragover'].forEach(name => {
-        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-      });
-
-      ['dragleave', 'drop'].forEach(name => {
-        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); });
-      });
-
-      dropzone.addEventListener('drop', (e) => {
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-          alert(`BuckTrack Intake: Ingested ${files.length} photo(s).`);
-        }
-      });
-    }
-
-    window.addEventListener('load', () => {
-      initCesium();
-
-      const recalcBtn = document.getElementById('btn-recalc');
-      if (recalcBtn) {
-        recalcBtn.addEventListener('click', refreshTelemetry);
-      }
+    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => e.preventDefault()));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      Array.from(e.dataTransfer.files).forEach(processImageFile);
     });
+
+    document.querySelectorAll('.layer-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.activeLayer = btn.dataset.layer;
+        renderPipelineFrame();
+      });
+    });
+
+    document.getElementById('threshSlider').addEventListener('input', e => {
+      state.edgeThreshold = parseInt(e.target.value);
+      document.getElementById('threshVal').textContent = state.edgeThreshold;
+      renderPipelineFrame();
+    });
+
+    window.addEventListener('resize', renderGISMap);
+    renderGISMap();
   </script>
 </body>
 </html>
