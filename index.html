@@ -1,3584 +1,633 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#070b08">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BUCKTRACK">
-
-<title>BUCKTRACK // Field Intelligence</title>
-
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-integrity="sha256-p4NxAoJBhIINfQ3wN2Q2z7RkM6zqVJkK3Jq8mH3z0fE="
-crossorigin=""/>
-
-<style>
-:root{
-    --bg:#050806;
-    --panel:#0d130f;
-    --panel2:#121a14;
-    --panel3:#172019;
-    --line:#27342b;
-    --text:#edf4ef;
-    --muted:#829087;
-    --orange:#e47c28;
-    --orange2:#ff9d49;
-    --green:#5e8467;
-    --green2:#83ad8d;
-    --blue:#67afd0;
-    --red:#d34c3e;
-    --yellow:#d7b54c;
-    --shadow:0 12px 35px rgba(0,0,0,.38);
-}
-
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    background:var(--bg);
-    color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    overflow:hidden;
-}
-
-button,input,select,textarea{
-    font:inherit;
-}
-
-button{
-    cursor:pointer;
-}
-
-button:active{
-    transform:scale(.98);
-}
-
-#app{
-    height:100%;
-    display:flex;
-    flex-direction:column;
-}
-
-/* ================= HEADER ================= */
-
-.header{
-    height:58px;
-    flex:none;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:0 14px;
-    padding-top:env(safe-area-inset-top);
-    background:rgba(6,10,8,.98);
-    border-bottom:1px solid var(--line);
-    z-index:5000;
-}
-
-.logo{
-    color:var(--orange);
-    font-size:18px;
-    font-weight:950;
-    letter-spacing:2px;
-}
-
-.logo small{
-    display:block;
-    color:var(--muted);
-    font-size:7px;
-    letter-spacing:2px;
-    margin-top:2px;
-}
-
-.header-right{
-    display:flex;
-    align-items:center;
-    gap:8px;
-}
-
-.live{
-    display:flex;
-    align-items:center;
-    gap:5px;
-    color:#83d894;
-    font-size:8px;
-    font-weight:800;
-}
-
-.live-dot{
-    width:7px;
-    height:7px;
-    border-radius:50%;
-    background:#4be36e;
-    box-shadow:0 0 12px #4be36e;
-}
-
-.user-btn{
-    background:none;
-    border:1px solid var(--line);
-    color:var(--muted);
-    border-radius:7px;
-    padding:5px 8px;
-    font-size:8px;
-}
-
-/* ================= MAIN ================= */
-
-.main{
-    flex:1;
-    min-height:0;
-    position:relative;
-}
-
-.view{
-    position:absolute;
-    inset:0;
-    display:none;
-    overflow:auto;
-}
-
-.view.active{
-    display:block;
-}
-
-#mapView{
-    overflow:hidden;
-}
-
-/* ================= MAP ================= */
-
-#map{
-    width:100%;
-    height:100%;
-    background:#182019;
-}
-
-.leaflet-control-attribution{
-    font-size:7px!important;
-}
-
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip{
-    background:#101711;
-    color:#edf4ef;
-}
-
-.leaflet-popup-content{
-    font-size:11px;
-}
-
-.map-top{
-    position:absolute;
-    z-index:900;
-    top:10px;
-    left:10px;
-    right:10px;
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:6px;
-    pointer-events:none;
-}
-
-.map-stat{
-    background:rgba(7,12,9,.91);
-    border:1px solid rgba(255,255,255,.11);
-    border-radius:9px;
-    padding:7px;
-    backdrop-filter:blur(9px);
-    box-shadow:var(--shadow);
-}
-
-.map-stat label{
-    display:block;
-    color:var(--muted);
-    font-size:7px;
-    text-transform:uppercase;
-    letter-spacing:1px;
-}
-
-.map-stat strong{
-    display:block;
-    margin-top:3px;
-    font-size:12px;
-}
-
-.map-stat.orange strong{
-    color:var(--orange2);
-}
-
-.map-tools{
-    position:absolute;
-    z-index:900;
-    top:108px;
-    right:10px;
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-}
-
-.map-tool{
-    width:40px;
-    height:40px;
-    border:1px solid var(--line);
-    border-radius:9px;
-    background:rgba(7,12,9,.94);
-    color:white;
-    box-shadow:var(--shadow);
-}
-
-.map-bottom{
-    position:absolute;
-    z-index:900;
-    left:10px;
-    right:10px;
-    bottom:10px;
-}
-
-.command-card{
-    background:rgba(7,12,9,.95);
-    border:1px solid var(--line);
-    border-radius:13px;
-    padding:10px;
-    box-shadow:var(--shadow);
-    backdrop-filter:blur(12px);
-}
-
-.command-title{
-    display:flex;
-    justify-content:space-between;
-    color:var(--muted);
-    font-size:8px;
-    font-weight:900;
-    letter-spacing:1px;
-    text-transform:uppercase;
-}
-
-.confidence{
-    color:var(--orange2);
-}
-
-.command-main{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:6px;
-}
-
-.command-main strong{
-    font-size:14px;
-}
-
-.command-main span{
-    font-size:23px;
-}
-
-.command-data{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:5px;
-    margin-top:8px;
-}
-
-.command-data div{
-    color:var(--muted);
-    font-size:8px;
-    text-align:center;
-    padding:5px 2px;
-    background:#0b110d;
-    border-radius:5px;
-}
-
-/* ================= NAV ================= */
-
-.bottom-nav{
-    height:68px;
-    flex:none;
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    background:#0a100c;
-    border-top:1px solid var(--line);
-    padding-bottom:env(safe-area-inset-bottom);
-    z-index:5000;
-}
-
-.nav-btn{
-    border:0;
-    background:none;
-    color:var(--muted);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:3px;
-    font-size:8px;
-    font-weight:800;
-}
-
-.nav-btn span{
-    font-size:19px;
-}
-
-.nav-btn.active{
-    color:var(--orange2);
-    background:rgba(228,124,40,.07);
-    border-top:2px solid var(--orange);
-}
-
-/* ================= PANELS ================= */
-
-.panel{
-    padding:12px;
-    max-width:1200px;
-    margin:auto;
-}
-
-.card{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:13px;
-    padding:13px;
-    margin-bottom:11px;
-    box-shadow:var(--shadow);
-}
-
-.card-title{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    color:var(--muted);
-    font-size:9px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:1px;
-    margin-bottom:11px;
-}
-
-.card-title strong{
-    color:var(--text);
-}
-
-.grid2{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:7px;
-}
-
-.grid3{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:7px;
-}
-
-.metric{
-    background:#090e0b;
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:9px;
-}
-
-.metric label{
-    display:block;
-    color:var(--muted);
-    font-size:7px;
-    text-transform:uppercase;
-    letter-spacing:1px;
-}
-
-.metric strong{
-    display:block;
-    margin-top:5px;
-    font-size:12px;
-}
-
-.metric .orange{
-    color:var(--orange2);
-}
-
-.metric .green{
-    color:var(--green2);
-}
-
-/* ================= TARGET ================= */
-
-.target{
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-.target-photo{
-    width:82px;
-    height:82px;
-    border-radius:12px;
-    background:
-        radial-gradient(circle at 50% 40%,#34463a,#111811 65%);
-    border:1px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:43px;
-}
-
-.target h1{
-    margin:0;
-    font-size:21px;
-}
-
-.target p{
-    margin:4px 0 0;
-    color:var(--muted);
-    font-size:9px;
-}
-
-/* ================= ACTIVITY ================= */
-
-.activity{
-    height:120px;
-    display:flex;
-    align-items:end;
-    gap:3px;
-    padding:10px 5px 5px;
-    background:#090e0b;
-    border:1px solid var(--line);
-    border-radius:8px;
-}
-
-.activity-bar{
-    flex:1;
-    min-height:3px;
-    background:var(--green);
-    border-radius:3px 3px 0 0;
-}
-
-.activity-bar.hot{
-    background:var(--orange);
-}
-
-/* ================= AI ================= */
-
-.ai-box{
-    background:#090e0b;
-    border:1px solid var(--line);
-    border-left:3px solid var(--orange);
-    border-radius:8px;
-    padding:11px;
-    font-size:10px;
-    line-height:1.55;
-}
-
-.ai-box strong{
-    color:var(--orange2);
-}
-
-.progress{
-    height:7px;
-    background:#040604;
-    border-radius:6px;
-    overflow:hidden;
-    margin-top:6px;
-}
-
-.progress span{
-    display:block;
-    height:100%;
-    background:var(--orange);
-    border-radius:6px;
-}
-
-/* ================= WEATHER ================= */
-
-.weather-hero{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-}
-
-.temperature{
-    font-size:43px;
-    font-weight:950;
-}
-
-.condition{
-    color:var(--muted);
-    font-size:10px;
-}
-
-.weather-icon{
-    font-size:43px;
-}
-
-.forecast{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    gap:5px;
-    margin-top:10px;
-}
-
-.forecast-item{
-    text-align:center;
-    padding:7px 2px;
-    background:#090e0b;
-    border:1px solid var(--line);
-    border-radius:7px;
-}
-
-.forecast-item small{
-    color:var(--muted);
-    font-size:7px;
-}
-
-.forecast-item div{
-    font-size:19px;
-    margin:3px 0;
-}
-
-.forecast-item b{
-    font-size:10px;
-}
-
-/* ================= PHOTO VAULT ================= */
-
-.upload{
-    display:block;
-    border:2px dashed var(--green);
-    border-radius:11px;
-    padding:25px 12px;
-    text-align:center;
-    background:rgba(94,132,103,.05);
-}
-
-.upload strong{
-    display:block;
-    color:var(--orange2);
-    font-size:13px;
-}
-
-.upload span{
-    display:block;
-    color:var(--muted);
-    font-size:8px;
-    margin-top:5px;
-}
-
-.file-input{
-    display:none;
-}
-
-.import-progress{
-    display:none;
-    margin-top:10px;
-}
-
-.import-progress.active{
-    display:block;
-}
-
-.import-text{
-    color:var(--muted);
-    font-size:8px;
-    margin-bottom:5px;
-}
-
-.gallery{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:6px;
-}
-
-.photo{
-    position:relative;
-    aspect-ratio:1;
-    overflow:hidden;
-    border:1px solid var(--line);
-    border-radius:7px;
-    background:#020302;
-}
-
-.photo img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-.photo-info{
-    position:absolute;
-    left:0;
-    right:0;
-    bottom:0;
-    padding:12px 4px 4px;
-    background:linear-gradient(transparent,rgba(0,0,0,.9));
-    font-size:7px;
-}
-
-.photo-delete{
-    position:absolute;
-    top:4px;
-    right:4px;
-    width:23px;
-    height:23px;
-    border:0;
-    border-radius:50%;
-    background:rgba(0,0,0,.82);
-    color:#fff;
-}
-
-.viewer{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.96);
-    z-index:9000;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:15px;
-}
-
-.viewer.active{
-    display:flex;
-}
-
-.viewer img{
-    max-width:100%;
-    max-height:90%;
-    object-fit:contain;
-}
-
-.viewer-close{
-    position:absolute;
-    top:20px;
-    right:20px;
-    width:40px;
-    height:40px;
-    border:1px solid #444;
-    border-radius:50%;
-    background:#111;
-    color:white;
-    font-size:20px;
-}
-
-/* ================= BUTTONS ================= */
-
-.btn{
-    width:100%;
-    padding:11px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    background:#1a271e;
-    color:var(--text);
-    font-weight:800;
-    font-size:10px;
-    margin-top:8px;
-}
-
-.btn.primary{
-    background:var(--orange);
-    color:#070a08;
-    border-color:var(--orange);
-}
-
-.btn.blue{
-    background:#17313b;
-    border-color:#285969;
-}
-
-.btn.danger{
-    background:#3b1715;
-    border-color:#6d2b26;
-}
-
-/* ================= SETTINGS ================= */
-
-.field{
-    margin-top:9px;
-}
-
-.field label{
-    display:block;
-    color:var(--muted);
-    font-size:8px;
-    margin-bottom:4px;
-}
-
-.field input,
-.field select,
-.field textarea{
-    width:100%;
-    padding:10px;
-    background:#080d09;
-    color:var(--text);
-    border:1px solid var(--line);
-    border-radius:7px;
-    outline:none;
-}
-
-.field textarea{
-    min-height:90px;
-    resize:vertical;
-}
-
-/* ================= TOAST ================= */
-
-#toast{
-    position:fixed;
-    left:50%;
-    bottom:82px;
-    transform:translate(-50%,20px);
-    background:#101711;
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:9px 14px;
-    font-size:9px;
-    opacity:0;
-    pointer-events:none;
-    transition:.25s;
-    z-index:10000;
-}
-
-#toast.show{
-    opacity:1;
-    transform:translate(-50%,0);
-}
-
-/* ================= BOOT ================= */
-
-#boot{
-    position:fixed;
-    inset:0;
-    z-index:11000;
-    background:#050806;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-}
-
-.boot-logo{
-    color:var(--orange);
-    font-size:28px;
-    font-weight:950;
-    letter-spacing:4px;
-}
-
-.boot-sub{
-    margin-top:5px;
-    color:var(--muted);
-    font-size:7px;
-    letter-spacing:2px;
-}
-
-.boot-status{
-    margin-top:20px;
-    color:#9ba89f;
-    font-size:9px;
-}
-
-.boot-track{
-    width:230px;
-    height:4px;
-    background:#182019;
-    border-radius:5px;
-    overflow:hidden;
-    margin-top:10px;
-}
-
-.boot-bar{
-    width:0;
-    height:100%;
-    background:var(--orange);
-    transition:width .35s;
-}
-
-/* ================= AUTH ================= */
-
-#auth{
-    position:fixed;
-    inset:0;
-    z-index:10500;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
-    background:#050806;
-}
-
-.auth-card{
-    width:100%;
-    max-width:390px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:20px;
-    box-shadow:var(--shadow);
-}
-
-.auth-card h1{
-    margin:0;
-    color:var(--orange);
-    letter-spacing:2px;
-}
-
-.auth-card p{
-    color:var(--muted);
-    font-size:9px;
-}
-
-.auth-message{
-    color:var(--red);
-    text-align:center;
-    font-size:9px;
-    margin-top:8px;
-}
-
-.auth-switch{
-    text-align:center;
-    margin-top:12px;
-    color:var(--blue);
-    font-size:9px;
-    cursor:pointer;
-}
-
-/* ================= DESKTOP ================= */
-
-@media(min-width:800px){
-
-    .gallery{
-        grid-template-columns:repeat(6,1fr);
-    }
-
-    .panel{
-        padding:20px;
-    }
-
-    .bottom-nav{
-        height:60px;
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BUCKTRACK // Tactical Field Intelligence</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-base: #0b0f0c;
+            --bg-surface: #121814;
+            --bg-card: #1a221c;
+            --bg-card-hover: #222d25;
+            --border-dim: #263329;
+            --border-bright: #3d5242;
+            
+            --brand-green: #4e8056;
+            --brand-accent: #7ca982;
+            --tactical-amber: #e6a100;
+            --tactical-red: #d9534f;
+            --tactical-blue: #4a90e2;
+            
+            --text-main: #e2e8e3;
+            --text-muted: #8b9e8f;
+            --text-dim: #5c6b5e;
+            
+            --font-display: 'Teko', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            --header-h: 60px;
+            --nav-h: 65px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Scanline Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 99999;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* HEADER */
+        header {
+            height: var(--header-h);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+        }
+
+        .brand-title {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: var(--brand-accent);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-title::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: var(--brand-accent);
+            box-shadow: 0 0 8px var(--brand-accent);
+        }
+
+        .sys-status {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--tactical-amber);
+        }
+
+        .status-dot.online {
+            background: #4caf50;
+            box-shadow: 0 0 6px #4caf50;
+        }
+
+        /* MAIN CONTAINER */
+        main {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: calc(100vh - var(--header-h) - var(--nav-h));
+            overflow: hidden;
+        }
+
+        .view {
+            position: absolute;
+            inset: 0;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 1;
+        }
+
+        .view.active {
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* MAP VIEW */
+        #mapView {
+            width: 100%;
+            height: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #0d120e;
+        }
+
+        /* Leaflet Overrides */
+        .leaflet-top, .leaflet-bottom {
+            z-index: 950 !important;
+        }
+        
+        .leaflet-tile-pane {
+            filter: brightness(0.85) contrast(1.1);
+        }
+
+        .map-overlay-top {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            z-index: 900;
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .hud-card {
+            background: rgba(18, 24, 20, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-dim);
+            padding: 8px 12px;
+            border-radius: 6px;
+            pointer-events: auto;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        /* CHAT VIEW (TACTICAL COMM) */
+        #chatView {
+            background: var(--bg-base);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 12px 16px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-dim);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .chat-logs {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-msg.system {
+            align-self: flex-start;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-left: 3px solid var(--brand-accent);
+            color: var(--text-main);
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+            background: var(--brand-green);
+            color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+
+        .msg-meta {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--bg-base);
+            border: 1px solid var(--border-dim);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--brand-accent);
+        }
+
+        .btn-send {
+            background: var(--brand-green);
+            color: white;
+            border: none;
+            padding: 0 16px;
+            border-radius: 4px;
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        .btn-send:active {
+            filter: brightness(0.9);
+        }
+
+        /* WEATHER & MEDIA VIEWS */
+        .generic-panel {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            padding: 14px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .metric-val {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            color: var(--brand-accent);
+        }
+
+        /* BOTTOM NAVIGATION */
+        nav {
+            height: var(--nav-h);
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-dim);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .nav-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .nav-btn span {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-btn.active {
+            color: var(--brand-accent);
+            background: rgba(124, 169, 130, 0.05);
+            border-top: 2px solid var(--brand-accent);
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- BOOT -->
-
-<div id="boot">
-    <div class="boot-logo">BUCKTRACK</div>
-    <div class="boot-sub">FIELD INTELLIGENCE SYSTEM</div>
-    <div class="boot-status" id="bootStatus">INITIALIZING</div>
-    <div class="boot-track">
-        <div class="boot-bar" id="bootBar"></div>
-    </div>
-</div>
-
-<!-- AUTH -->
-
-<div id="auth">
-    <div class="auth-card">
-
-        <h1>BUCKTRACK</h1>
-        <p id="authSubtitle">TACTICAL HUNTING INTELLIGENCE</p>
-
-        <form id="authForm">
-
-            <div class="field">
-                <label>USERNAME</label>
-                <input id="authUser" autocomplete="username" required>
-            </div>
-
-            <div class="field">
-                <label>PASSWORD</label>
-                <input id="authPass" type="password" autocomplete="current-password" required>
-            </div>
-
-            <button class="btn primary" id="authSubmit" type="submit">
-                LOGIN
-            </button>
-
-        </form>
-
-        <div class="auth-switch" id="authSwitch">
-            CREATE ACCOUNT
+    <!-- Top Header -->
+    <header>
+        <div class="brand-title">BuckTrack</div>
+        <div class="sys-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">LOCATING</span>
         </div>
-
-        <div class="auth-message" id="authMessage"></div>
-
-    </div>
-</div>
-
-<!-- APPLICATION -->
-
-<div id="app">
-
-<header class="header">
-
-    <div class="logo">
-        BUCKTRACK
-        <small>FIELD INTELLIGENCE</small>
-    </div>
-
-    <div class="header-right">
-
-        <div class="live">
-            <span class="live-dot"></span>
-            <span id="systemStatus">LIVE</span>
-        </div>
-
-        <button class="user-btn" onclick="logout()">
-            EXIT
-        </button>
-
-    </div>
-
-</header>
-
-<main class="main">
-
-<!-- =====================================================
-     MAP
-===================================================== -->
-
-<section class="view active" id="mapView">
-
-    <div id="map"></div>
-
-    <div class="map-top">
-
-        <div class="map-stat orange">
-            <label>Target</label>
-            <strong>GHOST 9</strong>
-        </div>
-
-        <div class="map-stat">
-            <label>Activity</label>
-            <strong id="mapActivity">87%</strong>
-        </div>
-
-        <div class="map-stat">
-            <label>Wind</label>
-            <strong id="mapWind">--</strong>
-        </div>
-
-        <div class="map-stat">
-            <label>Temp</label>
-            <strong id="mapTemp">--</strong>
-        </div>
-
-    </div>
-
-    <div class="map-tools">
-
-        <button class="map-tool" onclick="centerMap()">
-            ◎
-        </button>
-
-        <button class="map-tool" onclick="locateUser()">
-            📍
-        </button>
-
-        <button class="map-tool" onclick="togglePrediction()">
-            🎯
-        </button>
-
-        <button class="map-tool" onclick="toggleSatellite()">
-            🛰️
-        </button>
-
-    </div>
-
-    <div class="map-bottom">
-
-        <div class="command-card">
-
-            <div class="command-title">
-                <span>LIVE FIELD SOLUTION</span>
-                <span class="confidence" id="confidence">
-                    87% CONFIDENCE
-                </span>
-            </div>
-
-            <div class="command-main">
-                <strong id="interceptText">
-                    BEST INTERCEPT: NORTH RIDGE
-                </strong>
-                <span>🦌</span>
-            </div>
-
-            <div class="command-data">
-
-                <div>
-                    🌬 <span id="windDirection">--</span>
-                </div>
-
-                <div>
-                    🌡 <span id="mapTemperature">--</span>
-                </div>
-
-                <div>
-                    💧 <span id="mapHumidity">--</span>
-                </div>
-
-                <div>
-                    🕐 06:10–07:05
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</section>
-
-<!-- =====================================================
-     TARGET
-===================================================== -->
-
-<section class="view" id="targetView">
-
-<div class="panel">
-
-    <div class="card">
-
-        <div class="card-title">
-            TARGET PROFILE
-            <span class="confidence">ACTIVE</span>
-        </div>
-
-        <div class="target">
-
-            <div class="target-photo">
-                🦌
-            </div>
-
-            <div>
-                <h1>GHOST NINE</h1>
-                <p>PRIMARY TARGET // FIELD TRACK</p>
-                <p id="targetSightings">
-                    0 OBSERVATIONS
-                </p>
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            TARGET METRICS
-        </div>
-
-        <div class="grid2">
-
-            <div class="metric">
-                <label>ESTIMATED SCORE</label>
-                <strong class="orange">154 3/8"</strong>
-            </div>
-
-            <div class="metric">
-                <label>AGE CLASS</label>
-                <strong>4.5+ YEARS</strong>
-            </div>
-
-            <div class="metric">
-                <label>OBSERVATIONS</label>
-                <strong id="targetCount">0</strong>
-            </div>
-
-            <div class="metric">
-                <label>PRIMARY VECTOR</label>
-                <strong>NW → SE</strong>
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            24-HOUR ACTIVITY
-        </div>
-
-        <div class="activity" id="activityChart"></div>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            MOVEMENT MODEL
-        </div>
-
-        <div class="ai-box">
-
-            <strong>FIELD ANALYSIS</strong>
-
-            <p>
-                BUCKTRACK compares observation timestamps,
-                movement direction, weather and mapped
-                locations to identify recurring movement
-                patterns.
-            </p>
-
-            <strong>MODEL CONFIDENCE</strong>
-
-            <div class="progress">
-                <span id="modelProgress" style="width:87%"></span>
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-</section>
-
-<!-- =====================================================
-     PHOTOS
-===================================================== -->
-
-<section class="view" id="photosView">
-
-<div class="panel">
-
-    <div class="card">
-
-        <div class="card-title">
-            PHOTO INTELLIGENCE
-            <span id="photoCount">0</span>
-        </div>
-
-        <label class="upload">
-
-            <strong>
-                📸 IMPORT TRAIL-CAMERA PHOTOS
-            </strong>
-
-            <span>
-                Import large batches directly into the
-                local BUCKTRACK intelligence vault.
-            </span>
-
-            <input
-                class="file-input"
-                id="photoInput"
-                type="file"
-                accept="image/*"
-                multiple
-            >
-
-        </label>
-
-        <div class="import-progress" id="importProgress">
-
-            <div class="import-text" id="importText">
-                Preparing...
-            </div>
-
-            <div class="progress">
-                <span id="importBar" style="width:0"></span>
-            </div>
-
-        </div>
-
-        <button
-            class="btn primary"
-            onclick="document.getElementById('photoInput').click()">
-
-            SELECT PHOTOS
-
-        </button>
-
-        <button
-            class="btn"
-            onclick="exportDatabase()">
-
-            💾 EXPORT BUCKTRACK DATA
-
-        </button>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            VISUAL VAULT
-            <span id="vaultStatus">LOCAL</span>
-        </div>
-
-        <div class="gallery" id="gallery"></div>
-
-    </div>
-
-</div>
-
-</section>
-
-<!-- =====================================================
-     WEATHER
-===================================================== -->
-
-<section class="view" id="weatherView">
-
-<div class="panel">
-
-    <div class="card">
-
-        <div class="card-title">
-            LIVE FIELD WEATHER
-            <span id="weatherStatus">LOADING</span>
-        </div>
-
-        <div class="weather-hero">
-
-            <div>
-                <div class="temperature" id="temperature">
-                    --°
-                </div>
-
-                <div class="condition" id="condition">
-                    Waiting for weather...
+    </header>
+
+    <!-- Main Viewport Containers -->
+    <main>
+        <!-- 1. MAP VIEW -->
+        <div id="mapView" class="view active">
+            <div class="map-overlay-top">
+                <div class="hud-card">
+                    <span style="color: var(--text-muted)">LAT/LON:</span> 
+                    <span id="hudCoords" style="color: var(--brand-accent)">--.----, --.----</span>
                 </div>
             </div>
-
-            <div class="weather-icon" id="weatherIcon">
-                🌦️
-            </div>
-
+            <div id="map"></div>
         </div>
 
-        <div class="grid2" style="margin-top:12px">
-
-            <div class="metric">
-                <label>WIND</label>
-                <strong id="weatherWind">--</strong>
+        <!-- 2. FIELD CHAT / INTEL VIEW -->
+        <div id="chatView" class="view">
+            <div class="chat-header">
+                <span>CHANNEL: TACTICAL MESH #01</span>
+                <span>SECURE // LOCAL</span>
             </div>
-
-            <div class="metric">
-                <label>HUMIDITY</label>
-                <strong id="weatherHumidity">--</strong>
+            <div class="chat-logs" id="chatLogs">
+                <div class="chat-msg system">
+                    <div class="msg-meta">SYSTEM LOG // 00:00</div>
+                    Field Intelligence Chat online. Local-first mesh node ready for input.
+                </div>
             </div>
-
-            <div class="metric">
-                <label>PRESSURE</label>
-                <strong id="weatherPressure">--</strong>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Type tactical log or prompt..." autocomplete="off" />
+                <button class="btn-send" onclick="sendChatMessage()">SEND</button>
             </div>
-
-            <div class="metric">
-                <label>PRECIPITATION</label>
-                <strong id="weatherPrecip">--</strong>
-            </div>
-
         </div>
 
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            FIVE-DAY OUTLOOK
-        </div>
-
-        <div class="forecast" id="forecast"></div>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            HUNTING WINDOWS
-        </div>
-
-        <div class="grid2">
-
-            <div class="metric">
-                <label>MORNING</label>
-                <strong>FIRST LIGHT → 08:00</strong>
+        <!-- 3. WEATHER VIEW -->
+        <div id="weatherView" class="view generic-panel">
+            <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--brand-accent);">FIELD CONDITIONS</h2>
+            <div class="panel-grid">
+                <div class="metric-card">
+                    <span class="metric-label">Temperature</span>
+                    <span class="metric-val" id="wxTemp">--°C</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Baro Pressure</span>
+                    <span class="metric-val" id="wxBaro">---- hPa</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Wind Vector</span>
+                    <span class="metric-val" id="wxWind">-- km/h</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Precipitation</span>
+                    <span class="metric-val" id="wxPrecip">0.0 mm</span>
+                </div>
             </div>
-
-            <div class="metric">
-                <label>EVENING</label>
-                <strong>16:00 → LAST LIGHT</strong>
-            </div>
-
         </div>
 
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            STORM MODE
+        <!-- 4. MEDIA / DATA VAULT -->
+        <div id="vaultView" class="view generic-panel">
+            <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--brand-accent);">INTEL VAULT</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">IndexedDB photo logs & trail camera captures local storage.</p>
         </div>
+    </main>
 
-        <div class="ai-box">
-
-            <strong>❄️ WEATHER MOVEMENT ANALYSIS</strong>
-
-            <p id="stormText">
-                Waiting for current weather data.
-                When precipitation and pressure changes
-                are detected, BUCKTRACK can flag the
-                observation period for review.
-            </p>
-
-        </div>
-
-    </div>
-
-</div>
-
-</section>
-
-<!-- =====================================================
-     INTELLIGENCE
-===================================================== -->
-
-<section class="view" id="intelView">
-
-<div class="panel">
-
-    <div class="card">
-
-        <div class="card-title">
-            FIELD INTELLIGENCE ENGINE
-            <span class="confidence">ACTIVE</span>
-        </div>
-
-        <div class="ai-box">
-
-            <strong>🧠 OBSERVATION MODEL</strong>
-
-            <p>
-                The intelligence engine uses your stored
-                observations as evidence. Predictions are
-                presented as estimates rather than facts.
-            </p>
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            MOVEMENT CORRIDOR
-        </div>
-
-        <div class="grid2">
-
-            <div class="metric">
-                <label>BEDDING</label>
-                <strong>NORTH RIDGE</strong>
-            </div>
-
-            <div class="metric">
-                <label>FEEDING</label>
-                <strong>SOUTH VALLEY</strong>
-            </div>
-
-            <div class="metric">
-                <label>MORNING</label>
-                <strong>SE → NW</strong>
-            </div>
-
-            <div class="metric">
-                <label>EVENING</label>
-                <strong>NW → SE</strong>
-            </div>
-
-        </div>
-
-        <button class="btn primary" onclick="showPrediction()">
-            🎯 SHOW PREDICTION ON MAP
+    <!-- Navigation Bar -->
+    <nav>
+        <button class="nav-btn active" onclick="showView('mapView', this)">
+            <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+            <span>MAP</span>
         </button>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            FIELD DATA
-        </div>
-
-        <div class="grid3">
-
-            <div class="metric">
-                <label>PHOTOS</label>
-                <strong id="intelPhotos">0</strong>
-            </div>
-
-            <div class="metric">
-                <label>CAMERAS</label>
-                <strong>3</strong>
-            </div>
-
-            <div class="metric">
-                <label>LOCATION</label>
-                <strong id="locationStatus">WAITING</strong>
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            FIELD NOTES
-        </div>
-
-        <div class="field">
-            <label>OBSERVATION</label>
-            <textarea
-                id="fieldNotes"
-                placeholder="Record wind, deer movement, sign, weather, time and other field observations..."></textarea>
-        </div>
-
-        <button class="btn primary" onclick="saveNotes()">
-            SAVE FIELD NOTE
+        <button class="nav-btn" onclick="showView('chatView', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+            <span>CHAT</span>
         </button>
+        <button class="nav-btn" onclick="showView('weatherView', this)">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
 
-    </div>
-
-    <div class="card">
-
-        <div class="card-title">
-            DATABASE MANAGEMENT
-        </div>
-
-        <button class="btn" onclick="exportDatabase()">
-            💾 EXPORT BACKUP
+            <span>WEATHER</span>
         </button>
-
-        <label class="btn" style="display:block;text-align:center">
-            📥 IMPORT BACKUP
-            <input
-                id="backupInput"
-                class="file-input"
-                type="file"
-                accept=".json,application/json"
-            >
-        </label>
-
-        <button class="btn danger" onclick="clearPhotos()">
-            DELETE PHOTO VAULT
+        <button class="nav-btn" onclick="showView('vaultView', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+            <span>VAULT</span>
         </button>
-
-    </div>
-
-</div>
-
-</section>
-
-</main>
-
-<!-- NAV -->
-
-<nav class="bottom-nav">
-
-    <button class="nav-btn active"
-            onclick="showView('mapView',this)">
-        <span>🗺️</span>
-        MAP
-    </button>
-
-    <button class="nav-btn"
-            onclick="showView('targetView',this)">
-        <span>🦌</span>
-        TARGET
-    </button>
-
-    <button class="nav-btn"
-            onclick="showView('photosView',this)">
-        <span>📸</span>
-        PHOTOS
-    </button>
-
-    <button class="nav-btn"
-            onclick="showView('weatherView',this)">
-        <span>🌦️</span>
-        WEATHER
-    </button>
-
-    <button class="nav-btn"
-            onclick="showView('intelView',this)">
-        <span>🧠</span>
-        INTEL
-    </button>
-
-</nav>
-
-</div>
-
-<!-- IMAGE VIEWER -->
-
-<div class="viewer" id="viewer">
-
-    <button
-        class="viewer-close"
-        onclick="closeViewer()">
-        ×
-    </button>
-
-    <img id="viewerImage" alt="BUCKTRACK photo">
-
-</div>
-
-<div id="toast"></div>
-
-<script
-src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-crossorigin="">
-</script>
-
-<script>
-"use strict";
-
-/* =========================================================
-   BUCKTRACK CORE
-========================================================= */
-
-let DB = null;
-let MAP = null;
-let USER = null;
-
-let userLocation = {
-    lat: 45.816,
-    lon: -64.218
-};
-
-let predictionLayers = [];
-let satelliteMode = false;
-let satelliteLayer = null;
-let normalLayer = null;
-let registering = false;
-
-const $ = id => document.getElementById(id);
-
-function sleep(ms){
-    return new Promise(resolve => setTimeout(resolve,ms));
-}
-
-function toast(message){
-
-    const el = $("toast");
-
-    el.textContent = message;
-    el.classList.add("show");
-
-    clearTimeout(window.__toastTimer);
-
-    window.__toastTimer = setTimeout(() => {
-        el.classList.remove("show");
-    },2500);
-}
-
-
-/* =========================================================
-   SAFE BOOT
-========================================================= */
-
-async function boot(){
-
-    try{
-
-        bootStep("STARTING CORE",10);
-        await sleep(100);
-
-        bootStep("STARTING LOCAL DATABASE",25);
-        await initDatabase();
-
-        bootStep("STARTING MAP ENGINE",42);
-        initMap();
-
-        bootStep("REQUESTING FIELD LOCATION",58);
-        requestLocation();
-
-        bootStep("STARTING WEATHER ENGINE",72);
-        loadWeather();
-
-        bootStep("STARTING INTELLIGENCE",86);
-        createActivityChart();
-
-        bootStep("SYSTEM READY",100);
-        await sleep(300);
-
-        $("boot").style.display="none";
-
-        const session =
-            localStorage.getItem("bucktrack_session");
-
-        if(session){
-
-            USER = session;
-
-            loadPhotos();
-
-        }else{
-
-            $("auth").style.display="flex";
-
-        }
-
-    }catch(error){
-
-        console.error("BOOT FAILURE:",error);
-
-        bootStep("SAFE MODE",100);
-
-        await sleep(700);
-
-        $("boot").style.display="none";
-
-        $("auth").style.display="flex";
-
-    }
-
-}
-
-
-function bootStep(text,percent){
-
-    $("bootStatus").textContent=text;
-    $("bootBar").style.width=percent+"%";
-
-}
-
-
-/* =========================================================
-   DATABASE
-========================================================= */
-
-function initDatabase(){
-
-    return new Promise((resolve,reject)=>{
-
-        if(!window.indexedDB){
-
-            reject(new Error("IndexedDB unavailable"));
-            return;
-
-        }
-
-        let request;
-
-        try{
-
-            request =
-                indexedDB.open("BUCKTRACK_PRO_DB",3);
-
-        }catch(error){
-
-            reject(error);
-            return;
-
-        }
-
-        request.onupgradeneeded = event => {
-
-            const db = event.target.result;
-
-            if(!db.objectStoreNames.contains("users")){
-
-                db.createObjectStore(
-                    "users",
-                    {keyPath:"username"}
-                );
-
-            }
-
-            if(!db.objectStoreNames.contains("photos")){
-
-                const store =
-                    db.createObjectStore(
-                        "photos",
-                        {
-                            keyPath:"id",
-                            autoIncrement:true
-                        }
-                    );
-
-                store.createIndex(
-                    "username",
-                    "username",
-                    {unique:false}
-                );
-
-                store.createIndex(
-                    "timestamp",
-                    "timestamp",
-                    {unique:false}
-                );
-
-            }
-
-            if(!db.objectStoreNames.contains("notes")){
-
-                const store =
-                    db.createObjectStore(
-                        "notes",
-                        {
-                            keyPath:"id",
-                            autoIncrement:true
-                        }
-                    );
-
-                store.createIndex(
-                    "username",
-                    "username",
-                    {unique:false}
-                );
-
-            }
-
-        };
-
-        request.onsuccess = event => {
-
-            DB = event.target.result;
-
-            DB.onversionchange = () => DB.close();
-
-            resolve(DB);
-
-        };
-
-        request.onerror = () => {
-
-            reject(
-                new Error("IndexedDB initialization failed")
-            );
-
-        };
-
-    });
-
-}
-
-
-/* =========================================================
-   AUTH
-========================================================= */
-
-async function hashPassword(password){
-
-    if(!window.crypto?.subtle){
-
-        return password;
-
-    }
-
-    const buffer =
-        await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(password)
-        );
-
-    return Array
-        .from(new Uint8Array(buffer))
-        .map(v => v.toString(16).padStart(2,"0"))
-        .join("");
-
-}
-
-
-$("authSwitch").addEventListener("click",()=>{
-
-    registering = !registering;
-
-    $("authSubtitle").textContent =
-        registering
-        ? "CREATE YOUR FIELD PROFILE"
-        : "TACTICAL HUNTING INTELLIGENCE";
-
-    $("authSubmit").textContent =
-        registering
-        ? "CREATE ACCOUNT"
-        : "LOGIN";
-
-});
-
-
-$("authForm").addEventListener("submit",async event=>{
-
-    event.preventDefault();
-
-    if(!DB){
-
-        $("authMessage").textContent =
-            "DATABASE NOT READY";
-
-        return;
-
-    }
-
-    const username =
-        $("authUser").value.trim().toLowerCase();
-
-    const password =
-        $("authPass").value;
-
-    if(!username || !password) return;
-
-    const hash =
-        await hashPassword(password);
-
-    try{
-
-        if(registering){
-
-            const tx =
-                DB.transaction("users","readwrite");
-
-            tx.objectStore("users").add({
-                username,
-                password:hash,
-                createdAt:Date.now()
+    </nav>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // DOM Helper
+        const $ = id => document.getElementById(id);
+
+        let MAP = null;
+        let currentPos = [45.8167, -64.2167]; // Default fallback coordinates (Nova Scotia region)
+
+        // Initialize Application
+        document.addEventListener("DOMContentLoaded", () => {
+            initMap();
+            setupChatInput();
+            setupGeolocation();
+        });
+
+        // 1. MAP INITIALIZATION & FIXES
+        function initMap() {
+            MAP = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView(currentPos, 13);
+
+            // OpenStreetMap Dark/Tactical style layer via CartoDB DarkMatter
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                subdomains: 'abcd'
+            }).addTo(MAP);
+
+            // Re-align control position
+            L.control.zoom({ position: 'bottomright' }).addTo(MAP);
+
+            // Initial Marker
+            const userIcon = L.divIcon({
+                className: 'user-marker',
+                html: `<div style="width:14px;height:14px;background:#7ca982;border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px #7ca982;"></div>`,
+                iconSize: [14, 14]
             });
-
-            tx.oncomplete = () => {
-
-                login(username);
-
-            };
-
-            tx.onerror = () => {
-
-                $("authMessage").textContent =
-                    "USERNAME ALREADY EXISTS";
-
-            };
-
-        }else{
-
-            const tx =
-                DB.transaction("users","readonly");
-
-            const req =
-                tx.objectStore("users")
-                  .get(username);
-
-            req.onsuccess = () => {
-
-                const account = req.result;
-
-                if(
-                    account &&
-                    account.password === hash
-                ){
-
-                    login(username);
-
-                }else{
-
-                    $("authMessage").textContent =
-                        "INVALID USERNAME OR PASSWORD";
-
-                }
-
-            };
-
+            
+            L.marker(currentPos, { icon: userIcon }).addTo(MAP);
+            updateCoordsHUD(currentPos[0], currentPos[1]);
         }
 
-    }catch(error){
+        // Reliable View Switcher with Leaflet invalidateSize fix
+        function showView(id, button) {
+            document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
 
-        console.error(error);
+            const targetView = $(id);
+            if (targetView) targetView.classList.add("active");
+            if (button) button.classList.add("active");
 
-        $("authMessage").textContent =
-            "AUTHENTICATION ERROR";
+            // Fix broken Leaflet renders when switching tabs
+            if (id === "mapView" && MAP) {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        MAP.invalidateSize({ animate: false });
+                    }, 200);
+                });
+            }
 
-    }
-
-});
-
-
-function login(username){
-
-    USER = username;
-
-    localStorage.setItem(
-        "bucktrack_session",
-        username
-    );
-
-    $("auth").style.display="none";
-
-    $("authMessage").textContent="";
-
-    loadPhotos();
-
-    toast("BUCKTRACK ONLINE");
-
-}
-
-
-function logout(){
-
-    localStorage.removeItem(
-        "bucktrack_session"
-    );
-
-    location.reload();
-
-}
-
-
-/* =========================================================
-   MAP
-========================================================= */
-
-function initMap(){
-
-    try{
-
-        MAP =
-            L.map("map",{
-                zoomControl:false,
-                preferCanvas:true
-            })
-            .setView(
-                [userLocation.lat,userLocation.lon],
-                13
-            );
-
-        normalLayer =
-            L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                {
-                    maxZoom:19,
-                    attribution:"© OpenStreetMap"
-                }
-            ).addTo(MAP);
-
-        addFieldMarkers();
-
-    }catch(error){
-
-        console.error("MAP ERROR:",error);
-
-    }
-
-}
-
-
-function addFieldMarkers(){
-
-    if(!MAP)return;
-
-    const cameraIcon =
-        L.divIcon({
-            className:"",
-            html:
-                '<div style="background:#101711;border:2px solid #e47c28;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">📷</div>',
-            iconSize:[28,28],
-            iconAnchor:[14,14]
-        });
-
-    L.marker(
-        [45.816,-64.218],
-        {icon:cameraIcon}
-    )
-    .addTo(MAP)
-    .bindPopup(
-        "<b>📷 RIDGE TRAIL CAM 01</b><br>Primary funnel camera"
-    );
-
-
-    L.marker(
-        [45.808,-64.210],
-        {icon:cameraIcon}
-    )
-    .addTo(MAP)
-    .bindPopup(
-        "<b>📷 SOUTH MASH CAM</b><br>Feeding-area camera"
-    );
-
-
-    L.circleMarker(
-        [45.820,-64.224],
-        {
-            radius:8,
-            color:"#e47c28",
-            fillColor:"#e47c28",
-            fillOpacity:.9
+            if (id === "weatherView") {
+                fetchWeather(currentPos[0], currentPos[1]);
+            }
         }
-    )
-    .addTo(MAP)
-    .bindPopup(
-        "<b>🔥 SCRAPE CLUSTER</b><br>Observation point"
-    );
 
-
-    L.circle(
-        [45.828,-64.228],
-        {
-            radius:330,
-            color:"#d34c3e",
-            fillColor:"#d34c3e",
-            fillOpacity:.16,
-            weight:2
-        }
-    )
-    .addTo(MAP)
-    .bindPopup(
-        "<b>🛏 BEDDING AREA</b><br>Model-estimated zone"
-    );
-
-}
-
-
-function centerMap(){
-
-    if(!MAP)return;
-
-    MAP.setView(
-        [
-            userLocation.lat,
-            userLocation.lon
-        ],
-        14
-    );
-
-}
-
-
-function locateUser(){
-
-    if(!navigator.geolocation){
-
-        toast("LOCATION NOT SUPPORTED");
-        return;
-
-    }
-
-    navigator.geolocation.getCurrentPosition(
-
-        position => {
-
-            userLocation.lat =
-                position.coords.latitude;
-
-            userLocation.lon =
-                position.coords.longitude;
-
-            if(MAP){
-
-                MAP.setView(
-                    [
-                        userLocation.lat,
-                        userLocation.lon
-                    ],
-                    15
+        // 2. GEOLOCATION TRACKING
+        function setupGeolocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        currentPos = [pos.coords.latitude, pos.coords.longitude];
+                        if (MAP) MAP.setView(currentPos, 14);
+                        updateCoordsHUD(currentPos[0], currentPos[1]);
+                        
+                        $("statusDot").classList.add("online");
+                        $("statusText").innerText = "GPS READY";
+                    },
+                    err => {
+                        console.warn("Geolocation error, fallback active.", err);
+                        $("statusText").innerText = "GPS STATIC";
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
                 );
-
-                L.circleMarker(
-                    [
-                        userLocation.lat,
-                        userLocation.lon
-                    ],
-                    {
-                        radius:8,
-                        color:"#67afd0",
-                        fillColor:"#67afd0",
-                        fillOpacity:1
-                    }
-                )
-                .addTo(MAP)
-                .bindPopup("📍 YOUR LOCATION");
-
             }
-
-            $("locationStatus").textContent =
-                "GPS READY";
-
-            toast("LOCATION UPDATED");
-
-            loadWeather();
-
-        },
-
-        () => {
-
-            toast("LOCATION PERMISSION UNAVAILABLE");
-
-        },
-
-        {
-            enableHighAccuracy:true,
-            timeout:8000,
-            maximumAge:300000
         }
 
-    );
-
-}
-
-
-function requestLocation(){
-
-    if(!navigator.geolocation){
-
-        $("locationStatus").textContent =
-            "MANUAL";
-
-        return;
-
-    }
-
-    navigator.geolocation.getCurrentPosition(
-
-        position => {
-
-            userLocation.lat =
-                position.coords.latitude;
-
-            userLocation.lon =
-                position.coords.longitude;
-
-            $("locationStatus").textContent =
-                "GPS READY";
-
-            if(MAP){
-
-                MAP.setView(
-                    [
-                        userLocation.lat,
-                        userLocation.lon
-                    ],
-                    13
-                );
-
-            }
-
-            loadWeather();
-
-        },
-
-        () => {
-
-            $("locationStatus").textContent =
-                "DEFAULT";
-
-        },
-
-        {
-            enableHighAccuracy:true,
-            timeout:7000,
-            maximumAge:600000
+        function updateCoordsHUD(lat, lng) {
+            $("hudCoords").innerText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         }
 
-    );
-
-}
-
-
-/* =========================================================
-   PREDICTION
-========================================================= */
-
-function togglePrediction(){
-
-    if(predictionLayers.length){
-
-        clearPrediction();
-
-    }else{
-
-        showPrediction();
-
-    }
-
-}
-
-
-function clearPrediction(){
-
-    if(!MAP)return;
-
-    predictionLayers.forEach(layer=>{
-        try{
-            MAP.removeLayer(layer);
-        }catch(e){}
-    });
-
-    predictionLayers=[];
-
-    toast("PREDICTION LAYER OFF");
-
-}
-
-
-function showPrediction(){
-
-    if(!MAP)return;
-
-    clearPrediction();
-
-    const bedding =
-        L.circle(
-            [45.828,-64.228],
-            {
-                radius:350,
-                color:"#d34c3e",
-                fillColor:"#d34c3e",
-                fillOpacity:.22,
-                weight:2
-            }
-        )
-        .addTo(MAP)
-        .bindPopup(
-            "<b>🛏 MODEL BEDDING ZONE</b><br>Estimated from stored observations"
-        );
-
-
-    const corridor =
-        L.polyline(
-            [
-                [45.828,-64.228],
-                [45.821,-64.224],
-                [45.816,-64.218],
-                [45.810,-64.214],
-                [45.808,-64.210]
-            ],
-            {
-                color:"#e47c28",
-                weight:5,
-                dashArray:"11 8"
-            }
-        )
-        .addTo(MAP)
-        .bindPopup(
-            "<b>🦌 MOVEMENT CORRIDOR</b><br>Estimated bedding → feeding transition"
-        );
-
-
-    const intercept =
-        L.circle(
-            [45.816,-64.218],
-            {
-                radius:190,
-                color:"#ff9d49",
-                fillColor:"#ff9d49",
-                fillOpacity:.24,
-                weight:2
-            }
-        )
-        .addTo(MAP)
-        .bindPopup(
-            "<b>🎯 INTERCEPT ZONE</b><br>Model confidence: 87%"
-        );
-
-
-    predictionLayers = [
-        bedding,
-        corridor,
-        intercept
-    ];
-
-    MAP.fitBounds(
-        corridor.getBounds(),
-        {padding:[30,30]}
-    );
-
-    toast("FIELD PREDICTION ACTIVE");
-
-}
-
-
-function toggleSatellite(){
-
-    if(!MAP)return;
-
-    if(!satelliteLayer){
-
-        satelliteLayer =
-            L.tileLayer(
-                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-                {
-                    maxZoom:19,
-                    attribution:"Esri"
-                }
-            );
-
-    }
-
-    if(satelliteMode){
-
-        if(MAP.hasLayer(satelliteLayer))
-            MAP.removeLayer(satelliteLayer);
-
-        if(!MAP.hasLayer(normalLayer))
-            normalLayer.addTo(MAP);
-
-        satelliteMode=false;
-
-    }else{
-
-        if(MAP.hasLayer(normalLayer))
-            MAP.removeLayer(normalLayer);
-
-        satelliteLayer.addTo(MAP);
-
-        satelliteMode=true;
-
-    }
-
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-function showView(id,button){
-
-    document
-        .querySelectorAll(".view")
-        .forEach(view=>{
-            view.classList.remove("active");
-        });
-
-    document
-        .querySelectorAll(".nav-btn")
-        .forEach(btn=>{
-            btn.classList.remove("active");
-        });
-
-    const view=$(id);
-
-    if(view)
-        view.classList.add("active");
-
-    if(button)
-        button.classList.add("active");
-
-    if(id==="mapView" && MAP){
-
-        setTimeout(()=>{
-            MAP.invalidateSize();
-        },150);
-
-    }
-
-    if(id==="weatherView"){
-
-        loadWeather();
-
-    }
-
-}
-
-
-/* =========================================================
-   WEATHER
-========================================================= */
-
-async function loadWeather(){
-
-    try{
-
-        const url =
-            "https://api.open-meteo.com/v1/forecast"+
-            "?latitude="+encodeURIComponent(userLocation.lat)+
-            "&longitude="+encodeURIComponent(userLocation.lon)+
-            "&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure"+
-            "&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m"+
-            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"+
-            "&timezone=auto"+
-            "&forecast_days=5";
-
-        const response =
-            await fetch(
-                url,
-                {
-                    signal:AbortSignal.timeout(8000)
-                }
-            );
-
-        if(!response.ok)
-            throw new Error("Weather request failed");
-
-        const data =
-            await response.json();
-
-        updateWeatherUI(data);
-
-        $("weatherStatus").textContent =
-            "LIVE";
-
-        $("systemStatus").textContent =
-            "LIVE";
-
-    }catch(error){
-
-        console.warn(
-            "WEATHER ERROR:",
-            error
-        );
-
-        $("weatherStatus").textContent =
-            "OFFLINE";
-
-        $("condition").textContent =
-            "Weather temporarily unavailable";
-
-        $("systemStatus").textContent =
-            "WEATHER FALLBACK";
-
-    }
-
-}
-
-
-function updateWeatherUI(data){
-
-    const c=data.current;
-
-    const temp =
-        Math.round(c.temperature_2m);
-
-    const wind =
-        Math.round(c.wind_speed_10m);
-
-    const humidity =
-        c.relative_humidity_2m;
-
-    const pressure =
-        Math.round(c.surface_pressure);
-
-    const precip =
-        Number(c.precipitation || 0);
-
-    const direction =
-        degreesToCompass(
-            c.wind_direction_10m
-        );
-
-    $("temperature").textContent =
-        temp+"°";
-
-    $("condition").textContent =
-        weatherText(c.weather_code);
-
-    $("weatherWind").textContent =
-        wind+" km/h "+direction;
-
-    $("weatherHumidity").textContent =
-        humidity+"%";
-
-    $("weatherPressure").textContent =
-        pressure+" hPa";
-
-    $("weatherPrecip").textContent =
-        precip+" mm";
-
-    $("mapTemp").textContent =
-        temp+"°";
-
-    $("mapTemperature").textContent =
-        temp+"°";
-
-    $("mapHumidity").textContent =
-        humidity+"%";
-
-    $("mapWind").textContent =
-        direction;
-
-    $("windDirection").textContent =
-        direction;
-
-    $("windDirection").title =
-        "Wind direction "+c.wind_direction_10m+"°";
-
-    $("weatherIcon").textContent =
-        weatherEmoji(c.weather_code);
-
-    renderForecast(data.daily);
-
-    analyzeStorm(data);
-
-}
-
-
-function renderForecast(daily){
-
-    const container =
-        $("forecast");
-
-    container.innerHTML="";
-
-    if(!daily)return;
-
-    for(let i=0;i<Math.min(5,daily.time.length);i++){
-
-        const item =
-            document.createElement("div");
-
-        item.className="forecast-item";
-
-        const date =
-            new Date(
-                daily.time[i]+"T12:00:00"
-            );
-
-        const day =
-            date.toLocaleDateString(
-                undefined,
-                {weekday:"short"}
-            );
-
-        item.innerHTML = `
-            <small>${escapeHTML(day)}</small>
-            <div>${weatherEmoji(daily.weather_code[i])}</div>
-            <b>${Math.round(daily.temperature_2m_max[i])}°</b>
-            <small>${Math.round(daily.temperature_2m_min[i])}°</small>
-        `;
-
-        container.appendChild(item);
-
-    }
-
-}
-
-
-function analyzeStorm(data){
-
-    const code =
-        data.current.weather_code;
-
-    const precip =
-        Number(data.current.precipitation||0);
-
-    let message =
-        "No significant active precipitation signal. Continue comparing field observations with weather changes.";
-
-    if(code>=71 && code<=77){
-
-        message =
-            "SNOW SIGNAL DETECTED. Compare movement observations before, during and after the event.";
-
-    }else if(code>=51 && code<=67){
-
-        message =
-            "PRECIPITATION SIGNAL DETECTED. Weather may be useful as an observation variable.";
-
-    }else if(precip>0){
-
-        message =
-            "ACTIVE PRECIPITATION. Log new sightings carefully against the event timing.";
-
-    }
-
-    $("stormText").textContent =
-        message;
-
-}
-
-
-function weatherText(code){
-
-    if(code===0)return"Clear";
-    if(code<=3)return"Partly cloudy";
-    if(code<=48)return"Fog";
-    if(code<=67)return"Rain";
-    if(code<=77)return"Snow";
-    if(code<=82)return"Showers";
-    if(code<=86)return"Snow showers";
-    if(code>=95)return"Thunderstorm";
-
-    return"Variable";
-
-}
-
-
-function weatherEmoji(code){
-
-    if(code===0)return"☀️";
-    if(code<=3)return"🌤️";
-    if(code<=48)return"🌫️";
-    if(code<=67)return"🌧️";
-    if(code<=77)return"❄️";
-    if(code<=82)return"🌦️";
-    if(code<=86)return"🌨️";
-    if(code>=95)return"⛈️";
-
-    return"🌦️";
-
-}
-
-
-function degreesToCompass(degrees){
-
-    if(!Number.isFinite(degrees))
-        return "--";
-
-    const dirs=[
-        "N","NE","E","SE",
-        "S","SW","W","NW"
-    ];
-
-    return dirs[
-        Math.round(degrees/45)%8
-    ];
-
-}
-
-
-/* =========================================================
-   PHOTOS
-========================================================= */
-
-$("photoInput").addEventListener(
-    "change",
-    event=>{
-        processPhotos(event.target.files);
-        event.target.value="";
-    }
-);
-
-
-async function processPhotos(fileList){
-
-    if(!USER){
-
-        toast("LOGIN REQUIRED");
-        return;
-
-    }
-
-    const files =
-        Array.from(fileList||[])
-        .filter(file =>
-            file.type.startsWith("image/")
-        );
-
-    if(!files.length)return;
-
-    $("importProgress").classList.add("active");
-
-    let completed=0;
-
-    for(const file of files){
-
-        try{
-
-            const dataUrl =
-                await readFile(file);
-
-            const timestamp =
-                file.lastModified ||
-                Date.now();
-
-            const date =
-                new Date(timestamp);
-
-            const hour =
-                date.getHours();
-
-            let direction =
-                "INTERNAL";
-
-            let phase =
-                "CORE MOVEMENT";
-
-            if(hour>=5 && hour<=9){
-
-                direction="SE → NW";
-                phase="MORNING / BED";
-
-            }else if(hour>=16 && hour<=20){
-
-                direction="NW → SE";
-                phase="EVENING / FEED";
-
-            }
-
-            await addPhoto({
-
-                username:USER,
-
-                fileName:file.name,
-
-                dataUrl:dataUrl,
-
-                timestamp:timestamp,
-
-                direction:direction,
-
-                phase:phase,
-
-                camera:"FIELD IMPORT",
-
-                latitude:userLocation.lat,
-
-                longitude:userLocation.lon
-
+        // 3. TACTICAL CHAT SYSTEM
+        function setupChatInput() {
+            $("chatInput").addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendChatMessage();
             });
-
-            completed++;
-
-            const percent =
-                Math.round(
-                    completed/files.length*100
-                );
-
-            $("importText").textContent =
-                "IMPORTING "+
-                completed+
-                " / "+
-                files.length+
-                " — "+
-                file.name;
-
-            $("importBar").style.width =
-                percent+"%";
-
-        }catch(error){
-
-            console.warn(
-                "PHOTO IMPORT ERROR:",
-                file.name,
-                error
-            );
-
         }
 
-        /*
-         * Yield to browser so very large imports
-         * don't lock the UI.
-         */
+        function sendChatMessage() {
+            const input = $("chatInput");
+            const text = input.value.trim();
+            if (!text) return;
 
-        if(completed%5===0)
-            await sleep(0);
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    }
+            // Append User Message
+            appendMessage("USER", text, timeStr, "user");
+            input.value = "";
 
-    await loadPhotos();
-
-    setTimeout(()=>{
-
-        $("importProgress")
-            .classList.remove("active");
-
-        $("importBar").style.width="0";
-
-    },700);
-
-    toast(
-        "IMPORTED "+
-        completed+
-        " PHOTOS"
-    );
-
-}
-
-
-function readFile(file){
-
-    return new Promise((resolve,reject)=>{
-
-        const reader =
-            new FileReader();
-
-        reader.onload =
-            () => resolve(reader.result);
-
-        reader.onerror =
-            () => reject(
-                new Error("Unable to read image")
-            );
-
-        reader.readAsDataURL(file);
-
-    });
-
-}
-
-
-function addPhoto(photo){
-
-    return new Promise((resolve,reject)=>{
-
-        try{
-
-            const tx =
-                DB.transaction(
-                    "photos",
-                    "readwrite"
-                );
-
-            tx.objectStore("photos")
-              .add(photo);
-
-            tx.oncomplete=resolve;
-
-            tx.onerror=()=>{
-                reject(tx.error);
-            };
-
-        }catch(error){
-
-            reject(error);
-
+            // Simulated AI/System Auto-Reply
+            setTimeout(() => {
+                const response = getTacticalResponse(text);
+                appendMessage("INTEL-BOT", response, timeStr, "system");
+            }, 600);
         }
 
-    });
-
-}
-
-
-async function loadPhotos(){
-
-    if(!USER || !DB)return;
-
-    return new Promise(resolve=>{
-
-        try{
-
-            const tx =
-                DB.transaction(
-                    "photos",
-                    "readonly"
-                );
-
-            const req =
-                tx.objectStore("photos")
-                  .index("username")
-                  .getAll(USER);
-
-            req.onsuccess=()=>{
-
-                const photos =
-                    req.result || [];
-
-                renderGallery(photos);
-
-                updatePhotoStats(photos);
-
-                resolve();
-
-            };
-
-            req.onerror=()=>{
-                resolve();
-            };
-
-        }catch(error){
-
-            console.warn(error);
-            resolve();
-
+        function appendMessage(sender, text, time, type) {
+            const logs = $("chatLogs");
+            const msgNode = document.createElement("div");
+            msgNode.className = `chat-msg ${type}`;
+            msgNode.innerHTML = `
+                <div class="msg-meta">${sender} // ${time}</div>
+                <div>${escapeHTML(text)}</div>
+            `;
+            logs.appendChild(msgNode);
+            logs.scrollTop = logs.scrollHeight;
         }
 
-    });
-
-}
-
-
-function renderGallery(photos){
-
-    const gallery =
-        $("gallery");
-
-    gallery.innerHTML="";
-
-    $("photoCount").textContent =
-        photos.length;
-
-    $("intelPhotos").textContent =
-        photos.length;
-
-    $("targetCount").textContent =
-        photos.length;
-
-    $("targetSightings").textContent =
-        photos.length+
-        " OBSERVATIONS";
-
-    /*
-     * Don't insert thousands of DOM nodes.
-     * The complete database remains stored locally.
-     */
-
-    const visible =
-        photos
-        .slice()
-        .sort(
-            (a,b)=>
-                (b.timestamp||0)-
-                (a.timestamp||0)
-        )
-        .slice(0,150);
-
-    if(!visible.length){
-
-        gallery.innerHTML = `
-            <div style="
-                grid-column:1/-1;
-                text-align:center;
-                padding:35px;
-                color:#829087;
-                font-size:10px">
-                NO PHOTOS IN VAULT
-            </div>
-        `;
-
-        return;
-
-    }
-
-    visible.forEach(photo=>{
-
-        const item =
-            document.createElement("div");
-
-        item.className="photo";
-
-        const img =
-            document.createElement("img");
-
-        img.loading="lazy";
-        img.src=photo.dataUrl;
-        img.alt=photo.fileName||"BUCKTRACK";
-
-        img.addEventListener(
-            "click",
-            ()=>{
-                openViewer(photo.dataUrl);
-            }
-        );
-
-        const info =
-            document.createElement("div");
-
-        info.className="photo-info";
-
-        info.textContent =
-            (photo.direction||"UNKNOWN")+
-            " • "+
-            (photo.phase||"");
-
-        const del =
-            document.createElement("button");
-
-        del.className="photo-delete";
-        del.textContent="×";
-
-        del.onclick=event=>{
-
-            event.stopPropagation();
-
-            deletePhoto(photo.id);
-
-        };
-
-        item.appendChild(img);
-        item.appendChild(info);
-        item.appendChild(del);
-
-        gallery.appendChild(item);
-
-    });
-
-}
-
-
-function updatePhotoStats(photos){
-
-    $("photoCount").textContent =
-        photos.length;
-
-    $("intelPhotos").textContent =
-        photos.length;
-
-    $("targetCount").textContent =
-        photos.length;
-
-    $("targetSightings").textContent =
-        photos.length+
-        " OBSERVATIONS";
-
-    createActivityChart(photos);
-
-}
-
-
-function deletePhoto(id){
-
-    if(!DB)return;
-
-    const tx =
-        DB.transaction(
-            "photos",
-            "readwrite"
-        );
-
-    tx.objectStore("photos")
-      .delete(id);
-
-    tx.oncomplete=()=>{
-
-        loadPhotos();
-
-        toast("PHOTO REMOVED");
-
-    };
-
-}
-
-
-function clearPhotos(){
-
-    if(!USER || !DB)return;
-
-    const confirmation =
-        confirm(
-            "Delete the entire local photo vault for this account?"
-        );
-
-    if(!confirmation)return;
-
-    const tx =
-        DB.transaction(
-            "photos",
-            "readwrite"
-        );
-
-    const store =
-        tx.objectStore("photos");
-
-    const index =
-        store.index("username");
-
-    index.openCursor(
-        IDBKeyRange.only(USER)
-    ).onsuccess=event=>{
-
-        const cursor =
-            event.target.result;
-
-        if(cursor){
-
-            cursor.delete();
-            cursor.continue();
-
+        function getTacticalResponse(input) {
+            const lower = input.toLowerCase();
+            if (lower.includes("wind") || lower.includes("weather")) return "Current conditions logged. Recommendation: Check stand positions downwind of bed zones.";
+            if (lower.includes("buck") || lower.includes("trail")) return "Target log registered to field intel database. Tagging telemetry data.";
+            return `Log received: "${input}". Coordinates pinned to session trace.`;
         }
 
-    };
-
-    tx.oncomplete=()=>{
-
-        loadPhotos();
-
-        toast("PHOTO VAULT CLEARED");
-
-    };
-
-}
-
-
-/* =========================================================
-   PHOTO VIEWER
-========================================================= */
-
-function openViewer(src){
-
-    $("viewerImage").src=src;
-
-    $("viewer").classList.add("active");
-
-}
-
-
-function closeViewer(){
-
-    $("viewer").classList.remove("active");
-
-    $("viewerImage").src="";
-
-}
-
-
-$("viewer").addEventListener(
-    "click",
-    event=>{
-
-        if(event.target === $("viewer"))
-            closeViewer();
-
-    }
-);
-
-
-/* =========================================================
-   ACTIVITY MODEL
-========================================================= */
-
-function createActivityChart(photos=[]){
-
-    const chart =
-        $("activityChart");
-
-    if(!chart)return;
-
-    chart.innerHTML="";
-
-    const values =
-        new Array(24).fill(0);
-
-    photos.forEach(photo=>{
-
-        if(!photo.timestamp)return;
-
-        const hour =
-            new Date(
-                photo.timestamp
-            ).getHours();
-
-        if(hour>=0 && hour<24)
-            values[hour]++;
-
-    });
-
-    /*
-     * When there are no observations,
-     * show a neutral visual model rather
-     * than pretending observations exist.
-     */
-
-    if(!photos.length){
-
-        const demo=[
-            3,2,1,1,2,5,8,12,8,4,2,2,
-            2,2,3,5,9,13,16,11,7,4,3,2
-        ];
-
-        demo.forEach((value,hour)=>{
-
-            addActivityBar(
-                chart,
-                value,
-                16,
-                hour
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
             );
+        }
 
-        });
-
-        return;
-
-    }
-
-    const max =
-        Math.max(...values,1);
-
-    values.forEach((value,hour)=>{
-
-        addActivityBar(
-            chart,
-            value,
-            max,
-            hour
-        );
-
-    });
-
-}
-
-
-function addActivityBar(
-    chart,
-    value,
-    max,
-    hour
-){
-
-    const bar =
-        document.createElement("div");
-
-    bar.className =
-        "activity-bar"+
-        (
-            (hour>=5&&hour<=8)||
-            (hour>=17&&hour<=20)
-            ?" hot":""
-        );
-
-    const height =
-        Math.max(
-            3,
-            (value/max)*100
-        );
-
-    bar.style.height =
-        height+"%";
-
-    bar.title =
-        hour+
-        ":00 — "+
-        value+
-        " observations";
-
-    chart.appendChild(bar);
-
-}
-
-
-/* =========================================================
-   FIELD NOTES
-========================================================= */
-
-function saveNotes(){
-
-    const text =
-        $("fieldNotes").value.trim();
-
-    if(!text){
-
-        toast("ENTER A FIELD NOTE");
-        return;
-
-    }
-
-    if(!DB||!USER){
-
-        toast("DATABASE NOT READY");
-        return;
-
-    }
-
-    const tx =
-        DB.transaction(
-            "notes",
-            "readwrite"
-        );
-
-    tx.objectStore("notes")
-      .add({
-
-          username:USER,
-
-          text:text,
-
-          timestamp:Date.now(),
-
-          latitude:userLocation.lat,
-
-          longitude:userLocation.lon
-
-      });
-
-    tx.oncomplete=()=>{
-
-        $("fieldNotes").value="";
-
-        toast("FIELD NOTE SAVED");
-
-    };
-
-}
-
-
-/* =========================================================
-   DATABASE EXPORT
-========================================================= */
-
-async function exportDatabase(){
-
-    if(!DB||!USER){
-
-        toast("DATABASE NOT READY");
-        return;
-
-    }
-
-    try{
-
-        const photos =
-            await getAllStore(
-                "photos",
-                "username"
-            );
-
-        const notes =
-            await getAllStore(
-                "notes",
-                "username"
-            );
-
-        const backup = {
-
-            format:"BUCKTRACK_BACKUP",
-
-            version:1,
-
-            exportedAt:
-                new Date().toISOString(),
-
-            username:USER,
-
-            location:userLocation,
-
-            photos:photos,
-
-            notes:notes
-
-        };
-
-        const blob =
-            new Blob(
-                [
-                    JSON.stringify(
-                        backup
-                    )
-                ],
-                {
-                    type:"application/json"
+        // 4. OPEN-METEO WEATHER FETCHING
+        async function fetchWeather(lat, lng) {
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true&hourly=surface_pressure,precipitation`);
+                const data = await res.json();
+                
+                if (data.current_weather) {
+                    $("wxTemp").innerText = `${data.current_weather.temperature}°C`;
+                    $("wxWind").innerText = `${data.current_weather.windspeed} km/h`;
                 }
-            );
-
-        const url =
-            URL.createObjectURL(blob);
-
-        const link =
-            document.createElement("a");
-
-        link.href=url;
-
-        link.download =
-            "BUCKTRACK_BACKUP_"+
-            new Date()
-            .toISOString()
-            .slice(0,10)+
-            ".json";
-
-        link.click();
-
-        setTimeout(()=>{
-            URL.revokeObjectURL(url);
-        },1000);
-
-        toast("BACKUP EXPORTED");
-
-    }catch(error){
-
-        console.error(error);
-
-        toast("BACKUP FAILED");
-
-    }
-
-}
-
-
-function getAllStore(storeName,indexName){
-
-    return new Promise(resolve=>{
-
-        const tx =
-            DB.transaction(
-                storeName,
-                "readonly"
-            );
-
-        const store =
-            tx.objectStore(storeName);
-
-        let request;
-
-        if(indexName){
-
-            request =
-                store
-                .index(indexName)
-                .getAll(USER);
-
-        }else{
-
-            request =
-                store.getAll();
-
+                if (data.hourly) {
+                    $("wxBaro").innerText = `${data.hourly.surface_pressure[0]} hPa`;
+                    $("wxPrecip").innerText = `${data.hourly.precipitation[0]} mm`;
+                }
+            } catch (err) {
+                console.error("Weather data unavailable", err);
+            }
         }
-
-        request.onsuccess=()=>{
-            resolve(request.result||[]);
-        };
-
-        request.onerror=()=>{
-            resolve([]);
-        };
-
-    });
-
-}
-
-
-/* =========================================================
-   BACKUP IMPORT
-========================================================= */
-
-$("backupInput").addEventListener(
-    "change",
-    event=>{
-
-        const file =
-            event.target.files[0];
-
-        if(!file)return;
-
-        importBackup(file);
-
-        event.target.value="";
-
-    }
-);
-
-
-async function importBackup(file){
-
-    try{
-
-        const text =
-            await file.text();
-
-        const backup =
-            JSON.parse(text);
-
-        if(
-            !backup ||
-            backup.format!=="BUCKTRACK_BACKUP"
-        ){
-
-            throw new Error(
-                "Invalid BUCKTRACK backup"
-            );
-
-        }
-
-        if(
-            !confirm(
-                "Import this backup into the current account?"
-            )
-        ){
-
-            return;
-
-        }
-
-        const photos =
-            Array.isArray(backup.photos)
-            ?backup.photos
-            :[];
-
-        for(const photo of photos){
-
-            await addPhoto({
-                username:USER,
-                fileName:photo.fileName||"imported",
-                dataUrl:photo.dataUrl,
-                timestamp:photo.timestamp||Date.now(),
-                direction:photo.direction||"UNKNOWN",
-                phase:photo.phase||"UNKNOWN",
-                camera:photo.camera||"IMPORTED",
-                latitude:photo.latitude||userLocation.lat,
-                longitude:photo.longitude||userLocation.lon
-            });
-
-        }
-
-        await loadPhotos();
-
-        toast(
-            "IMPORTED "+
-            photos.length+
-            " PHOTOS"
-        );
-
-    }catch(error){
-
-        console.error(error);
-
-        toast("BACKUP IMPORT FAILED");
-
-    }
-
-}
-
-
-/* =========================================================
-   SECURITY / HTML SAFETY
-========================================================= */
-
-function escapeHTML(value){
-
-    return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-
-}
-
-
-/* =========================================================
-   GLOBAL ERROR RECOVERY
-========================================================= */
-
-window.addEventListener(
-    "error",
-    event=>{
-
-        console.error(
-            "BUCKTRACK ERROR",
-            event.error
-        );
-
-        const status =
-            $("systemStatus");
-
-        if(status)
-            status.textContent =
-                "RECOVERY MODE";
-
-    }
-);
-
-
-window.addEventListener(
-    "unhandledrejection",
-    event=>{
-
-        console.error(
-            "BUCKTRACK ASYNC ERROR",
-            event.reason
-        );
-
-    }
-);
-
-
-/* =========================================================
-   START APPLICATION
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    ()=>{
-        boot();
-    }
-);
-
-</script>
-
+    </script>
 </body>
 </html>
