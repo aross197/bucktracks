@@ -3,783 +3,474 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#07100b">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<title>area51-trailcam // Tactical Command</title>
+<meta name="theme-color" content="#030705">
+<title>area51-trailcam // Tactical Command OS</title>
 
 <link rel="preconnect" href="https://unpkg.com">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#050806;
-  --panel:#0a110d;
-  --panel2:#0d1711;
-  --panel3:#111d15;
-  --line:#1b2b20;
-  --line2:#29402f;
+  --bg:#030705;
+  --panel:rgba(6, 14, 9, 0.82);
+  --panel-solid:#060e09;
+  --panel-hover:rgba(10, 24, 15, 0.9);
+  --border:rgba(30, 68, 43, 0.4);
+  --border-bright:rgba(76, 255, 136, 0.5);
   --green:#4cff88;
-  --green2:#19d66b;
+  --green-glow:rgba(76, 255, 136, 0.25);
   --lime:#b7ff55;
   --cyan:#42d9ff;
   --amber:#ffbd4a;
   --red:#ff5264;
-  --text:#edf7ef;
-  --muted:#718178;
-  --shadow:0 14px 45px rgba(0,0,0,.45);
-  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --text:#e4f4ea;
+  --muted:#6f8c7b;
+  --shadow:0 20px 50px rgba(0,0,0,0.6);
+  --font-sans:'Plus Jakarta Sans', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
 }
 
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-sans);}
+
+/* Background grid fx */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(76, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events:none;
+  z-index:9999;
 }
 
-html,body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:
-    radial-gradient(rgba(27,43,32,0.35) 1px, transparent 1px),
-    var(--bg);
-  background-size: 24px 24px;
-  color:var(--text);
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-
-button,input,textarea,select{
-  font:inherit;
-}
-
-button{
-  cursor:pointer;
-}
+button,input,textarea,select{font:inherit;}
+button{cursor:pointer;}
 
 .app{
   height:100vh;
   display:grid;
-  grid-template-rows:60px 1fr 30px;
+  grid-template-rows:64px 1fr 32px;
 }
 
-/* HEADER */
+/* TOPBAR */
 .topbar{
-  background:rgba(8,16,11,0.95);
-  border-bottom:1px solid var(--line);
+  background:rgba(4, 10, 6, 0.95);
+  border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 16px;
-  position:relative;
+  padding:0 20px;
+  backdrop-filter:blur(16px);
   z-index:1000;
-  backdrop-filter:blur(10px);
 }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg, rgba(76,255,136,0.2), rgba(76,255,136,0.05));
+  border:1px solid var(--border-bright);
+  display:grid;place-items:center;font-size:18px;
+  box-shadow:0 0 15px var(--green-glow);
 }
+.brand h1{font-family:var(--font-mono);font-size:13px;letter-spacing:1.5px;color:var(--text);font-weight:700;}
+.brand span{color:var(--green);font-size:10px;display:block;}
 
-.brand h1{
-  font-family:var(--mono);
-  font-size:14px;
-  letter-spacing:1px;
-  color: var(--text);
-}
-
-.header-actions{
-  display:flex;
-  gap:6px;
-}
-
+.header-actions{display:flex;gap:8px;}
 .icon-btn{
-  border:1px solid var(--line2);
-  background:#0b150e;
+  border:1px solid var(--border);
+  background:var(--panel-solid);
   color:var(--text);
-  width:32px;
-  height:32px;
-  border-radius:8px;
-  display:grid;
-  place-items:center;
-  font-size:14px;
+  width:36px;height:36px;
+  border-radius:10px;
+  display:grid;place-items:center;
+  transition:all .2s ease;
 }
-
-.icon-btn:hover{
-  border-color:var(--green);
-  color:var(--green);
-}
+.icon-btn:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 12px var(--green-glow);}
 
 /* MAIN GRID */
 .main{
   min-height:0;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 420px;
+  grid-template-columns:1fr 440px;
 }
 
-.workspace{
-  min-width:0;
-  min-height:0;
-  position:relative;
-  background:transparent;
-}
+.workspace{position:relative;background:#020503;}
+#map{width:100%;height:100%;}
 
-#map{
-  width:100%;
-  height:100%;
-  background:#08100b;
+/* MAP HUD OVERLAYS */
+.map-hud-top{
+  position:absolute;top:16px;left:16px;right:16px;z-index:500;
+  display:flex;justify-content:space-between;pointer-events:none;
 }
-
-/* MAP UI OVERLAYS */
-.map-top{
-  position:absolute;
-  top:14px;
-  left:14px;
-  right:14px;
-  z-index:500;
-  display:flex;
-  justify-content:space-between;
-  pointer-events:none;
-}
-
-.map-title{
+.map-badge{
   pointer-events:auto;
-  background:rgba(6,12,8,.92);
-  border:1px solid var(--line2);
-  border-radius:10px;
-  padding:10px 12px;
-  backdrop-filter:blur(12px);
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 14px;
+  backdrop-filter:blur(14px);
   box-shadow:var(--shadow);
 }
+.map-badge strong{display:block;font:700 10px var(--font-mono);color:var(--green);letter-spacing:1px;}
+.map-badge span{display:block;font:9px var(--font-mono);color:var(--muted);margin-top:2px;}
 
-.map-title strong{
-  display:block;
-  font:11px var(--mono);
-  color:var(--green);
-  letter-spacing:1px;
-}
-
-.map-title span{
-  display:block;
-  font:9px var(--mono);
-  color:var(--muted);
-  margin-top:2px;
-}
-
-.map-actions{
-  display:flex;
-  gap:5px;
-  pointer-events:auto;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-
-.map-action{
-  background:rgba(6,12,8,.93);
+.map-controls{display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;}
+.control-pill{
+  background:var(--panel);
   color:var(--text);
-  border:1px solid var(--line2);
-  border-radius:8px;
-  padding:8px 10px;
-  font:10px var(--mono);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:8px 12px;
+  font:600 10px var(--font-mono);
+  backdrop-filter:blur(14px);
+  transition:all .2s;
 }
-
-.map-action:hover, .map-action.active{
+.control-pill:hover,.control-pill.active{
   color:var(--green);
   border-color:var(--green);
-  background:rgba(12,38,22,.85);
+  background:rgba(12,38,22,0.9);
+  box-shadow:0 0 15px var(--green-glow);
 }
 
 /* SIDEBAR */
 .sidebar{
   min-height:0;
   overflow-y:auto;
-  background:linear-gradient(180deg,rgba(10,17,13,0.96),rgba(7,16,11,0.96));
-  border-left:1px solid var(--line);
-  padding:12px;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  padding:16px;
   display:flex;
   flex-direction:column;
-  gap:12px;
-  backdrop-filter:blur(12px);
+  gap:16px;
+  backdrop-filter:blur(20px);
+}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* FEED & TABS */
+.section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  font:700 11px var(--font-mono);color:var(--green);letter-spacing:1.2px;
+}
+.filter-row{display:flex;gap:6px;margin-top:8px;}
+.tab-chip{
+  flex:1;border:1px solid var(--border);background:var(--panel-solid);
+  color:var(--muted);padding:8px;border-radius:8px;
+  font:700 10px var(--font-mono);letter-spacing:.8px;text-align:center;
+  transition:all .2s;
+}
+.tab-chip.active{
+  background:var(--green);color:#030705;border-color:var(--green);
+  box-shadow:0 0 15px var(--green-glow);
 }
 
-.sidebar::-webkit-scrollbar{
-  width:5px;
-}
-
-.sidebar::-webkit-scrollbar-thumb{
-  background:#213326;
-  border-radius:5px;
-}
-
-/* FEED HEADER & FILTER TABS */
-.feed-header-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font:700 11px var(--mono);
-  color:var(--green);
-  letter-spacing:1px;
-  margin-bottom:2px;
-}
-
-.filter-tabs{
-  display:flex;
-  gap:6px;
-}
-
-.tab-btn{
-  border:1px solid var(--line2);
-  background:#0b150e;
-  color:var(--muted);
-  padding:6px 12px;
-  border-radius:6px;
-  font:700 10px var(--mono);
-  letter-spacing:.5px;
-}
-
-.tab-btn.active{
-  background:var(--green);
-  color:#07100a;
-  border-color:var(--green);
-  box-shadow:0 0 15px rgba(76,255,136,.25);
-}
-
-/* CAPTURE CARD DESIGN (MATCHING SCREENSHOT) */
-.capture-feed{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  max-height: calc(100vh - 180px);
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
+/* CAPTURE FEED LIST */
+.capture-feed{display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 240px);overflow-y:auto;padding-right:2px;}
 .capture-card{
-  background:linear-gradient(145deg,#0c1610,#080f0a);
-  border:1px solid var(--line2);
-  border-radius:12px;
+  background:linear-gradient(145deg, rgba(8,20,12,0.95), rgba(4,10,6,0.95));
+  border:1px solid var(--border);
+  border-radius:14px;
   overflow:hidden;
   box-shadow:var(--shadow);
+  transition:border-color .2s, transform .2s;
+}
+.capture-card:hover{border-color:var(--border-bright);transform:translateY(-2px);}
+
+.capture-media{position:relative;width:100%;aspect-ratio:16/10;background:#010302;cursor:pointer;}
+.capture-media img{width:100%;height:100%;object-fit:cover;display:block;}
+
+.cam-pill{
+  position:absolute;top:10px;left:10px;
+  background:rgba(3,7,5,0.85);border:1px solid var(--green);
+  color:var(--green);font:700 9px var(--font-mono);padding:4px 8px;border-radius:6px;letter-spacing:1px;
+}
+.rack-pill{
+  position:absolute;bottom:10px;right:10px;
+  background:var(--amber);color:#030705;font:700 9px var(--font-mono);
+  padding:4px 8px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
+}
+.media-overlay-bar{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(180deg, transparent, rgba(2,5,3,0.9));
+  padding:14px 12px 8px;display:flex;justify-content:space-between;align-items:center;
+  font:9px var(--font-mono);color:#a8d5be;
 }
 
-.capture-media{
-  position:relative;
-  width:100%;
-  aspect-ratio:16/10;
-  background:#030604;
-  cursor:pointer;
-}
+.capture-body{padding:14px;}
+.capture-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.capture-title{font:700 12px var(--font-mono);color:var(--text);letter-spacing:.5px;line-height:1.3;}
+.capture-time{font:9px var(--font-mono);color:var(--muted);text-align:right;}
 
-.capture-media img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-
-.cam-badge{
-  position:absolute;
-  top:10px;
-  left:10px;
-  background:rgba(8,16,11,0.85);
-  border:1px solid var(--green);
-  color:var(--green);
-  font:700 9px var(--mono);
-  padding:4px 8px;
-  border-radius:5px;
-  letter-spacing:1px;
-}
-
-.rack-badge{
-  position:absolute;
-  bottom:10px;
-  right:10px;
-  background:var(--amber);
-  color:#07100a;
-  font:700 9px var(--mono);
-  padding:4px 8px;
-  border-radius:5px;
-  box-shadow:0 4px 12px rgba(0,0,0,.4);
-}
-
-.media-bar{
-  position:absolute;
-  bottom:0;
-  left:0;
-  right:0;
-  background:linear-gradient(180deg,transparent,rgba(4,8,6,0.85));
-  padding:12px 10px 8px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font:9px var(--mono);
-  color:#c5dcd0;
-}
-
-.capture-body{
-  padding:12px;
-}
-
-.capture-title-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:8px;
-  margin-bottom:8px;
-}
-
-.capture-title{
-  font:700 12px var(--mono);
-  color:var(--text);
-  letter-spacing:.5px;
-  line-height:1.3;
-}
-
-.capture-time{
-  font:9px var(--mono);
-  color:var(--muted);
-  text-align:right;
-  white-space:nowrap;
-}
-
-.capture-meta{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  font:10px var(--mono);
-  color:var(--muted);
-  margin-bottom:10px;
-  line-height:1.4;
-}
-
-.capture-meta span{
-  color:#a2b8ab;
-}
+.capture-meta{display:flex;flex-direction:column;gap:4px;font:10px var(--font-mono);color:var(--muted);margin-bottom:12px;}
+.capture-meta span{color:var(--text);}
 
 .capture-footer{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-top:1px solid var(--line);
-  padding-top:8px;
-  font:9px var(--mono);
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:1px solid var(--border);padding-top:10px;font:9px var(--font-mono);
 }
-
-.capture-id{
-  color:var(--muted);
-}
-
-.tag-pattern{
-  color:var(--green);
-  font-weight:700;
-  letter-spacing:.5px;
-}
+.tag-badge{color:var(--green);font-weight:700;}
 
 /* CARDS GENERAL */
-.card{
-  background:linear-gradient(145deg,#0d1711,#09110c);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:12px;
+.hud-card{
+  background:linear-gradient(145deg, rgba(8,18,11,0.9), rgba(4,10,6,0.9));
+  border:1px solid var(--border);border-radius:14px;padding:14px;
 }
-
-.card-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:8px;
-}
-
-.card-title{
-  font:700 10px var(--mono);
-  letter-spacing:1px;
-  color:var(--green);
-}
-
-.card-tag{
-  font:9px var(--mono);
-  color:var(--muted);
-}
+.hud-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.hud-card-title{font:700 10px var(--font-mono);letter-spacing:1.2px;color:var(--green);}
 
 /* DROPZONE */
 .dropzone{
-  border:1px dashed #35563e;
-  background:rgba(76,255,136,.025);
-  border-radius:9px;
-  padding:14px 10px;
-  text-align:center;
-  cursor:pointer;
+  border:1px dashed var(--border-bright);
+  background:rgba(76,255,136,0.02);
+  border-radius:10px;padding:16px;text-align:center;cursor:pointer;
+  transition:all .2s;
 }
+.dropzone:hover,.dropzone.drag{background:rgba(76,255,136,0.08);border-color:var(--green);}
+.dropzone strong{display:block;font:700 10px var(--font-mono);color:var(--text);margin-top:6px;}
+.dropzone small{display:block;color:var(--muted);font-size:9px;margin-top:2px;}
 
-.dropzone.drag{
-  border-color:var(--green);
-  background:rgba(76,255,136,.08);
+.action-btn{
+  margin-top:10px;width:100%;border:1px solid var(--border-bright);
+  background:linear-gradient(180deg, rgba(18,61,33,0.9), rgba(11,43,23,0.9));
+  color:var(--green);padding:10px;border-radius:8px;font:700 10px var(--font-mono);
+  box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:all .2s;
 }
+.action-btn:hover{background:rgba(20,80,35,0.9);box-shadow:0 0 15px var(--green-glow);}
 
-.dropzone strong{
-  display:block;
-  font:10px var(--mono);
-  color:var(--text);
-  margin-top:4px;
-}
-
-.dropzone small{
-  display:block;
-  color:var(--muted);
-  font-size:8px;
-  margin-top:2px;
-}
-
-.primary{
-  margin-top:8px;
-  width:100%;
-  border:1px solid #2e8c4d;
-  background:linear-gradient(180deg,#123d21,#0b2b17);
-  color:var(--green);
-  padding:8px;
-  border-radius:7px;
-  font:700 10px var(--mono);
-}
-
-.primary:hover{
-  background:#145023;
-}
-
-/* AI CHAT */
-.chat{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
+/* ADVANCED AI CHAT INTERFACE */
+.chat-container{display:flex;flex-direction:column;gap:8px;}
 .chat-log{
-  height:120px;
-  overflow:auto;
-  background:#050b07;
-  border:1px solid var(--line);
-  border-radius:8px;
-  padding:8px;
-  font-size:10px;
-  line-height:1.4;
+  height:150px;overflow-y:auto;background:#020503;
+  border:1px solid var(--border);border-radius:10px;padding:10px;
+  font-size:11px;line-height:1.5;display:flex;flex-direction:column;gap:8px;
 }
+.chat-msg{word-break:break-word;padding:8px 10px;border-radius:8px;max-width:90%;}
+.chat-msg.ai{background:rgba(16,36,22,0.8);color:#b6e8cd;border:1px solid var(--border);align-self:flex-start;}
+.chat-msg.user{background:rgba(25,50,35,0.8);color:var(--text);border:1px solid var(--border-bright);align-self:flex-end;}
 
-.msg{
-  margin-bottom:6px;
-  word-break:break-word;
+.chat-settings{
+  display:flex;gap:6px;align-items:center;background:#040a06;
+  border:1px solid var(--border);padding:6px 10px;border-radius:8px;font:9px var(--font-mono);color:var(--muted);
 }
-
-.msg.ai{color:#a9dcb8;}
-.msg.user{color:var(--text); text-align:right;}
-
-.chat-config{
-  display:flex;
-  gap:5px;
-  align-items:center;
-  background:#07100a;
-  border:1px solid var(--line);
-  padding:4px 8px;
-  border-radius:6px;
-  font:9px var(--mono);
-  color:var(--muted);
+.chat-settings select,.chat-settings input{
+  background:#020402;color:var(--text);border:1px solid var(--border);
+  border-radius:6px;padding:4px 8px;font:9px var(--font-mono);outline:none;
 }
+.chat-settings input{flex:1;}
 
-.chat-config select, .chat-config input{
-  background:#040805;
-  color:var(--text);
-  border:1px solid var(--line2);
-  border-radius:4px;
-  padding:3px 6px;
-  font:9px var(--mono);
-  outline:none;
+.chat-input-row{display:flex;gap:6px;}
+.chat-input-row input{
+  flex:1;background:#040a06;border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:10px;outline:none;font-size:11px;
 }
-
-.chat-config input{flex:1;}
-
-.chat-row{
-  display:flex;
-  gap:5px;
-}
-
-.chat-row input{
-  min-width:0;
-  flex:1;
-  background:#07100a;
-  border:1px solid var(--line2);
-  color:var(--text);
-  border-radius:7px;
-  padding:7px;
-  outline:none;
-  font-size:10px;
-}
-
-.chat-row button{
-  width:36px;
-  border:1px solid #2e8c4d;
-  background:#0c2816;
-  color:var(--green);
-  border-radius:7px;
+.chat-input-row input:focus{border-color:var(--green);}
+.chat-input-row button{
+  width:40px;border:1px solid var(--border-bright);background:rgba(18,61,33,0.9);
+  color:var(--green);border-radius:8px;font-weight:bold;
 }
 
 /* FOOTER */
 .footer{
-  background:#060d08;
-  border-top:1px solid var(--line);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 14px;
-  color:var(--muted);
-  font:8px var(--mono);
+  background:#020503;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0 20px;color:var(--muted);font:8px var(--font-mono);
 }
 
-/* LEAFLET & MODAL */
-.leaflet-control-zoom a{
-  background:#09120c!important;
-  color:var(--text)!important;
-  border-color:var(--line2)!important;
+/* LEAFLET & CUSTOM MARKERS */
+.leaflet-control-zoom a{background:#060e09!important;color:var(--text)!important;border-color:var(--border)!important;}
+.leaflet-control-attribution{background:rgba(3,7,5,0.9)!important;color:var(--muted)!important;}
+
+.tactical-pin{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid #030705;background:var(--green);color:#030705;
+  display:grid;place-items:center;font-size:14px;
+  box-shadow:0 0 0 4px var(--green-glow), 0 0 20px var(--green);
+  animation:pulsePin 2s infinite;
+}
+@keyframes pulsePin {
+  0% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0.4), 0 0 10px var(--green); }
+  70% { box-shadow: 0 0 0 10px rgba(76, 255, 136, 0), 0 0 25px var(--green); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0), 0 0 10px var(--green); }
 }
 
-.leaflet-control-attribution{
-  background:rgba(5,8,6,.8)!important;
-  color:#637168!important;
-}
-
-.camera-marker{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  border:2px solid #07100a;
-  background:var(--green);
-  color:#07100a;
-  display:grid;
-  place-items:center;
-  font-size:12px;
-  box-shadow:0 0 0 4px rgba(76,255,136,.14),0 0 15px rgba(76,255,136,.5);
-}
-
+/* MODAL */
 .modal{
-  position:fixed;
-  inset:0;
-  z-index:3000;
-  background:rgba(0,0,0,.75);
-  backdrop-filter:blur(8px);
-  display:none;
-  place-items:center;
-  padding:16px;
+  position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.8);
+  backdrop-filter:blur(10px);display:none;place-items:center;padding:20px;
 }
-
 .modal.show{display:grid;}
-
 .modal-box{
-  width:min(820px,100%);
-  max-height:90vh;
-  overflow:auto;
-  background:#09110c;
-  border:1px solid var(--line2);
-  border-radius:12px;
-  box-shadow:0 30px 100px rgba(0,0,0,.7);
-  padding:14px;
+  width:min(900px,100%);max-height:90vh;overflow:auto;background:var(--panel-solid);
+  border:1px solid var(--border-bright);border-radius:16px;box-shadow:var(--shadow);padding:16px;
 }
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.modal-head strong{font:11px var(--font-mono);color:var(--green);}
+.close-btn{border:1px solid var(--border);background:#030705;color:var(--text);border-radius:8px;padding:6px 10px;font:9px var(--font-mono);}
+.modal-preview{width:100%;max-height:75vh;object-fit:contain;background:#000;border-radius:10px;}
 
-.modal-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
-}
-
-.modal-head strong{
-  font:11px var(--mono);
-  color:var(--green);
-}
-
-.close{
-  border:1px solid var(--line2);
-  background:#07100a;
-  color:var(--text);
-  border-radius:6px;
-  padding:4px 8px;
-  font:9px var(--mono);
-}
-
-.preview{
-  width:100%;
-  max-height:70vh;
-  object-fit:contain;
-  background:#020402;
-  border-radius:8px;
-}
-
-/* MOBILE ADAPTATION */
-@media(max-width:900px){
-  .app{grid-template-rows:54px 1fr 26px;}
-  .main{grid-template-columns:1fr; grid-template-rows:50vh 50vh; overflow:auto;}
-  .workspace{min-height:50vh;}
-  .sidebar{border-left:0; border-top:1px solid var(--line);}
+/* RESPONSIVE */
+@media(max-width:960px){
+  .app{grid-template-rows:60px 1fr 28px;}
+  .main{grid-template-columns:1fr;grid-template-rows:50vh 50vh;}
 }
 </style>
 </head>
-
 <body>
 
 <div class="app">
 
-<header class="topbar">
-  <div class="brand">
-    <div style="font-size:18px;">🦌</div>
-    <h1>area51-trailcam</h1>
-  </div>
-
-  <div class="header-actions">
-    <button class="icon-btn" id="locateBtn" title="Locate GPS">⌖</button>
-    <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
-  </div>
-</header>
-
-<main class="main">
-
-<section class="workspace">
-  <div id="map"></div>
-
-  <div class="map-top">
-    <div class="map-title">
-      <strong>TACTICAL MAP FEED</strong>
-      <span id="mapLocation">45.8167° N, -64.2167° W</span>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🦌</div>
+      <div>
+        <h1>AREA51-TRAILCAM OS</h1>
+        <span>TACTICAL WILDLIFE COMMAND</span>
+      </div>
     </div>
-
-    <div class="map-actions">
-      <button class="map-action active" id="streetBtn">STREET</button>
-      <button class="map-action" id="satelliteBtn">SATELLITE</button>
-      <button class="map-action" id="toggleCrown">CROWN LAND</button>
-      <button class="map-action" id="toggleTrails">CANVEC TRAILS</button>
+    <div class="header-actions">
+      <button class="icon-btn" id="locateBtn" title="Recenter GPS">⌖</button>
+      <button class="icon-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
     </div>
-  </div>
-</section>
+  </header>
 
-<aside class="sidebar">
-
-  <!-- CAPTURE FEED HEADER & FILTER TABS -->
-  <div>
-    <div class="feed-header-row">
-      <span>CAPTURE FEED // DETECTIONS</span>
-      <span id="feedCount" style="font-size:9px;color:var(--muted);">1 CAPTURE</span>
-    </div>
-    <div class="filter-tabs" style="margin-top:8px;">
-      <button class="tab-btn active" id="filterAll" onclick="setFilter('all')">ALL</button>
-      <button class="tab-btn" id="filterBucks" onclick="setFilter('bucks')">BUCKS ONLY</button>
-    </div>
-  </div>
-
-  <!-- CAPTURE FEED LIST (MATCHING SCREENSHOT) -->
-  <div class="capture-feed" id="captureFeedContainer">
-    <!-- Default initial mock item matching screenshot style -->
-    <div class="capture-card" data-isbuck="true">
-      <div class="capture-media" onclick="openModalMock()">
-        <div class="cam-badge">CAM-01</div>
-        <img src="https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=700&q=80" alt="Trailcam capture">
-        <div class="rack-badge">Rack Score ~ 155"</div>
-        <div class="media-bar">
-          <span>🌙 4°C / 39°F</span>
-          <span>11/16/2025 18:46:21</span>
+  <!-- MAIN INTERFACE -->
+  <main class="main">
+    
+    <!-- MAP WORKSPACE -->
+    <section class="workspace">
+      <div id="map"></div>
+      <div class="map-hud-top">
+        <div class="map-badge">
+          <strong>SECTOR TELEMETRY</strong>
+          <span id="mapCoords">45.8167° N, -64.2167° W</span>
+        </div>
+        <div class="map-controls">
+          <button class="control-pill active" id="streetBtn">STREET</button>
+          <button class="control-pill" id="satelliteBtn">ESRI SATELLITE</button>
+          <button class="control-pill" id="toggleCrown">CROWN LAND</button>
+          <button class="control-pill" id="toggleTrails">CANVEC TRAILS</button>
         </div>
       </div>
-      <div class="capture-body">
-        <div class="capture-title-row">
-          <div class="capture-title">WHITETAIL BUCK (MAINFRAME 10)</div>
-          <div class="capture-time">Today @<br>02:45 AM</div>
-        </div>
-        <div class="capture-meta">
-          <div>Confidence: <span>93.2%</span></div>
-          <div>Temp: <span>4°C / 39°F</span></div>
-          <div>Notes: <i>Archived capture – 11/16/2025 06:46 PM.</i></div>
-        </div>
-        <div class="capture-footer">
-          <span class="capture-id">ID: DET-7837</span>
-          <span class="tag-pattern">TAG PATTERN</span>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- UPLOAD / INGEST CARD -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">INGEST NEW TRAIL-CAM FRAME</div>
-      <div class="card-tag">AUTO-TAG</div>
-    </div>
-    <div class="dropzone" id="dropzone">
-      <div style="font-size:20px;">📸</div>
-      <strong>DROP PHOTOS HERE</strong>
-      <small>JPG / PNG • Automatic metadata parsing</small>
-      <button class="primary" id="choosePhotos">SELECT FILES</button>
-      <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-    </div>
-  </div>
-
-  <!-- TACTICAL AI ASSISTANT -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">TACTICAL AI ASSISTANT</div>
-      <div class="card-tag">ONLINE</div>
-    </div>
-    <div class="chat">
-      <div class="chat-config">
-        <span>Model:</span>
-        <select id="aiProvider">
-          <option value="builtin">Built-in Tactical Expert</option>
-          <option value="openai">OpenAI GPT-4o-mini</option>
-          <option value="gemini">Google Gemini Flash</option>
-        </select>
-      </div>
-      <div class="chat-config" id="apiKeyRow" style="display:none;">
-        <span>Key:</span>
-        <input id="apiKeyInput" type="password" placeholder="Paste API Key...">
-      </div>
-      <div class="chat-log" id="chatLog">
-        <div class="msg ai">
-          AREA51: Assistant ready. Query wind vectors, stand setups, or detection patterns.
+    <!-- SIDEBAR COMMAND PANEL -->
+    <aside class="sidebar">
+      <div>
+        <div class="section-header">
+          <span>CAPTURE FEED // DETECTIONS</span>
+          <span id="feedCount" style="color:var(--muted);font-size:9px;">1 CAPTURE</span>
+        </div>
+        <div class="filter-row">
+          <button class="tab-chip active" id="filterAll" onclick="setFilter('all')">ALL FEEDS</button>
+          <button class="tab-chip" id="filterBucks" onclick="setFilter('bucks')">BUCKS ONLY</button>
         </div>
       </div>
-      <div class="chat-row">
-        <input id="chatInput" placeholder="Ask tactical query..." autocomplete="off">
-        <button id="chatSend">➤</button>
+
+      <!-- CAPTURE FEED LIST -->
+      <div class="capture-feed" id="captureFeedContainer">
+        <div class="capture-card" data-isbuck="true">
+          <div class="capture-media" onclick="openModal('https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=1200&q=80', 'DET-7837')">
+            <div class="cam-pill">CAM-01</div>
+            <img src="https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=700&q=80" alt="Buck Capture">
+            <div class="rack-pill">Rack Score ~ 155"</div>
+            <div class="media-overlay-bar">
+              <span>🌙 4°C / 39°F</span>
+              <span>11/16/2025 18:46:21</span>
+            </div>
+          </div>
+          <div class="capture-body">
+            <div class="capture-title-row">
+              <div class="capture-title">WHITETAIL BUCK (MAINFRAME 10)</div>
+              <div class="capture-time">Today @<br>02:45 AM</div>
+            </div>
+            <div class="capture-meta">
+              <div>Confidence: <span>93.2%</span></div>
+              <div>Temp: <span>4°C / 39°F</span></div>
+              <div>Notes: <i>Archived capture – 11/16/2025 06:46 PM.</i></div>
+            </div>
+            <div class="capture-footer">
+              <span style="color:var(--muted);">ID: DET-7837</span>
+              <span class="tag-badge">AI CLASSIFIED</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-</aside>
+      <!-- INGEST CARD -->
+      <div class="hud-card">
+        <div class="hud-card-head">
+          <div class="hud-card-title">INGEST NEW TRAIL-CAM FRAME</div>
+        </div>
+        <div class="dropzone" id="dropzone">
+          <div style="font-size:24px;">📸</div>
+          <strong>DROP IMAGES TO AUTO-ANALYZE</strong>
+          <small>JPG / PNG / WEBP • Instant telemetry parser</small>
+          <button class="action-btn" id="choosePhotos">BROWSE FILES</button>
+          <input id="fileInput" type="file" accept="image/*" multiple hidden>
+        </div>
+      </div>
 
-</main>
+      <!-- ADVANCED AI CHAT ASSISTANT -->
+      <div class="hud-card">
+        <div class="hud-card-head">
+          <div class="hud-card-title">TACTICAL AI ASSISTANT</div>
+          <span style="color:var(--green);font-size:9px;font-family:var(--font-mono);">● ONLINE</span>
+        </div>
+        <div class="chat-container">
+          <div class="chat-settings">
+            <span>Model:</span>
+            <select id="aiProvider">
+              <option value="builtin">Area51 Neural Expert</option>
+              <option value="openai">OpenAI GPT-4o-mini</option>
+              <option value="gemini">Google Gemini Flash</option>
+            </select>
+          </div>
+          <div class="chat-settings" id="apiKeyRow" style="display:none;">
+            <span>Key:</span>
+            <input id="apiKeyInput" type="password" placeholder="Enter API Key...">
+          </div>
+          <div class="chat-log" id="chatLog">
+            <div class="chat-msg ai">AREA51 OS: Neural intelligence online. Query wind vectors, stand movement patterns, or trigger timestamps.</div>
+          </div>
+          <div class="chat-input-row">
+            <input id="chatInput" placeholder="Ask tactical query..." autocomplete="off">
+            <button id="chatSend">➤</button>
+          </div>
+        </div>
+      </div>
 
-<footer class="footer">
-  <span>AREA51-TRAILCAM // FIELD COMMAND</span>
-  <span>MAP DATA © OPENSTREETMAP</span>
-</footer>
+    </aside>
+
+  </main>
+
+  <footer class="footer">
+    <span>AREA51 // SECURE WILDLIFE TELEMETRY NODE</span>
+    <span>MAP ENGINE © OPENSTREETMAP & ESRI</span>
+  </footer>
 
 </div>
 
-<!-- IMAGE INSPECTION MODAL -->
+<!-- INSPECTION MODAL -->
 <div class="modal" id="imageModal">
   <div class="modal-box">
     <div class="modal-head">
       <strong id="modalTitle">FRAME INSPECTION // DET-7837</strong>
-      <button class="close" id="closeModal">CLOSE</button>
+      <button class="close-btn" id="closeModal">CLOSE</button>
     </div>
-    <img id="modalImage" class="preview" src="https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=1200&q=80" alt="Inspection">
+    <img id="modalImage" class="modal-preview" src="" alt="Zoom preview">
   </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
-/* =========================================================
-   AREA51 TRAILCAM COMMAND ENGINE
-   ========================================================= */
-
 const state = {
-  location: { lat: 45.8167, lon: -64.2167 },
+  lat: 45.8167, lon: -64.2167,
+  filter: 'all',
   records: [
     {
       id: "DET-7837",
@@ -792,78 +483,88 @@ const state = {
       timeStr: "Today @ 02:45 AM",
       timestamp: "11/16/2025 18:46:21",
       isBuck: true,
-      url: "https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=700&q=80",
-      lat: 45.8167,
-      lon: -64.2167
+      url: "https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=1200&q=80",
+      lat: 45.8167, lon: -64.2167
     }
   ],
-  filter: "all", // 'all' or 'bucks'
   map: null,
   streetLayer: null,
   satelliteLayer: null,
   crownLayer: null,
   trailsLayer: null,
   showCrown: false,
-  showTrails: false,
-  userMarker: null
+  showTrails: false
 };
 
 const $ = id => document.getElementById(id);
 
-const mockCrownGeoJSON = {
+const mockCrown = {
   type: "FeatureCollection",
   features: [{
     type: "Feature",
-    properties: { NAME: "Crown Parcel A-1", HECTARES: 142.5 },
+    properties: { NAME: "Crown Land Parcel A-1", HECTARES: 142.5 },
     geometry: { type: "Polygon", coordinates: [[[-64.23,45.82],[-64.20,45.825],[-64.195,45.805],[-64.225,45.8],[-64.23,45.82]]] }
   }]
 };
 
-const mockTrailsGeoJSON = {
+const mockTrails = {
   type: "FeatureCollection",
   features: [{
     type: "Feature",
-    properties: { FEAT_NAME: "CanVec Main Ridge Trail", CLASS: "Access Road" },
+    properties: { FEAT_NAME: "CanVec Main Ridge Trail", CLASS: "Access ATV Route" },
     geometry: { type: "LineString", coordinates: [[-64.25,45.81],[-64.22,45.815],[-64.19,45.8]] }
   }]
 };
 
 function initMap(){
-  state.map = L.map("map", { zoomControl: true, attributionControl: true }).setView([state.location.lat, state.location.lon], 13);
+  state.map = L.map("map", { zoomControl: true, attributionControl: true }).setView([state.lat, state.lon], 13);
 
   state.streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(state.map);
   state.satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Esri" });
 
-  state.crownLayer = L.geoJSON(mockCrownGeoJSON, {
-    style: { color: "#4cff88", weight: 1.5, fillColor: "#4cff88", fillOpacity: 0.12 },
+  state.crownLayer = L.geoJSON(mockCrown, {
+    style: { color: "#4cff88", weight: 2, fillColor: "#4cff88", fillOpacity: 0.15 },
     onEachFeature: (f, l) => l.bindPopup(`<b>${f.properties.NAME}</b><br>Area: ${f.properties.HECTARES} ha`)
   });
 
-  state.trailsLayer = L.geoJSON(mockTrailsGeoJSON, {
-    style: { color: "#42d9ff", weight: 2.5, dashArray: "5, 5" },
+  state.trailsLayer = L.geoJSON(mockTrails, {
+    style: { color: "#42d9ff", weight: 3, dashArray: "6, 6" },
     onEachFeature: (f, l) => l.bindPopup(`<b>${f.properties.FEAT_NAME}</b><br>Type: ${f.properties.CLASS}`)
   });
 
   renderFeed();
+  addPin(state.records[0]);
+}
+
+function addPin(rec){
+  const pinIcon = L.divIcon({
+    className: "",
+    html: `<div class="tactical-pin">🦌</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
+  });
+  L.marker([rec.lat, rec.lon], {icon: pinIcon})
+    .addTo(state.map)
+    .bindPopup(`<b>${rec.name}</b><br>ID: ${rec.id}<br>Telemetry: ${rec.lat}, ${rec.lon}`)
+    .on('click', () => state.map.setView([rec.lat, rec.lon], 15));
 }
 
 function setFilter(mode){
   state.filter = mode;
-  $("filterAll").className = mode === 'all' ? "tab-btn active" : "tab-btn";
-  $("filterBucks").className = mode === 'bucks' ? "tab-btn active" : "tab-btn";
+  $("filterAll").className = mode === 'all' ? "tab-chip active" : "tab-chip";
+  $("filterBucks").className = mode === 'bucks' ? "tab-chip active" : "tab-chip";
   renderFeed();
 }
 
 function renderFeed(){
   const container = $("captureFeedContainer");
   container.innerHTML = "";
-
   const filtered = state.records.filter(r => state.filter === 'all' || (state.filter === 'bucks' && r.isBuck));
 
   $("feedCount").textContent = `${filtered.length} CAPTURE${filtered.length === 1 ? '' : 'S'}`;
 
   if(!filtered.length){
-    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font:10px var(--mono);">NO CAPTURES MATCH FILTER</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font:10px var(--font-mono);">NO CAPTURES FOUND IN CURRENT FILTER</div>`;
     return;
   }
 
@@ -872,10 +573,10 @@ function renderFeed(){
     card.className = "capture-card";
     card.innerHTML = `
       <div class="capture-media" onclick="openModal('${r.url}', '${r.id}')">
-        <div class="cam-badge">${r.cam}</div>
+        <div class="cam-pill">${r.cam}</div>
         <img src="${r.url}" alt="${r.name}">
-        ${r.score ? `<div class="rack-badge">Rack Score ~ ${r.score}</div>` : ''}
-        <div class="media-bar">
+        ${r.score ? `<div class="rack-pill">Rack Score ~ ${r.score}</div>` : ''}
+        <div class="media-overlay-bar">
           <span>🌙 ${r.temp}</span>
           <span>${r.timestamp}</span>
         </div>
@@ -891,8 +592,8 @@ function renderFeed(){
           <div>Notes: <i>${r.notes}</i></div>
         </div>
         <div class="capture-footer">
-          <span class="capture-id">ID: ${r.id}</span>
-          <span class="tag-pattern">TAG PATTERN</span>
+          <span style="color:var(--muted);">ID: ${r.id}</span>
+          <span class="tag-badge">AI CLASSIFIED</span>
         </div>
       </div>
     `;
@@ -901,45 +602,32 @@ function renderFeed(){
 }
 
 function processFiles(files){
-  [...files].filter(f => f.type.startsWith("image/")).forEach((file, index) => {
+  [...files].filter(f => f.type.startsWith("image/")).forEach((file, i) => {
     const url = URL.createObjectURL(file);
     const id = "DET-" + Math.floor(1000 + Math.random() * 9000);
-    const isBuck = Math.random() > 0.3;
-    const score = isBuck ? Math.floor(130 + Math.random() * 35) + '"' : null;
+    const isBuck = Math.random() > 0.25;
+    const score = isBuck ? Math.floor(130 + Math.random() * 40) + '"' : null;
 
-    const record = {
+    const rec = {
       id: id,
-      name: isBuck ? "WHITETAIL BUCK (CANDIDATE)" : "WILDLIFE CAPTURE",
-      cam: "CAM-0" + (index + 2),
+      name: isBuck ? "WHITETAIL BUCK (CANDIDATE)" : "WILDLIFE MOVEMENT DETECTED",
+      cam: "CAM-0" + (i + 2),
       score: score,
-      confidence: (88 + Math.random() * 10).toFixed(1) + "%",
-      temp: "3°C / 38°F",
-      notes: `Automated detection capture – ${new Date().toLocaleString()}.`,
+      confidence: (89 + Math.random() * 10).toFixed(1) + "%",
+      temp: "2°C / 36°F",
+      notes: `Automated detection trigger – ${new Date().toLocaleTimeString()}.`,
       timeStr: "Just now",
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       isBuck: isBuck,
       url: url,
-      lat: state.location.lat + (Math.random() - 0.5) * 0.012,
-      lon: state.location.lon + (Math.random() - 0.5) * 0.012
+      lat: state.lat + (Math.random() - 0.5) * 0.015,
+      lon: state.lon + (Math.random() - 0.5) * 0.015
     };
 
-    state.records.unshift(record);
-    addCameraMarker(record);
+    state.records.unshift(rec);
+    addPin(rec);
   });
   renderFeed();
-}
-
-function addCameraMarker(record){
-  const icon = L.divIcon({
-    className: "",
-    html: `<div class="camera-marker">📷</div>`,
-    iconSize: [26, 26],
-    iconAnchor: [13, 13]
-  });
-  L.marker([record.lat, record.lon], {icon})
-    .addTo(state.map)
-    .bindPopup(`<b>${record.name}</b><br>ID: ${record.id}<br>Lat/Lon: ${record.lat.toFixed(4)}, ${record.lon.toFixed(4)}`)
-    .on("click", () => state.map.setView([record.lat, record.lon], 16));
 }
 
 function openModal(url, id){
@@ -948,29 +636,25 @@ function openModal(url, id){
   $("imageModal").classList.add("show");
 }
 
-function openModalMock(){
-  openModal("https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=1200&q=80", "DET-7837");
-}
-
-/* AI CHAT ENGINE */
+/* AI CHAT */
 async function sendChat(){
   const input = $("chatInput");
   const q = input.value.trim();
   if(!q) return;
 
   const log = $("chatLog");
-  const userMsg = document.createElement("div");
-  userMsg.className = "msg user";
-  userMsg.textContent = q;
-  log.appendChild(userMsg);
+  const uMsg = document.createElement("div");
+  uMsg.className = "chat-msg user";
+  uMsg.textContent = q;
+  log.appendChild(uMsg);
   input.value = "";
   log.scrollTop = log.scrollHeight;
 
-  const loading = document.createElement("div");
-  loading.className = "msg ai";
-  loading.id = "chatLoading";
-  loading.textContent = "AREA51: Processing tactical query...";
-  log.appendChild(loading);
+  const load = document.createElement("div");
+  load.className = "chat-msg ai";
+  load.id = "tempLoad";
+  load.textContent = "Analyzing telemetry matrices...";
+  log.appendChild(load);
   log.scrollTop = log.scrollHeight;
 
   const provider = $("aiProvider").value;
@@ -979,22 +663,22 @@ async function sendChat(){
   try {
     let reply = "";
     if(provider === "builtin"){
-      await new Promise(r => setTimeout(r, 400));
-      reply = `Assessment for "${q}": Target movement on CAM-01 shows reliable night travel patterns along thermal corridors.`;
-    } else if(provider === "openai" || provider === "gemini"){
-      if(!apiKey) throw new Error("API Key required.");
-      reply = `Connected to ${provider.toUpperCase()}: Analysis confirms active deer routing through sector boundaries.`;
+      await new Promise(r => setTimeout(r, 500));
+      reply = `Neural assessment for "${q}": Nocturnal movement patterns suggest steady feeding routes along the western ridge tree line.`;
+    } else {
+      if(!apiKey) throw new Error("API Key required for external provider.");
+      reply = `Connected to ${provider.toUpperCase()}: Target trajectory confirms active buck indexing in sector.`;
     }
 
-    $("chatLoading")?.remove();
-    const aiMsg = document.createElement("div");
-    aiMsg.className = "msg ai";
-    aiMsg.textContent = "AREA51: " + reply;
-    log.appendChild(aiMsg);
+    $("tempLoad")?.remove();
+    const aMsg = document.createElement("div");
+    aMsg.className = "chat-msg ai";
+    aMsg.textContent = reply;
+    log.appendChild(aMsg);
   } catch(err){
-    $("chatLoading")?.remove();
+    $("tempLoad")?.remove();
     const errDiv = document.createElement("div");
-    errDiv.className = "msg ai";
+    errDiv.className = "chat-msg ai";
     errDiv.style.color = "var(--red)";
     errDiv.textContent = "ERROR: " + err.message;
     log.appendChild(errDiv);
@@ -1032,10 +716,10 @@ $("toggleTrails").onclick = () => {
 $("locateBtn").onclick = () => {
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos => {
-      state.location.lat = pos.coords.latitude;
-      state.location.lon = pos.coords.longitude;
-      state.map.setView([state.location.lat, state.location.lon], 14);
-      $("mapLocation").textContent = `${state.location.lat.toFixed(4)}° N, ${state.location.lon.toFixed(4)}° W`;
+      state.lat = pos.coords.latitude;
+      state.lon = pos.coords.longitude;
+      state.map.setView([state.lat, state.lon], 14);
+      $("mapCoords").textContent = `${state.lat.toFixed(4)}° N, ${state.lon.toFixed(4)}° W`;
     });
   }
 };
@@ -1046,8 +730,8 @@ $("choosePhotos").onclick = () => $("fileInput").click();
 $("dropzone").onclick = e => { if(e.target.id !== "choosePhotos") $("fileInput").click(); };
 $("fileInput").onchange = e => processFiles(e.target.files);
 
-["dragenter", "dragover"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.add("drag"); }));
-["dragleave", "drop"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.remove("drag"); }));
+["dragenter","dragover"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.add("drag"); }));
+["dragleave","drop"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.remove("drag"); }));
 $("dropzone").addEventListener("drop", e => processFiles(e.dataTransfer.files));
 
 $("closeModal").onclick = () => $("imageModal").classList.remove("show");
