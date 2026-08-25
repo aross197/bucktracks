@@ -1,8 +1,8 @@
-     <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BUCKTRACK AI // Advanced Canadian Tactical Field Intelligence</title>
     
     <!-- Leaflet CSS -->
@@ -49,7 +49,7 @@
             background-color: var(--bg-base);
             color: var(--text-main);
             font-family: var(--font-body);
-            height: 100vh;
+            height: 100dvh;
             width: 100vw;
             overflow: hidden;
             display: flex;
@@ -71,12 +71,14 @@
         /* HEADER */
         header {
             height: var(--header-h);
+            padding-top: env(safe-area-inset-top, 0px);
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border-dim);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 16px;
+            padding-left: 16px;
+            padding-right: 16px;
             z-index: 1000;
         }
 
@@ -136,7 +138,7 @@
             flex: 1;
             position: relative;
             width: 100%;
-            height: calc(100vh - var(--header-h) - var(--nav-h));
+            height: calc(100dvh - var(--header-h) - var(--nav-h) - env(safe-area-inset-bottom, 0px));
             overflow: hidden;
         }
 
@@ -368,14 +370,16 @@
             color: var(--brand-accent);
         }
 
-        /* NAVIGATION */
+        /* NAVIGATION WITH SAFE AREA INSET FIX */
         nav {
-            height: var(--nav-h);
+            height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+            padding-bottom: env(safe-area-inset-bottom, 0px);
             background: var(--bg-surface);
             border-top: 1px solid var(--border-dim);
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            z-index: 1000;
+            z-index: 10000;
+            position: relative;
         }
 
         .nav-btn {
@@ -409,7 +413,7 @@
 
     <!-- Header -->
     <header>
-        <div class="brand-title">BUCKTRACK AI</div>
+        <div class="brand-title">BuckTrack AI</div>
         <div class="sys-status">
             <div class="status-dot" id="statusDot"></div>
             <span id="statusText">LOADING AI CORE</span>
@@ -545,7 +549,7 @@
         let baseLayers = {};
         let activeLayerKey = "topoCanada";
         let aiDetector = null;
-        let currentPos = [45.8167, -64.2167]; // Springhill / NS default focus
+        let currentPos = [45.8167, -64.2167];
 
         document.addEventListener("DOMContentLoaded", async () => {
             initMap();
@@ -553,7 +557,6 @@
             initAiEngine();
         });
 
-        // 1. HIGH-PRECISION CANADIAN MAP ENGINE
         function initMap() {
             if (typeof L === 'undefined') return;
 
@@ -598,11 +601,9 @@
             }
         }
 
-        // 2. IN-BROWSER AI OBJECT DETECTION ENGINE
         async function initAiEngine() {
             const status = $("statusText");
             try {
-                // Poll for module readiness
                 let checkCount = 0;
                 while(!window.transformersPipeline && checkCount < 50) {
                     await new Promise(r => setTimeout(r, 200));
@@ -653,7 +654,6 @@
                         const boxElem = document.createElement("div");
                         boxElem.className = "detection-box";
                         
-                        // Map percentages
                         const naturalWidth = img.naturalWidth || img.clientWidth;
                         const naturalHeight = img.naturalHeight || img.clientHeight;
 
@@ -675,7 +675,6 @@
             }, 100);
         }
 
-        // 3. CANADIAN TACTICAL CHAT & AI INTEL
         function setupChatInput() {
             $("chatInput").addEventListener("keypress", (e) => {
                 if (e.key === "Enter") sendChatMessage();
