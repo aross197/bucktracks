@@ -1,168 +1,452 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NUK3 | Call of Duty: Mobile Hub</title>
-  <link rel="stylesheet" href="styles.css" />
-  <!-- FontAwesome for Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
-<body class="dark-theme">
-
-  <!-- TOP NAVIGATION BAR -->
-  <header class="navbar">
-    <div class="nav-brand">
-      <span class="brand-badge">NUK3</span>
-      <span class="brand-title">CODM HQ</span>
-    </div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BUCKTRACK // Tactical Operations Center</title>
     
-    <nav class="nav-links">
-      <button class="nav-btn active" data-tab="dashboard"><i class="fa-solid fa-chart-line"></i> Stats</button>
-      <button class="nav-btn" data-tab="spectate"><i class="fa-solid fa-tv"></i> Spectate</button>
-      <button class="nav-btn" data-tab="social"><i class="fa-solid fa-comments"></i> Community</button>
+    <!-- PWA & Mobile Meta -->
+    <meta name="theme-color" content="#121614">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BUCKTRACK">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/000000/deer.png">
+
+    <!-- Leaflet.js for Lightweight Mobile WebGL Mapping -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0b0e0c;
+            --panel-bg: rgba(20, 26, 22, 0.95);
+            --border-color: #2e3832;
+            --accent-orange: #d97724;
+            --accent-green: #4a6b53;
+            --accent-snow: #7bbcd5;
+            --text-main: #e2e8e4;
+            --text-muted: #8b9b90;
+            --nav-height: 60px;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+            margin: 0; padding: 0;
+            height: 100vh; height: -webkit-fill-available;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Authentication Screen Overlay */
+        #auth-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 25px; width: 100%; max-width: 400px;
+        }
+
+        .auth-card h2 { margin-top: 0; color: var(--accent-orange); text-transform: uppercase; font-size: 1.2rem; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+        .input-group input {
+            width: 100%; padding: 12px; background: #121614; border: 1px solid var(--border-color);
+            color: var(--text-main); border-radius: 4px; font-family: inherit; font-size: 0.9rem;
+        }
+
+        /* App Layout Header */
+        header {
+            background: #121614; border-bottom: 1px solid var(--border-color);
+            padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 50px;
+        }
+
+        h1 { margin: 0; font-size: 1rem; letter-spacing: 1px; }
+        .badge { background: var(--accent-orange); color: #000; padding: 3px 6px; font-weight: bold; border-radius: 3px; font-size: 0.7rem; }
+
+        /* Main Viewports */
+        .main-viewport { flex: 1; position: relative; width: 100%; height: calc(100vh - 110px); overflow: hidden; }
+        .tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 15px; }
+        .tab-content.active { display: block; }
+        #map-view { padding: 0; }
+        #map { width: 100%; height: 100%; }
+
+        /* Mobile Bottom Nav */
+        .bottom-nav {
+            height: var(--nav-height); background: #121614; border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-around; align-items: center;
+        }
+
+        .nav-item {
+            flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.75rem; cursor: pointer;
+        }
+
+        .nav-item.active { color: var(--accent-orange); border-top: 2px solid var(--accent-orange); background: rgba(217, 119, 36, 0.05); }
+
+        /* Utility Components */
+        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .card h2 { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-top: 0; text-transform: uppercase; }
+        .upload-zone { border: 2px dashed var(--accent-green); padding: 20px; text-align: center; border-radius: 8px; background: rgba(74, 107, 83, 0.08); cursor: pointer; }
+        .btn-tactical { background: #28362d; border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; width: 100%; cursor: pointer; font-family: inherit; border-radius: 6px; font-weight: bold; min-height: 44px; margin-top: 5px; }
+        .btn-tactical:hover { background: var(--accent-orange); color: #000; }
+        .stat-list { list-style: none; padding: 0; margin: 0; font-size: 0.9rem; }
+        .stat-list li { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1c241f; }
+        .legal-banner { background: rgba(217, 119, 36, 0.12); border: 1px solid var(--accent-orange); padding: 12px; border-radius: 6px; margin-bottom: 15px; }
+        .snow-active { border-color: var(--accent-snow) !important; background: rgba(123, 188, 213, 0.08) !important; }
+        .auth-toggle { color: var(--accent-snow); text-decoration: underline; cursor: pointer; font-size: 0.8rem; margin-top: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <!-- Authentication Screen -->
+    <div id="auth-modal">
+        <div class="auth-card">
+            <h2 id="auth-title">BUCKTRACK Login</h2>
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="auth-username" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-tactical" id="auth-submit-btn">LOGIN TO FIELD SYSTEM</button>
+            </form>
+            <span class="auth-toggle" id="auth-toggle-btn" onclick="toggleAuthMode()">Need an account? Register here</span>
+            <div id="auth-msg" style="margin-top:10px; font-size:0.8rem; color:var(--accent-orange);"></div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header>
+        <h1>BUCKTRACK</h1>
+        <div>
+            <span class="badge" id="user-badge">OFFLINE</span>
+            <button onclick="logout()" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; margin-left:8px; cursor:pointer;">[Exit]</button>
+        </div>
+    </header>
+
+    <!-- Main Viewport Layout -->
+    <main class="main-viewport">
+        
+        <!-- Tab 1: Satellite Map -->
+        <section id="map-view" class="tab-content active">
+            <div id="map"></div>
+        </section>
+
+        <!-- Tab 2: Field Telemetry & Intake -->
+        <section id="data-view" class="tab-content">
+            
+            <div class="legal-banner">
+                <strong id="legal-status" style="display:block; font-size:0.85rem;">CALCULATING LEGAL HOURS...</strong>
+                <div id="legal-range" style="font-size: 1.1rem; font-weight: bold; margin-top: 4px;">--:-- AM — --:-- PM</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">Nova Scotia Hunting Regulations (Cumberland County)</div>
+            </div>
+
+            <div class="card">
+                <h2>Trail Cam Intake</h2>
+                <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+                    <p style="margin: 0; font-weight: bold; font-size: 0.9rem;">Tap to Upload Field Images</p>
+                    <p style="margin: 4px 0 0 0; font-size: 0.75rem; color: var(--text-muted);">Parses metadata into local database</p>
+                </div>
+                <input type="file" id="file-input" multiple accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                <div id="telemetry-log" style="margin-top: 8px;"></div>
+            </div>
+
+            <div class="card">
+                <h2>Target Profile // Ghost Nine</h2>
+                <ul class="stat-list">
+                    <li><span>Est. Score:</span> <strong>154 3/8"</strong></li>
+                    <li><span>Age Class:</span> <strong>4.5+ Years</strong></li>
+                    <li><span>Primary Attraction:</span> <strong>Fermented Mash</strong></li>
+                    <li><span>Stored Field Images:</span> <strong id="img-count">0</strong></li>
+                </ul>
+            </div>
+
+        </section>
+
+        <!-- Tab 3: Snow Mode -->
+        <section id="storm-view" class="tab-content">
+            <div class="card snow-active">
+                <h2 style="color: var(--accent-snow);">SNOW EVENT MODEL</h2>
+                <ul class="stat-list">
+                    <li><span>Storm Match:</span> <strong style="color: var(--accent-snow); font-size:1.1rem;">91%</strong></li>
+                    <li><span>Corridor:</span> <strong>North Cover → South Feed</strong></li>
+                    <li><span>Prime Window:</span> <strong>First 90 min post-snowfall</strong></li>
+                </ul>
+                <button class="btn-tactical" onclick="switchTab('map-view', document.querySelectorAll('.nav-item')[0]); highlightCorridor();">
+                    Highlight Snow Corridor on Map
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('map-view', this)">
+            <span>🗺️ Map</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('data-view', this)">
+            <span>📷 Telemetry</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('storm-view', this)">
+            <span>❄️ Snow Mode</span>
+        </button>
     </nav>
 
-    <div class="nav-user" id="user-nav-area">
-      <button class="btn btn-primary" id="btn-login-open"><i class="fa-solid fa-right-to-bracket"></i> Login with Activision</button>
-    </div>
-  </header>
+    <!-- Core Database & Logic Engines -->
+    <script>
+        // ----------------------------------------------------
+        // 1. INDEXEDDB LOCAL DATABASE ENGINE
+        // ----------------------------------------------------
+        let db = null;
+        let isRegisterMode = false;
+        let currentUser = null;
 
-  <!-- MAIN CONTAINER -->
-  <main class="container">
+        function initDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open("BuckTrackDB", 1);
+                
+                request.onupgradeneeded = (e) => {
+                    const dbInstance = e.target.result;
+                    if (!dbInstance.objectStoreNames.contains("users")) {
+                        dbInstance.createObjectStore("users", { keyPath: "username" });
+                    }
+                    if (!dbInstance.objectStoreNames.contains("photos")) {
+                        const photoStore = dbInstance.createObjectStore("photos", { keyPath: "id", autoIncrement: true });
+                        photoStore.createIndex("username", "username", { unique: false });
+                    }
+                };
 
-    <!-- TAB 1: PLAYER STATS DASHBOARD -->
-    <section id="tab-dashboard" class="tab-content active">
-      <div class="profile-header">
-        <div class="avatar-box">
-          <img id="user-avatar" src="https://via.placeholder.com/100/10141d/00ff88?text=COD" alt="Avatar" />
-          <span class="rank-badge" id="user-rank">Legendary</span>
-        </div>
-        <div class="profile-details">
-          <h1 id="user-activision-id">Ghost_NUK3#1029384</h1>
-          <p class="clan-tag"><i class="fa-solid fa-shield-halved"></i> Clan: <strong>[NUK3] Elite</strong></p>
-        </div>
-      </div>
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
 
-      <!-- STAT CARDS GRID -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-label">K/D Ratio</span>
-          <span class="stat-value" id="stat-kd">2.42</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Win Rate</span>
-          <span class="stat-value" id="stat-winrate">68.5%</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Rank Points</span>
-          <span class="stat-value" id="stat-points">12,450</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Total Matches</span>
-          <span class="stat-value" id="stat-matches">1,280</span>
-        </div>
-      </div>
+                request.onerror = (e) => reject("Database initialization failed");
+            });
+        }
 
-      <!-- RECENT MATCHES TABLE -->
-      <div class="card-section">
-        <h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Match History</h2>
-        <table class="match-table">
-          <thead>
-            <tr>
-              <th>Mode</th>
-              <th>Map</th>
-              <th>Result</th>
-              <th>K / D / A</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody id="match-history-rows">
-            <!-- Populated dynamically via app.js -->
-          </tbody>
-        </table>
-      </div>
-    </section>
+        // SHA-256 Client Password Hashing
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
-    <!-- TAB 2: SPECTATE LIVE MATCHES -->
-    <section id="tab-spectate" class="tab-content">
-      <div class="spectate-grid">
-        <div class="video-container">
-          <div class="video-placeholder">
-            <i class="fa-solid fa-play-circle stream-play-icon"></i>
-            <p>Live Match Broadcast (Twitch / YouTube Integration)</p>
-          </div>
-          <div class="stream-info">
-            <h3><span class="live-dot">● LIVE</span> NUK3 Scrims: Division 1 Finals</h3>
-            <p>Hardpoint — Standoff</p>
-          </div>
-        </div>
+        // ----------------------------------------------------
+        // 2. AUTHENTICATION CONTROLLER
+        // ----------------------------------------------------
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? "BUCKTRACK Registration" : "BUCKTRACK Login";
+            document.getElementById('auth-submit-btn').innerText = isRegisterMode ? "CREATE SECURE ACCOUNT" : "LOGIN TO FIELD SYSTEM";
+            document.getElementById('auth-toggle-btn').innerText = isRegisterMode ? "Existing user? Login here" : "Need an account? Register here";
+            document.getElementById('auth-msg').innerText = "";
+        }
 
-        <div class="stream-chat-box">
-          <div class="chat-header">
-            <h3>Match Chat</h3>
-          </div>
-          <div class="chat-messages" id="spectate-chat-log">
-            <div class="chat-msg"><strong>[System]:</strong> Welcome to the match broadcast!</div>
-          </div>
-          <form class="chat-input-form" id="spectate-chat-form">
-            <input type="text" id="spectate-chat-input" placeholder="Send a message..." required />
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
-          </form>
-        </div>
-      </div>
-    </section>
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value.trim().toLowerCase();
+            const password = document.getElementById('auth-password').value;
+            const msgElem = document.getElementById('auth-msg');
 
-    <!-- TAB 3: SOCIAL & FRIENDS -->
-    <section id="tab-social" class="tab-content">
-      <div class="social-grid">
-        <div class="friends-list-card">
-          <h3><i class="fa-solid fa-users"></i> Online Squad</h3>
-          <ul class="friends-list" id="friends-list-ul">
-            <!-- Populated dynamically via app.js -->
-          </ul>
-        </div>
+            if (!username || !password) return;
 
-        <div class="direct-message-card">
-          <div class="chat-header">
-            <h3 id="active-chat-user">Global Community Channel</h3>
-          </div>
-          <div class="chat-messages" id="global-chat-log">
-            <div class="chat-msg"><strong>Price_NUK3:</strong> Anyone running ranked SnD tonight?</div>
-          </div>
-          <form class="chat-input-form" id="global-chat-form">
-            <input type="text" id="global-chat-input" placeholder="Say something in global chat..." required />
-            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
-          </form>
-        </div>
-      </div>
-    </section>
+            const hashedPassword = await hashPassword(password);
+            const tx = db.transaction(["users"], isRegisterMode ? "readwrite" : "readonly");
+            const store = tx.objectStore("users");
 
-  </main>
+            if (isRegisterMode) {
+                const checkReq = store.get(username);
+                checkReq.onsuccess = () => {
+                    if (checkReq.result) {
+                        msgElem.innerText = "Error: Username already exists.";
+                    } else {
+                        store.add({ username, password: hashedPassword, createdAt: new Date() });
+                        msgElem.style.color = "var(--accent-green)";
+                        msgElem.innerText = "Account created! Logging in...";
+                        setTimeout(() => completeLogin(username), 800);
+                    }
+                };
+            } else {
+                const getReq = store.get(username);
+                getReq.onsuccess = () => {
+                    const user = getReq.result;
+                    if (user && user.password === hashedPassword) {
+                        completeLogin(username);
+                    } else {
+                        msgElem.style.color = "var(--accent-orange)";
+                        msgElem.innerText = "Invalid username or password.";
+                    }
+                };
+            }
+        });
 
-  <!-- ACTIVISION LOGIN MODAL -->
-  <div class="modal-overlay" id="login-modal">
-    <div class="modal-card">
-      <button class="modal-close" id="btn-login-close">&times;</button>
-      <div class="modal-header">
-        <i class="fa-solid fa-shield-cat modal-logo"></i>
-        <h2>Activision Account Login</h2>
-        <p>Authenticate with your Activision ID to sync stats.</p>
-      </div>
-      <form id="login-form">
-        <div class="form-group">
-          <label for="act-id">Activision ID</label>
-          <input type="text" id="act-id" placeholder="Username#1234567" required />
-        </div>
-        <div class="form-group">
-          <label for="act-password">Password</label>
-          <input type="password" id="act-password" placeholder="••••••••••••" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-      </form>
-    </div>
-  </div>
+        function completeLogin(username) {
+            currentUser = username;
+            localStorage.setItem("bucktrack_session", username);
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('user-badge').innerText = username.toUpperCase();
+            loadUserPhotos();
+        }
 
-  <script src="app.js"></script>
+        function logout() {
+            localStorage.removeItem("bucktrack_session");
+            location.reload();
+        }
+
+        function checkSession() {
+            const savedSession = localStorage.getItem("bucktrack_session");
+            if (savedSession) {
+                completeLogin(savedSession);
+            }
+        }
+
+        // ----------------------------------------------------
+        // 3. IMAGE INGESTION & STORAGE ENGINE
+        // ----------------------------------------------------
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            if (!files.length || !currentUser) return;
+
+            const log = document.getElementById('telemetry-log');
+            log.innerHTML = `<p style="color:var(--accent-orange)">Processing ${files.length} Field File(s)...</p>`;
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const tx = db.transaction(["photos"], "readwrite");
+                    const store = tx.objectStore("photos");
+                    store.add({
+                        username: currentUser,
+                        fileName: file.name,
+                        dataUrl: e.target.result,
+                        timestamp: new Date()
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+
+            setTimeout(() => {
+                log.innerHTML = `<p style="color:var(--accent-green)">✓ Stored ${files.length} images in local database.</p>`;
+                loadUserPhotos();
+            }, 1000);
+        }
+
+        function loadUserPhotos() {
+            if (!currentUser || !db) return;
+            const tx = db.transaction(["photos"], "readonly");
+            const store = tx.objectStore("photos");
+            const index = store.index("username");
+            const req = index.getAll(currentUser);
+
+            req.onsuccess = () => {
+                const countElem = document.getElementById('img-count');
+                if (countElem) countElem.innerText = req.result.length;
+            };
+        }
+
+        // ----------------------------------------------------
+        // 4. NOVA SCOTIA LEGAL HOURS CALCULATOR
+        // ----------------------------------------------------
+        function updateLegalHours() {
+            const now = new Date();
+            // Springhill / Cumberland County approximate solar times
+            const sunrise = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 30);
+            const sunset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 45);
+
+            const legalStart = new Date(sunrise.getTime() - (30 * 60 * 1000));
+            const legalEnd = new Date(sunset.getTime() + (30 * 60 * 1000));
+
+            const formatTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('legal-range').innerText = `${formatTime(legalStart)} — ${formatTime(legalEnd)}`;
+            
+            const statusElem = document.getElementById('legal-status');
+            if (now >= legalStart && now <= legalEnd) {
+                statusElem.innerText = "ACTIVE LEGAL HOURS";
+                statusElem.style.color = "var(--accent-green)";
+            } else {
+                statusElem.innerText = "HUNTING CLOSED (OUTSIDE LEGAL HOURS)";
+                statusElem.style.color = "var(--accent-orange)";
+            }
+        }
+
+        // ----------------------------------------------------
+        // 5. MAP & UI ENGINE
+        // ----------------------------------------------------
+        let map = null;
+        let corridorLayer = null;
+
+        function initMap() {
+            // Springhill / Springhill Junction Coordinates
+            map = L.map('map').setView([45.816, -64.218], 13);
+
+            // Esri Clarity Satellite Basemap (Free, high-res tile layer)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 18,
+                attribution: 'Esri Satellite'
+            }).addTo(map);
+
+            // Stand Pin
+            L.marker([45.816, -64.218]).addTo(map)
+                .bindPopup('<b>Cam 01 - Ridge Scrape</b><br>Ghost Nine Target Area');
+        }
+
+        function highlightCorridor() {
+            if (!map) return;
+            if (corridorLayer) map.removeLayer(corridorLayer);
+
+            // Corridor vector line from North Ridge to South Softwood Feed
+            const corridorCoords = [
+                [45.825, -64.225],
+                [45.816, -64.218],
+                [45.808, -64.210]
+            ];
+
+            corridorLayer = L.polyline(corridorCoords, {
+                color: '#7bbcd5',
+                weight: 5,
+                opacity: 0.8,
+                dashArray: '10, 10'
+            }).addTo(map);
+
+            map.fitBounds(corridorLayer.getBounds());
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            if (btn) btn.classList.add('active');
+
+            if (tabId === 'map-view' && map) {
+                setTimeout(() => map.invalidateSize(), 200);
+            }
+        }
+
+        // ----------------------------------------------------
+        // APP INITIALIZATION
+        // ----------------------------------------------------
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initDatabase();
+            checkSession();
+            initMap();
+            updateLegalHours();
+            setInterval(updateLegalHours, 60000);
+        });
+    </script>
 </body>
 </html>
