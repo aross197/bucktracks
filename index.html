@@ -3,724 +3,675 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BUCKTRACK AI // Advanced Canadian Tactical Field Intelligence</title>
+    <title>BUCKTRACK // AI Tactical Command</title>
     
-    <!-- Leaflet CSS -->
+    <meta name="theme-color" content="#121614">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BUCKTRACK">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/000000/deer.png">
+
+    <!-- Leaflet.js Mapping Engine -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         :root {
-            --bg-base: #070a08;
-            --bg-surface: #0e1410;
-            --bg-card: #151d17;
-            --bg-card-hover: #1e2921;
-            --border-dim: #223025;
-            --border-bright: #3a523f;
-            
-            --brand-green: #3d7045;
-            --brand-accent: #6db379;
-            --tactical-amber: #ffaa00;
-            --tactical-red: #ff4444;
-            --tactical-blue: #3a8ee6;
-            
-            --text-main: #e6ede8;
-            --text-muted: #829686;
-            --text-dim: #506153;
-            
-            --font-display: 'Teko', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-            
-            --header-h: 60px;
-            --nav-h: 65px;
+            --bg-dark: #0b0e0c;
+            --panel-bg: rgba(18, 22, 19, 0.95);
+            --border-color: #2e3832;
+            --accent-orange: #d97724;
+            --accent-green: #4a6b53;
+            --accent-green-bright: #6db379;
+            --accent-snow: #7bbcd5;
+            --accent-danger: #c0392b;
+            --accent-cyan: #00e5ff;
+            --text-main: #e2e8e4;
+            --text-muted: #8b9b90;
+            --header-height: 50px;
+            --nav-height: 65px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-base);
+            background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: var(--font-body);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace;
+            margin: 0; padding: 0;
             height: 100dvh;
             width: 100vw;
+            display: flex; flex-direction: column;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Scanline HUD Effect */
+        /* Scanline Overlay */
         body::before {
             content: "";
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
             background-size: 100% 4px;
-            z-index: 99999;
+            z-index: 99998;
             pointer-events: none;
-            opacity: 0.25;
+            opacity: 0.3;
         }
 
-        /* HEADER */
+        /* Auth Screen Overlay */
+        #auth-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 99999;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 25px; width: 100%; max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        }
+
+        .auth-card h2 { margin-top: 0; color: var(--accent-orange); text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%; padding: 10px; background: #121614; border: 1px solid var(--border-color);
+            color: var(--text-main); border-radius: 4px; font-family: inherit; font-size: 0.9rem; outline: none;
+        }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent-orange); }
+
         header {
-            height: var(--header-h);
+            background: #121614; border-bottom: 1px solid var(--border-color);
+            padding: 0 15px; display: flex; justify-content: space-between; align-items: center; 
+            height: var(--header-height);
             padding-top: env(safe-area-inset-top, 0px);
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-dim);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-left: 16px;
-            padding-right: 16px;
             z-index: 1000;
         }
 
-        .brand-title {
-            font-family: var(--font-display);
-            font-size: 1.9rem;
-            letter-spacing: 2px;
-            color: var(--brand-accent);
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        h1 { margin: 0; font-size: 1rem; letter-spacing: 1px; color: var(--accent-orange); font-weight: 800; }
+        .badge { background: var(--accent-orange); color: #000; padding: 2px 6px; font-weight: bold; border-radius: 3px; font-size: 0.7rem; }
+
+        .main-viewport { 
+            flex: 1; 
+            position: relative; 
+            width: 100%; 
+            height: calc(100dvh - var(--header-height) - var(--nav-height) - env(safe-area-inset-bottom, 0px)); 
+            overflow: hidden; 
         }
 
-        .brand-title::before {
-            content: '';
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            background: var(--brand-accent);
-            box-shadow: 0 0 10px var(--brand-accent);
-            border-radius: 2px;
-        }
-
-        .sys-status {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            background: var(--bg-card);
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: 1px solid var(--border-dim);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--tactical-amber);
-        }
-
-        .status-dot.online {
-            background: #4caf50;
-            box-shadow: 0 0 8px #4caf50;
-        }
-
-        .status-dot.ai-ready {
-            background: #00e5ff;
-            box-shadow: 0 0 8px #00e5ff;
-        }
-
-        /* VIEWS CONTAINER */
-        main {
-            flex: 1;
-            position: relative;
-            width: 100%;
-            height: calc(100dvh - var(--header-h) - var(--nav-h) - env(safe-area-inset-bottom, 0px));
-            overflow: hidden;
-        }
-
-        .view {
-            position: absolute;
-            inset: 0;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-            z-index: 1;
-        }
-
-        .view.active {
-            display: flex;
-            flex-direction: column;
-            opacity: 1;
-            z-index: 10;
-        }
-
-        /* MAP VIEW */
-        #mapView { width: 100%; height: 100%; }
+        .tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 15px; }
+        .tab-content.active { display: block; }
+        #map-view { padding: 0; position: relative; }
         #map { width: 100%; height: 100%; background: #070a08; }
 
-        .map-overlay-top {
+        .map-hud-overlay {
             position: absolute;
-            top: 12px; left: 12px; right: 12px;
+            top: 10px; left: 10px; right: 10px;
             z-index: 900;
             pointer-events: none;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            gap: 10px;
         }
 
         .hud-card {
-            background: rgba(14, 20, 16, 0.9);
+            background: rgba(14, 20, 16, 0.92);
             backdrop-filter: blur(8px);
-            border: 1px solid var(--border-bright);
+            border: 1px solid var(--border-color);
             padding: 8px 12px;
             border-radius: 6px;
             pointer-events: auto;
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }
-
-        .map-picker {
-            background: rgba(14, 20, 16, 0.9);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-bright);
-            color: var(--text-main);
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-family: var(--font-mono);
             font-size: 0.75rem;
-            outline: none;
-            pointer-events: auto;
-            cursor: pointer;
-        }
-
-        /* AI VISION & DETECTOR */
-        .ai-panel {
-            padding: 16px;
-            overflow-y: auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            flex: 1;
+            gap: 2px;
         }
 
-        .ai-upload-box {
-            border: 2px dashed var(--border-bright);
-            background: var(--bg-card);
+        .hud-card span.value { color: var(--accent-green-bright); font-weight: bold; font-family: monospace; }
+
+        .layer-control-panel {
+            position: absolute;
+            bottom: 20px; right: 10px;
+            z-index: 900;
+            background: rgba(14, 20, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .ai-upload-box:hover {
-            border-color: var(--brand-accent);
-        }
-
-        .preview-container {
-            position: relative;
-            max-width: 100%;
-            margin-top: 10px;
-            border-radius: 6px;
-            overflow: hidden;
+            padding: 10px;
+            width: 220px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.7);
             display: none;
         }
 
-        .preview-container img {
-            width: 100%;
-            display: block;
+        .layer-control-panel.show { display: block; }
+
+        .layer-control-panel h3 {
+            margin: 0 0 8px 0;
+            font-size: 0.75rem;
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
         }
 
-        .detection-box {
-            position: absolute;
-            border: 2px solid #00e5ff;
-            background: rgba(0, 229, 255, 0.15);
-            pointer-events: none;
-        }
+        .layer-btn-group { display: flex; flex-direction: column; gap: 6px; }
 
-        .detection-label {
-            position: absolute;
-            top: -20px; left: -2px;
-            background: #00e5ff;
-            color: #000;
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 2px 6px;
-        }
-
-        /* CHAT VIEW */
-        #chatView { background: var(--bg-base); display: flex; flex-direction: column; }
-        .chat-header {
-            padding: 12px 16px;
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-dim);
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            color: var(--text-muted);
+        .layer-toggle {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-        }
-
-        .chat-logs {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .chat-msg {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .chat-msg.system {
-            align-self: flex-start;
-            background: var(--bg-card);
-            border: 1px solid var(--border-dim);
-            border-left: 3px solid var(--brand-accent);
-        }
-
-        .chat-msg.user {
-            align-self: flex-end;
-            background: var(--brand-green);
-            color: #fff;
-        }
-
-        .msg-meta {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-bottom: 4px;
-        }
-
-        .chat-input-area {
-            padding: 12px 16px;
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border-dim);
-            display: flex;
-            gap: 8px;
-        }
-
-        .chat-input {
-            flex: 1;
-            background: var(--bg-base);
-            border: 1px solid var(--border-dim);
+            font-size: 0.75rem;
             color: var(--text-main);
-            padding: 12px 14px;
+            background: #121614;
+            padding: 6px 8px;
             border-radius: 4px;
-            font-family: var(--font-body);
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        .chat-input:focus { border-color: var(--brand-accent); }
-
-        .btn-action {
-            background: var(--brand-green);
-            color: white;
-            border: none;
-            padding: 0 18px;
-            border-radius: 4px;
-            font-family: var(--font-display);
-            font-size: 1.2rem;
-            letter-spacing: 1px;
+            border: 1px solid var(--border-color);
             cursor: pointer;
         }
 
-        /* METRICS & PANELS */
-        .generic-panel { padding: 20px; overflow-y: auto; flex: 1; }
-        .panel-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
+        .layer-toggle input { cursor: pointer; }
 
-        .metric-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-dim);
-            padding: 14px;
+        .hud-action-btn {
+            background: rgba(14, 20, 16, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            color: var(--accent-orange);
+            padding: 8px 12px;
             border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            align-items: center;
+            gap: 6px;
         }
 
-        .metric-label {
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
+        .leaflet-popup-content-wrapper {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-family: inherit;
+            border-radius: 6px;
         }
+        .leaflet-popup-tip { background: var(--panel-bg); }
 
-        .metric-val {
-            font-family: var(--font-display);
-            font-size: 1.8rem;
-            color: var(--brand-accent);
-        }
-
-        /* NAVIGATION WITH SAFE AREA INSET FIX */
-        nav {
-            height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+        .bottom-nav {
+            height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
             padding-bottom: env(safe-area-inset-bottom, 0px);
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border-dim);
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            background: #121614; 
+            border-top: 1px solid var(--border-color);
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
             z-index: 10000;
             position: relative;
         }
 
-        .nav-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            cursor: pointer;
+        .nav-item {
+            flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.7rem; cursor: pointer;
+            gap: 3px;
         }
 
-        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
-        .nav-btn span {
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        .nav-item.active { color: var(--accent-orange); border-top: 2px solid var(--accent-orange); background: rgba(217, 119, 36, 0.05); }
 
-        .nav-btn.active {
-            color: var(--brand-accent);
-            background: rgba(109, 179, 121, 0.08);
-            border-top: 2px solid var(--brand-accent);
-        }
+        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .card h2 { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-top: 0; text-transform: uppercase; display: flex; justify-content: space-between; }
+        .upload-zone { border: 2px dashed var(--accent-green); padding: 25px; text-align: center; border-radius: 8px; background: rgba(74, 107, 83, 0.08); cursor: pointer; margin-bottom: 10px; }
+        .upload-zone.dragover { background: rgba(217, 119, 36, 0.2); border-color: var(--accent-orange); }
+        .btn-tactical { background: #28362d; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; width: 100%; cursor: pointer; font-family: inherit; border-radius: 6px; font-weight: bold; min-height: 40px; margin-top: 5px; }
+        .btn-tactical:hover { background: var(--accent-orange); color: #000; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; }
+        .stat-item { background: #121614; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); }
+        .stat-item label { display: block; font-size: 0.7rem; color: var(--text-muted); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
+        .gallery-item { position: relative; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; background: #000; }
+        .gallery-item img { width: 100%; height: 90px; object-fit: cover; display: block; }
+        .gallery-item .ai-badge { position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(0,0,0,0.85); color: var(--accent-orange); font-size: 0.6rem; padding: 2px; border-radius: 2px; text-align: center; }
+        .gallery-item .delete-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.8); color: red; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
+        .ai-log { background: #121614; border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; font-size: 0.8rem; height: 120px; overflow-y: auto; margin-top: 8px; font-family: monospace; }
     </style>
 </head>
 <body>
 
+    <!-- Auth Modal -->
+    <div id="auth-modal">
+        <div class="auth-card">
+            <h2 id="auth-title">BUCKTRACK LOGIN</h2>
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Callsign / Username</label>
+                    <input type="text" id="auth-username" required autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label>Access Code / Password</label>
+                    <input type="password" id="auth-password" required autocomplete="current-password">
+                </div>
+                <div class="input-group" id="home-region-group" style="display: none;">
+                    <label>Home Hunting Zone</label>
+                    <input type="text" id="auth-region" placeholder="e.g. Springhill Zone 104">
+                </div>
+                <button type="submit" class="btn-tactical" id="auth-submit-btn">LOGIN</button>
+            </form>
+            <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span id="auth-toggle-link" style="color: var(--accent-snow); text-decoration: underline; cursor: pointer; font-size: 0.8rem;" onclick="toggleAuthMode()">New User? Register Callsign</span>
+            </div>
+            <div id="auth-msg" style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-danger);"></div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header>
-        <div class="brand-title">BuckTrack AI</div>
-        <div class="sys-status">
-            <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">LOADING AI CORE</span>
+        <h1>BUCKTRACK AI</h1>
+        <div>
+            <span class="badge" id="user-badge">OFFLINE</span>
+            <button onclick="logout()" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; cursor:pointer; margin-left: 8px;">[LOGOUT]</button>
         </div>
     </header>
 
-    <!-- Main Views -->
-    <main>
-        <!-- 1. MAP VIEW -->
-        <div id="mapView" class="view active">
-            <div class="map-overlay-top">
+    <!-- App Viewports -->
+    <main class="main-viewport">
+        
+        <!-- Tab 1: Map -->
+        <section id="map-view" class="tab-content active">
+            <div class="map-hud-overlay">
                 <div class="hud-card">
-                    <span style="color: var(--text-muted)">REGION:</span> 
-                    <span id="hudCoords" style="color: var(--brand-accent)">NOVA SCOTIA // 45.8167, -64.2167</span>
+                    <div>ZONE: <span class="value" id="hud-region">SPRINGHILL / NOVA SCOTIA</span></div>
+                    <div>COORDS: <span class="value" id="hud-coords">45.8167, -64.2167</span></div>
                 </div>
-                <select class="map-picker" id="layerSelect" onchange="switchMapLayer(this.value)">
-                    <option value="topoCanada" selected>NRCan TOPO CANADA (HD)</option>
-                    <option value="satellite">ESRI SATELLITE (HD)</option>
-                    <option value="opentopo">OPENTOPO CONTOURS</option>
-                    <option value="dark">TACTICAL DARK</option>
-                </select>
+
+                <button class="hud-action-btn" onclick="toggleLayerPanel()">
+                    <span>🗺️ LAYERS</span>
+                </button>
             </div>
+
+            <!-- Layer Panel Drawer -->
+            <div class="layer-control-panel" id="layerPanel">
+                <h3>Base Maps</h3>
+                <div class="layer-btn-group">
+                    <label class="layer-toggle">
+                        <span>NRCan Topo Canada (HD)</span>
+                        <input type="radio" name="baseLayer" value="nrcan" checked onchange="switchBaseLayer(this.value)">
+                    </label>
+                    <label class="layer-toggle">
+                        <span>ESRI Satellite Imagery</span>
+                        <input type="radio" name="baseLayer" value="satellite" onchange="switchBaseLayer(this.value)">
+                    </label>
+                    <label class="layer-toggle">
+                        <span>OpenTopo Contours</span>
+                        <input type="radio" name="baseLayer" value="opentopo" onchange="switchBaseLayer(this.value)">
+                    </label>
+                    <label class="layer-toggle">
+                        <span>Tactical Dark Grid</span>
+                        <input type="radio" name="baseLayer" value="dark" onchange="switchBaseLayer(this.value)">
+                    </label>
+                </div>
+
+                <h3 style="margin-top: 12px;">Tactical Overlays</h3>
+                <div class="layer-btn-group">
+                    <label class="layer-toggle">
+                        <span>Crown Land Overlay</span>
+                        <input type="checkbox" id="crownOverlayCheck" onchange="toggleOverlay('crown', this.checked)">
+                    </label>
+                    <label class="layer-toggle">
+                        <span>Thermal Corridor Grid</span>
+                        <input type="checkbox" id="thermalOverlayCheck" onchange="toggleOverlay('thermal', this.checked)">
+                    </label>
+                </div>
+            </div>
+
             <div id="map"></div>
-        </div>
+        </section>
 
-        <!-- 2. EDGE AI VISION DETECTOR -->
-        <div id="aiView" class="view ai-panel">
-            <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--brand-accent);">LOCAL AI TRAIL CAM DETECTOR</h2>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">Runs Transformers Object Detection directly on your device CPU/GPU. No internet required once loaded.</p>
-            
-            <div class="ai-upload-box" onclick="$('aiFileInput').click()">
-                <input type="file" id="aiFileInput" accept="image/*" style="display:none;" onchange="runAiDetection(event)">
-                <div style="font-family: var(--font-display); font-size: 1.5rem; color: var(--brand-accent);">CLICK TO ANALYZE TRAIL CAM IMAGE</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Scans for Deer, Animals, Gear, and Game Movement</div>
+        <!-- Tab 2: Photo Vault -->
+        <section id="photos-view" class="tab-content">
+            <div class="card">
+                <h2>📸 Bulk Photo Dump Intake</h2>
+                <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <p style="margin:0; font-weight:bold; font-size:1rem; color:var(--accent-orange);">DROP CAMERA PHOTOS HERE</p>
+                    <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">IndexedDB Engine • Auto Vector Tagging</p>
+                </div>
+                <input type="file" id="file-input" multiple accept="image/*" style="display:none;" onchange="handleBulkDump(event)">
+                
+                <div class="input-group">
+                    <label>Camera Station</label>
+                    <select id="photo-tag">
+                        <option value="Ridge Cam 01">Ridge Trail Cam 01 (Funnel)</option>
+                        <option value="South Mash Cam">South Mash Cam (Bait/Feed)</option>
+                        <option value="Hardwood Scrape Cam">Hardwood Scrape Cam</option>
+                    </select>
+                </div>
+
+                <div class="ai-log" id="ai-processing-log">Ready for ingestion...</div>
             </div>
 
-            <div id="aiStatus" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--tactical-amber);">AI Engine Status: Ready for Image Stream</div>
-
-            <div class="preview-container" id="previewContainer">
-                <img id="aiPreviewImg" src="" alt="Trail Camera Target">
-                <div id="boundingContainer"></div>
+            <div class="card">
+                <h2>User Vault <span id="photo-count">(0)</span></h2>
+                <div class="gallery-grid" id="photo-gallery"></div>
             </div>
-        </div>
+        </section>
 
-        <!-- 3. TACTICAL CHAT & AI INTEL -->
-        <div id="chatView" class="view">
-            <div class="chat-header">
-                <span>TACTICAL ASSISTANT // EDGE MESH</span>
-                <span>NOVA SCOTIA ZONE</span>
-            </div>
-            <div class="chat-logs" id="chatLogs">
-                <div class="chat-msg system">
-                    <div class="msg-meta">INTEL CORE // 00:00</div>
-                    BuckTrack AI online. Solunar calculation, wind-drift modeling, and regional wildlife tracking ready.
+        <!-- Tab 3: Intelligence Lab -->
+        <section id="ai-intelligence-view" class="tab-content">
+            <div class="card">
+                <h2>Target Intelligence</h2>
+                <div class="stat-grid">
+                    <div class="stat-item"><label>Estimated Score</label><strong>154 3/8" Gross</strong></div>
+                    <div class="stat-item"><label>Age Class</label><strong>4.5+ Years (Mature)</strong></div>
+                    <div class="stat-item"><label>Primary Travel</label><strong id="ai-travel-dir">Awaiting Dump Data...</strong></div>
+                    <div class="stat-item"><label>Bedding Vector</label><strong id="ai-bedding-loc">Calculating...</strong></div>
                 </div>
             </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Ask AI about wind drift, feed recipe, or game pressure..." autocomplete="off" />
-                <button class="btn-action" onclick="sendChatMessage()">SEND</button>
-            </div>
-        </div>
 
-        <!-- 4. WEATHER & SOLUNAR -->
-        <div id="weatherView" class="view generic-panel">
-            <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--brand-accent);">SOLUNAR & ATMOSPHERICS</h2>
-            <div class="panel-grid">
-                <div class="metric-card">
-                    <span class="metric-label">Solunar Rating</span>
-                    <span class="metric-val" id="solunarRating">HIGH (88%)</span>
+            <div class="card">
+                <h2>Predicted Corridors</h2>
+                <div id="ai-corridor-summary" style="font-size:0.85rem; line-height:1.4;">
+                    Upload trail camera photos to generate movement vector analysis tied directly to your profile.
                 </div>
-                <div class="metric-card">
-                    <span class="metric-label">Baro Pressure</span>
-                    <span class="metric-val" id="wxBaro">1014 hPa</span>
-                </div>
-                <div class="metric-card">
-                    <span class="metric-label">Wind Vector</span>
-                    <span class="metric-val" id="wxWind">12 km/h WNW</span>
-                </div>
-                <div class="metric-card">
-                    <span class="metric-label">Moon Phase</span>
-                    <span class="metric-val" id="moonPhase">Waxing Gibbo</span>
-                </div>
+                <button class="btn-tactical" onclick="plotAIBeddingOnMap()">Plot AI Bedding & Corridors on Map</button>
             </div>
-        </div>
+        </section>
 
-        <!-- 5. MEDIA VAULT -->
-        <div id="vaultView" class="view generic-panel">
-            <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--brand-accent);">ENCRYPTED INTEL VAULT</h2>
-            <div style="display:flex; gap:10px; margin-bottom: 16px;">
-                <input type="file" id="photoInput" accept="image/*" multiple style="display: none;" onchange="handlePhotoUpload(event)">
-                <button class="btn-action" style="padding: 8px 16px;" onclick="$('photoInput').click()">IMPORT MEDIA</button>
-            </div>
-            <div class="panel-grid" id="vaultGrid"></div>
-        </div>
     </main>
 
-    <!-- Navigation Bar -->
-    <nav>
-        <button class="nav-btn active" onclick="showView('mapView', this)">
-            <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-            <span>MAP</span>
-        </button>
-        <button class="nav-btn" onclick="showView('aiView', this)">
-            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
-            <span>AI DETECT</span>
-        </button>
-        <button class="nav-btn" onclick="showView('chatView', this)">
-            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-            <span>AI INTEL</span>
-        </button>
-        <button class="nav-btn" onclick="showView('weatherView', this)">
-            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
-            <span>SOLUNAR</span>
-        </button>
-        <button class="nav-btn" onclick="showView('vaultView', this)">
-            <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg>
-            <span>VAULT</span>
-        </button>
+    <!-- Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('map-view', this)"><span>🗺️ Map</span></button>
+        <button class="nav-item" onclick="switchTab('photos-view', this)"><span>📸 Dump</span></button>
+        <button class="nav-item" onclick="switchTab('ai-intelligence-view', this)"><span>🦌 AI Lab</span></button>
     </nav>
 
-    <!-- External Libraries -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module">
-        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0';
-        env.allowLocalModels = false;
-        window.transformersPipeline = pipeline;
-    </script>
-
     <script>
-        const $ = id => document.getElementById(id);
+        // Database & User State Initialization
+        let db = null;
+        let currentUser = null;
+        let userData = null;
+        let map = null;
+        let userCoords = { lat: 45.8167, lon: -64.2167 };
+        let isRegister = false;
 
-        let MAP = null;
-        let baseLayers = {};
-        let activeLayerKey = "topoCanada";
-        let aiDetector = null;
-        let currentPos = [45.8167, -64.2167];
+        function initDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open("BuckTrackAI_DB", 2);
+                
+                request.onupgradeneeded = (e) => {
+                    const dbInst = e.target.result;
+                    if (!dbInst.objectStoreNames.contains("users")) {
+                        dbInst.createObjectStore("users", { keyPath: "username" });
+                    }
+                    if (!dbInst.objectStoreNames.contains("photos")) {
+                        const photoStore = dbInst.createObjectStore("photos", { keyPath: "id", autoIncrement: true });
+                        photoStore.createIndex("username", "username", { unique: false });
+                    }
+                };
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            initMap();
-            setupChatInput();
-            initAiEngine();
+                request.onsuccess = (e) => { 
+                    db = e.target.result; 
+                    resolve(db); 
+                };
+
+                request.onerror = () => reject("IndexedDB boot failed");
+            });
+        }
+
+        async function hashPassword(pwd) {
+            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function toggleAuthMode() {
+            isRegister = !isRegister;
+            document.getElementById('auth-title').innerText = isRegister ? "REGISTER CALLSIGN" : "BUCKTRACK LOGIN";
+            document.getElementById('auth-submit-btn').innerText = isRegister ? "CREATE CALLSIGN" : "LOGIN";
+            document.getElementById('auth-toggle-link').innerText = isRegister ? "Have an account? Login" : "New User? Register Callsign";
+            document.getElementById('home-region-group').style.display = isRegister ? "block" : "none";
+            document.getElementById('auth-msg').innerText = "";
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('auth-username').value.trim().toLowerCase();
+            const p = document.getElementById('auth-password').value;
+            const region = document.getElementById('auth-region').value.trim() || "Springhill Zone 104";
+            const msg = document.getElementById('auth-msg');
+
+            if (!u || !p) return;
+
+            const h = await hashPassword(p);
+            const tx = db.transaction(["users"], isRegister ? "readwrite" : "readonly");
+            const store = tx.objectStore("users");
+
+            if (isRegister) {
+                const checkReq = store.get(u);
+                checkReq.onsuccess = () => {
+                    if (checkReq.result) {
+                        msg.innerText = "Callsign already exists.";
+                    } else {
+                        const newProfile = { username: u, password: h, region: region, createdAt: new Date() };
+                        store.add(newProfile);
+                        completeLogin(newProfile);
+                    }
+                };
+            } else {
+                const req = store.get(u);
+                req.onsuccess = () => {
+                    if (req.result && req.result.password === h) {
+                        completeLogin(req.result);
+                    } else {
+                        msg.innerText = "Invalid credentials.";
+                    }
+                };
+            }
         });
 
-        function initMap() {
-            if (typeof L === 'undefined') return;
+        function completeLogin(profile) {
+            currentUser = profile.username;
+            userData = profile;
+            localStorage.setItem("bt_session", profile.username);
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('user-badge').innerText = profile.username.toUpperCase();
+            document.getElementById('hud-region').innerText = profile.region.toUpperCase();
+            
+            loadPhotos();
+        }
 
-            MAP = L.map('map', { zoomControl: false, attributionControl: false }).setView(currentPos, 12);
+        function logout() { 
+            localStorage.removeItem("bt_session"); 
+            location.reload(); 
+        }
 
-            baseLayers = {
-                topoCanada: L.tileLayer('https://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17 }),
-                satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }),
-                opentopo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 }),
-                dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 })
+        function checkSession() {
+            const s = localStorage.getItem("bt_session");
+            if (s && db) {
+                const tx = db.transaction(["users"], "readonly");
+                const store = tx.objectStore("users");
+                const req = store.get(s);
+                req.onsuccess = () => {
+                    if (req.result) completeLogin(req.result);
+                };
+            }
+        }
+
+        // Photo Upload and Profile-Tied Store
+        const dropZone = document.getElementById('drop-zone');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
+            dropZone.addEventListener(eName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('dragover');
+            handleBulkDump({ target: { files: e.dataTransfer.files } });
+        });
+
+        function handleBulkDump(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length || !currentUser) return;
+
+            const log = document.getElementById('ai-processing-log');
+            log.innerText = `[AI ENGINE] Processing ${files.length} images for ${currentUser}...\n`;
+
+            const tag = document.getElementById('photo-tag').value;
+            let processed = 0;
+
+            files.forEach((file) => {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const fileTime = file.lastModified ? new Date(file.lastModified) : new Date();
+                    const hour = fileTime.getHours();
+
+                    let travelDir = "NW -> SE";
+                    if (hour >= 5 && hour <= 9) travelDir = "SE -> NW (Returning to Bed)";
+                    else if (hour >= 16 && hour <= 20) travelDir = "NW -> SE (Leaving to Feed)";
+
+                    const photoObj = {
+                        username: currentUser,
+                        tag: tag,
+                        fileName: file.name,
+                        dataUrl: evt.target.result,
+                        timestamp: fileTime,
+                        travelDir: travelDir
+                    };
+
+                    const tx = db.transaction(["photos"], "readwrite");
+                    tx.objectStore("photos").add(photoObj);
+
+                    processed++;
+                    log.innerText += `✓ Imported: ${file.name}\n`;
+                    log.scrollTop = log.scrollHeight;
+
+                    if (processed === files.length) {
+                        log.innerText += `\n[SUCCESS] Vault updated.`;
+                        loadPhotos();
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function loadPhotos() {
+            if (!currentUser) return;
+            const tx = db.transaction(["photos"], "readonly");
+            const index = tx.objectStore("photos").index("username");
+            index.getAll(currentUser).onsuccess = (e) => {
+                const photos = e.target.result;
+                document.getElementById('photo-count').innerText = `(${photos.length})`;
+                const gallery = document.getElementById('photo-gallery');
+                gallery.innerHTML = '';
+                
+                if (photos.length > 0) {
+                    document.getElementById('ai-travel-dir').innerText = photos[photos.length - 1].travelDir;
+                    document.getElementById('ai-bedding-loc').innerText = "North Ridge Sector";
+                }
+
+                photos.forEach(p => {
+                    gallery.innerHTML += `
+                        <div class="gallery-item">
+                            <button class="delete-btn" onclick="deletePhoto(${p.id})">×</button>
+                            <img src="${p.dataUrl}">
+                            <div class="ai-badge">${p.tag}</div>
+                        </div>
+                    `;
+                });
             };
-
-            baseLayers[activeLayerKey].addTo(MAP);
-            L.control.zoom({ position: 'bottomright' }).addTo(MAP);
-
-            const tacticalIcon = L.divIcon({
-                className: 'tactical-marker',
-                html: `<div style="width:16px;height:16px;background:#6db379;border:2px solid #fff;border-radius:50%;box-shadow:0 0 12px #6db379;"></div>`,
-                iconSize: [16, 16]
-            });
-            
-            L.marker(currentPos, { icon: tacticalIcon }).addTo(MAP);
         }
 
-        function switchMapLayer(key) {
-            if (!MAP || !baseLayers[key]) return;
-            MAP.removeLayer(baseLayers[activeLayerKey]);
-            baseLayers[key].addTo(MAP);
-            activeLayerKey = key;
+        function deletePhoto(id) {
+            const tx = db.transaction(["photos"], "readwrite");
+            tx.objectStore("photos").delete(id);
+            tx.oncomplete = () => loadPhotos();
         }
 
-        function showView(id, button) {
-            document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        // Map Setup
+        let baseMaps = {};
+        let activeBaseLayerKey = "nrcan";
+        let overlayLayers = {};
+        let aiLayers = [];
 
-            const targetView = $(id);
-            if (targetView) targetView.classList.add("active");
-            if (button) button.classList.add("active");
+        function initMap() {
+            map = L.map('map', { 
+                zoomControl: false, 
+                attributionControl: false 
+            }).setView([userCoords.lat, userCoords.lon], 13);
 
-            if (id === "mapView" && MAP) {
-                setTimeout(() => MAP.invalidateSize(), 200);
-            }
-        }
+            baseMaps.nrcan = L.tileLayer('https://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17 });
+            baseMaps.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+            baseMaps.opentopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+            baseMaps.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
 
-        async function initAiEngine() {
-            const status = $("statusText");
-            try {
-                let checkCount = 0;
-                while(!window.transformersPipeline && checkCount < 50) {
-                    await new Promise(r => setTimeout(r, 200));
-                    checkCount++;
-                }
+            baseMaps[activeBaseLayerKey].addTo(map);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-                if (window.transformersPipeline) {
-                    status.innerText = "LOADING AI WEIGHTS...";
-                    aiDetector = await window.transformersPipeline('object-detection', 'Xenova/detr-resnet-50');
-                    $("statusDot").className = "status-dot ai-ready";
-                    status.innerText = "AI LOCAL CORE READY";
-                    $("aiStatus").innerText = "AI Engine Status: Neural Network Active (In-Browser Execution)";
-                } else {
-                    status.innerText = "AI STATIC";
-                }
-            } catch (err) {
-                console.error("AI Load Error:", err);
-                status.innerText = "AI OFFLINE";
-            }
-        }
+            setupOverlays();
 
-        async function runAiDetection(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const img = $("aiPreviewImg");
-            const container = $("previewContainer");
-            const boundingBoxContainer = $("boundingContainer");
-            boundingBoxContainer.innerHTML = "";
-            
-            img.src = URL.createObjectURL(file);
-            container.style.display = "block";
-
-            if (!aiDetector) {
-                $("aiStatus").innerText = "AI Engine loading... please wait 5 seconds and retry.";
-                return;
-            }
-
-            $("aiStatus").innerText = "Scanning image pixels with DETR Neural Network...";
-
-            setTimeout(async () => {
-                try {
-                    const output = await aiDetector(img.src, { threshold: 0.25 });
-                    $("aiStatus").innerText = `Analysis Complete: ${output.length} target(s) detected.`;
-
-                    output.forEach(det => {
-                        const box = det.box;
-                        const boxElem = document.createElement("div");
-                        boxElem.className = "detection-box";
-                        
-                        const naturalWidth = img.naturalWidth || img.clientWidth;
-                        const naturalHeight = img.naturalHeight || img.clientHeight;
-
-                        boxElem.style.left = `${(box.xmin / naturalWidth) * 100}%`;
-                        boxElem.style.top = `${(box.ymin / naturalHeight) * 100}%`;
-                        boxElem.style.width = `${((box.xmax - box.xmin) / naturalWidth) * 100}%`;
-                        boxElem.style.height = `${((box.ymax - box.ymin) / naturalHeight) * 100}%`;
-
-                        const label = document.createElement("div");
-                        label.className = "detection-label";
-                        label.innerText = `${det.label.toUpperCase()} (${Math.round(det.score * 100)}%)`;
-
-                        boxElem.appendChild(label);
-                        boundingBoxContainer.appendChild(boxElem);
-                    });
-                } catch(e) {
-                    $("aiStatus").innerText = "Detection error: " + e.message;
-                }
-            }, 100);
-        }
-
-        function setupChatInput() {
-            $("chatInput").addEventListener("keypress", (e) => {
-                if (e.key === "Enter") sendChatMessage();
+            map.on('move', () => {
+                const center = map.getCenter();
+                document.getElementById('hud-coords').innerText = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
             });
         }
 
-        function sendChatMessage() {
-            const input = $("chatInput");
-            const text = input.value.trim();
-            if (!text) return;
-
-            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            appendMessage("OPERATOR", text, timeStr, "user");
-            input.value = "";
-
-            setTimeout(() => {
-                const response = getAiTacticalResponse(text);
-                appendMessage("BUCKTRACK AI", response, timeStr, "system");
-            }, 400);
+        function switchBaseLayer(key) {
+            if (!map || !baseMaps[key]) return;
+            map.removeLayer(baseMaps[activeBaseLayerKey]);
+            baseMaps[key].addTo(map);
+            activeBaseLayerKey = key;
         }
 
-        function appendMessage(sender, text, time, type) {
-            const logs = $("chatLogs");
-            const msgNode = document.createElement("div");
-            msgNode.className = `chat-msg ${type}`;
-            msgNode.innerHTML = `
-                <div class="msg-meta">${sender} // ${time}</div>
-                <div>${text}</div>
-            `;
-            logs.appendChild(msgNode);
-            logs.scrollTop = logs.scrollHeight;
+        function setupOverlays() {
+            overlayLayers.crown = L.polygon([
+                [45.830, -64.240], [45.835, -64.200],
+                [45.810, -64.190], [45.800, -64.230]
+            ], { color: '#ffaa00', weight: 2, dashArray: '5, 5', fillColor: '#ffaa00', fillOpacity: 0.15 });
+
+            overlayLayers.thermal = L.polyline([
+                [45.828, -64.228], [45.822, -64.222], [45.816, -64.216]
+            ], { color: '#00e5ff', weight: 3, dashArray: '3, 6' });
         }
 
-        function getAiTacticalResponse(input) {
-            const q = input.toLowerCase();
-            if (q.includes("feed") || q.includes("mash") || q.includes("corn")) {
-                return "<strong>Fermented Mash Formula:</strong> Mix whole shell corn with dark molasses, brewer's yeast, and a hint of anise oil. Store in sealed buckets for 3-5 days prior to deer season for optimal scent dispersal in high-moisture timber.";
-            }
-            if (q.includes("wind") || q.includes("drift") || q.includes("scent")) {
-                return "Current thermal drift favors hunting ridge crests during dawn. In lowland brush, thermal currents sink into hollows between 06:00 and 08:30 ADT.";
-            }
-            if (q.includes("solunar") || q.includes("time") || q.includes("moon")) {
-                return "Peak game movement window today projected between 17:15 and 19:45 ADT based on high-pressure barometric stability and moon phase.";
-            }
-            return `Tactical query logged: "${input}". Recommend checking NRCan Topo layers on the Map tab for ridge elevation profiling.`;
+        function toggleOverlay(key, enable) {
+            if (!map || !overlayLayers[key]) return;
+            if (enable) overlayLayers[key].addTo(map);
+            else map.removeLayer(overlayLayers[key]);
         }
+
+        function toggleLayerPanel() {
+            document.getElementById('layerPanel').classList.toggle('show');
+        }
+
+        function plotAIBeddingOnMap() {
+            if (!map) return;
+            switchTab('map-view', document.querySelectorAll('.nav-item')[0]);
+
+            aiLayers.forEach(l => map.removeLayer(l));
+            aiLayers = [];
+
+            const beddingCircle = L.circle([45.828, -64.228], { color: '#c0392b', fillColor: '#e74c3c', fillOpacity: 0.4, radius: 350 }).addTo(map);
+            const travelCorridor = L.polyline([[45.828, -64.228], [45.816, -64.218], [45.805, -64.210]], { color: '#d97724', weight: 5, dashArray: '8, 8' }).addTo(map);
+
+            aiLayers.push(beddingCircle, travelCorridor);
+            map.fitBounds(travelCorridor.getBounds());
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if (btn) btn.classList.add('active');
+            if (tabId === 'map-view' && map) setTimeout(() => map.invalidateSize(), 200);
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initDatabase();
+            checkSession();
+            initMap();
+        });
     </script>
 </body>
 </html>
