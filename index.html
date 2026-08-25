@@ -1,442 +1,3584 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BUCKTRACK // AI Tactical Command</title>
-    
-    <meta name="theme-color" content="#121614">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="BUCKTRACK">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/000000/deer.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#070b08">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BUCKTRACK">
 
-    <!-- Leaflet.js Mapping Engine -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<title>BUCKTRACK // Field Intelligence</title>
 
-    <style>
-        :root {
-            --bg-dark: #0b0e0c;
-            --panel-bg: rgba(20, 26, 22, 0.95);
-            --border-color: #2e3832;
-            --accent-orange: #d97724;
-            --accent-green: #4a6b53;
-            --accent-snow: #7bbcd5;
-            --accent-danger: #c0392b;
-            --text-main: #e2e8e4;
-            --text-muted: #8b9b90;
-            --nav-height: 60px;
-        }
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+integrity="sha256-p4NxAoJBhIINfQ3wN2Q2z7RkM6zqVJkK3Jq8mH3z0fE="
+crossorigin=""/>
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+<style>
+:root{
+    --bg:#050806;
+    --panel:#0d130f;
+    --panel2:#121a14;
+    --panel3:#172019;
+    --line:#27342b;
+    --text:#edf4ef;
+    --muted:#829087;
+    --orange:#e47c28;
+    --orange2:#ff9d49;
+    --green:#5e8467;
+    --green2:#83ad8d;
+    --blue:#67afd0;
+    --red:#d34c3e;
+    --yellow:#d7b54c;
+    --shadow:0 12px 35px rgba(0,0,0,.38);
+}
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-            margin: 0; padding: 0;
-            height: 100vh; height: -webkit-fill-available;
-            display: flex; flex-direction: column;
-            overflow: hidden;
-        }
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
 
-        /* Auth Screen Overlay */
-        #auth-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 9999;
-            display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    overflow:hidden;
+}
 
-        .auth-card {
-            background: var(--panel-bg); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 25px; width: 100%; max-width: 400px;
-        }
+button,input,select,textarea{
+    font:inherit;
+}
 
-        .auth-card h2 { margin-top: 0; color: var(--accent-orange); text-transform: uppercase; font-size: 1.2rem; }
-        .input-group { margin-bottom: 12px; }
-        .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
-        .input-group input, .input-group select, .input-group textarea {
-            width: 100%; padding: 10px; background: #121614; border: 1px solid var(--border-color);
-            color: var(--text-main); border-radius: 4px; font-family: inherit; font-size: 0.9rem;
-        }
+button{
+    cursor:pointer;
+}
 
-        header {
-            background: #121614; border-bottom: 1px solid var(--border-color);
-            padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; height: 50px;
-        }
+button:active{
+    transform:scale(.98);
+}
 
-        h1 { margin: 0; font-size: 1rem; letter-spacing: 1px; color: var(--accent-orange); }
-        .badge { background: var(--accent-orange); color: #000; padding: 2px 6px; font-weight: bold; border-radius: 3px; font-size: 0.7rem; }
+#app{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
 
-        .main-viewport { flex: 1; position: relative; width: 100%; height: calc(100vh - 110px); overflow: hidden; }
-        .tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 15px; }
-        .tab-content.active { display: block; }
-        #map-view { padding: 0; }
-        #map { width: 100%; height: 100%; }
+/* ================= HEADER ================= */
 
-        .bottom-nav {
-            height: var(--nav-height); background: #121614; border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-around; align-items: center;
-        }
+.header{
+    height:58px;
+    flex:none;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 14px;
+    padding-top:env(safe-area-inset-top);
+    background:rgba(6,10,8,.98);
+    border-bottom:1px solid var(--line);
+    z-index:5000;
+}
 
-        .nav-item {
-            flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.7rem; cursor: pointer;
-        }
+.logo{
+    color:var(--orange);
+    font-size:18px;
+    font-weight:950;
+    letter-spacing:2px;
+}
 
-        .nav-item.active { color: var(--accent-orange); border-top: 2px solid var(--accent-orange); background: rgba(217, 119, 36, 0.05); }
+.logo small{
+    display:block;
+    color:var(--muted);
+    font-size:7px;
+    letter-spacing:2px;
+    margin-top:2px;
+}
 
-        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .card h2 { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-top: 0; text-transform: uppercase; display: flex; justify-content: space-between; }
-        .upload-zone { border: 2px dashed var(--accent-green); padding: 25px; text-align: center; border-radius: 8px; background: rgba(74, 107, 83, 0.08); cursor: pointer; margin-bottom: 10px; }
-        .upload-zone.dragover { background: rgba(217, 119, 36, 0.2); border-color: var(--accent-orange); }
-        .btn-tactical { background: #28362d; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; width: 100%; cursor: pointer; font-family: inherit; border-radius: 6px; font-weight: bold; min-height: 40px; margin-top: 5px; }
-        .btn-tactical:hover { background: var(--accent-orange); color: #000; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; }
-        .stat-item { background: #121614; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); }
-        .stat-item label { display: block; font-size: 0.7rem; color: var(--text-muted); }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
-        .gallery-item { position: relative; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; background: #000; }
-        .gallery-item img { width: 100%; height: 90px; object-fit: cover; display: block; }
-        .gallery-item .ai-badge { position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(0,0,0,0.85); color: var(--accent-orange); font-size: 0.6rem; padding: 2px; border-radius: 2px; text-align: center; }
-        .gallery-item .delete-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.8); color: red; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
-        .ai-log { background: #121614; border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; font-size: 0.8rem; height: 120px; overflow-y: auto; margin-top: 8px; font-family: monospace; }
-    </style>
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.live{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    color:#83d894;
+    font-size:8px;
+    font-weight:800;
+}
+
+.live-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:#4be36e;
+    box-shadow:0 0 12px #4be36e;
+}
+
+.user-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:7px;
+    padding:5px 8px;
+    font-size:8px;
+}
+
+/* ================= MAIN ================= */
+
+.main{
+    flex:1;
+    min-height:0;
+    position:relative;
+}
+
+.view{
+    position:absolute;
+    inset:0;
+    display:none;
+    overflow:auto;
+}
+
+.view.active{
+    display:block;
+}
+
+#mapView{
+    overflow:hidden;
+}
+
+/* ================= MAP ================= */
+
+#map{
+    width:100%;
+    height:100%;
+    background:#182019;
+}
+
+.leaflet-control-attribution{
+    font-size:7px!important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip{
+    background:#101711;
+    color:#edf4ef;
+}
+
+.leaflet-popup-content{
+    font-size:11px;
+}
+
+.map-top{
+    position:absolute;
+    z-index:900;
+    top:10px;
+    left:10px;
+    right:10px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+    pointer-events:none;
+}
+
+.map-stat{
+    background:rgba(7,12,9,.91);
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:9px;
+    padding:7px;
+    backdrop-filter:blur(9px);
+    box-shadow:var(--shadow);
+}
+
+.map-stat label{
+    display:block;
+    color:var(--muted);
+    font-size:7px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.map-stat strong{
+    display:block;
+    margin-top:3px;
+    font-size:12px;
+}
+
+.map-stat.orange strong{
+    color:var(--orange2);
+}
+
+.map-tools{
+    position:absolute;
+    z-index:900;
+    top:108px;
+    right:10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.map-tool{
+    width:40px;
+    height:40px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    background:rgba(7,12,9,.94);
+    color:white;
+    box-shadow:var(--shadow);
+}
+
+.map-bottom{
+    position:absolute;
+    z-index:900;
+    left:10px;
+    right:10px;
+    bottom:10px;
+}
+
+.command-card{
+    background:rgba(7,12,9,.95);
+    border:1px solid var(--line);
+    border-radius:13px;
+    padding:10px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(12px);
+}
+
+.command-title{
+    display:flex;
+    justify-content:space-between;
+    color:var(--muted);
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.confidence{
+    color:var(--orange2);
+}
+
+.command-main{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:6px;
+}
+
+.command-main strong{
+    font-size:14px;
+}
+
+.command-main span{
+    font-size:23px;
+}
+
+.command-data{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:5px;
+    margin-top:8px;
+}
+
+.command-data div{
+    color:var(--muted);
+    font-size:8px;
+    text-align:center;
+    padding:5px 2px;
+    background:#0b110d;
+    border-radius:5px;
+}
+
+/* ================= NAV ================= */
+
+.bottom-nav{
+    height:68px;
+    flex:none;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    background:#0a100c;
+    border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom);
+    z-index:5000;
+}
+
+.nav-btn{
+    border:0;
+    background:none;
+    color:var(--muted);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    font-size:8px;
+    font-weight:800;
+}
+
+.nav-btn span{
+    font-size:19px;
+}
+
+.nav-btn.active{
+    color:var(--orange2);
+    background:rgba(228,124,40,.07);
+    border-top:2px solid var(--orange);
+}
+
+/* ================= PANELS ================= */
+
+.panel{
+    padding:12px;
+    max-width:1200px;
+    margin:auto;
+}
+
+.card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:13px;
+    padding:13px;
+    margin-bottom:11px;
+    box-shadow:var(--shadow);
+}
+
+.card-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:var(--muted);
+    font-size:9px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:11px;
+}
+
+.card-title strong{
+    color:var(--text);
+}
+
+.grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+}
+
+.grid3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:7px;
+}
+
+.metric{
+    background:#090e0b;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px;
+}
+
+.metric label{
+    display:block;
+    color:var(--muted);
+    font-size:7px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+
+.metric strong{
+    display:block;
+    margin-top:5px;
+    font-size:12px;
+}
+
+.metric .orange{
+    color:var(--orange2);
+}
+
+.metric .green{
+    color:var(--green2);
+}
+
+/* ================= TARGET ================= */
+
+.target{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.target-photo{
+    width:82px;
+    height:82px;
+    border-radius:12px;
+    background:
+        radial-gradient(circle at 50% 40%,#34463a,#111811 65%);
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:43px;
+}
+
+.target h1{
+    margin:0;
+    font-size:21px;
+}
+
+.target p{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:9px;
+}
+
+/* ================= ACTIVITY ================= */
+
+.activity{
+    height:120px;
+    display:flex;
+    align-items:end;
+    gap:3px;
+    padding:10px 5px 5px;
+    background:#090e0b;
+    border:1px solid var(--line);
+    border-radius:8px;
+}
+
+.activity-bar{
+    flex:1;
+    min-height:3px;
+    background:var(--green);
+    border-radius:3px 3px 0 0;
+}
+
+.activity-bar.hot{
+    background:var(--orange);
+}
+
+/* ================= AI ================= */
+
+.ai-box{
+    background:#090e0b;
+    border:1px solid var(--line);
+    border-left:3px solid var(--orange);
+    border-radius:8px;
+    padding:11px;
+    font-size:10px;
+    line-height:1.55;
+}
+
+.ai-box strong{
+    color:var(--orange2);
+}
+
+.progress{
+    height:7px;
+    background:#040604;
+    border-radius:6px;
+    overflow:hidden;
+    margin-top:6px;
+}
+
+.progress span{
+    display:block;
+    height:100%;
+    background:var(--orange);
+    border-radius:6px;
+}
+
+/* ================= WEATHER ================= */
+
+.weather-hero{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.temperature{
+    font-size:43px;
+    font-weight:950;
+}
+
+.condition{
+    color:var(--muted);
+    font-size:10px;
+}
+
+.weather-icon{
+    font-size:43px;
+}
+
+.forecast{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:5px;
+    margin-top:10px;
+}
+
+.forecast-item{
+    text-align:center;
+    padding:7px 2px;
+    background:#090e0b;
+    border:1px solid var(--line);
+    border-radius:7px;
+}
+
+.forecast-item small{
+    color:var(--muted);
+    font-size:7px;
+}
+
+.forecast-item div{
+    font-size:19px;
+    margin:3px 0;
+}
+
+.forecast-item b{
+    font-size:10px;
+}
+
+/* ================= PHOTO VAULT ================= */
+
+.upload{
+    display:block;
+    border:2px dashed var(--green);
+    border-radius:11px;
+    padding:25px 12px;
+    text-align:center;
+    background:rgba(94,132,103,.05);
+}
+
+.upload strong{
+    display:block;
+    color:var(--orange2);
+    font-size:13px;
+}
+
+.upload span{
+    display:block;
+    color:var(--muted);
+    font-size:8px;
+    margin-top:5px;
+}
+
+.file-input{
+    display:none;
+}
+
+.import-progress{
+    display:none;
+    margin-top:10px;
+}
+
+.import-progress.active{
+    display:block;
+}
+
+.import-text{
+    color:var(--muted);
+    font-size:8px;
+    margin-bottom:5px;
+}
+
+.gallery{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+}
+
+.photo{
+    position:relative;
+    aspect-ratio:1;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:7px;
+    background:#020302;
+}
+
+.photo img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.photo-info{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    padding:12px 4px 4px;
+    background:linear-gradient(transparent,rgba(0,0,0,.9));
+    font-size:7px;
+}
+
+.photo-delete{
+    position:absolute;
+    top:4px;
+    right:4px;
+    width:23px;
+    height:23px;
+    border:0;
+    border-radius:50%;
+    background:rgba(0,0,0,.82);
+    color:#fff;
+}
+
+.viewer{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.96);
+    z-index:9000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+}
+
+.viewer.active{
+    display:flex;
+}
+
+.viewer img{
+    max-width:100%;
+    max-height:90%;
+    object-fit:contain;
+}
+
+.viewer-close{
+    position:absolute;
+    top:20px;
+    right:20px;
+    width:40px;
+    height:40px;
+    border:1px solid #444;
+    border-radius:50%;
+    background:#111;
+    color:white;
+    font-size:20px;
+}
+
+/* ================= BUTTONS ================= */
+
+.btn{
+    width:100%;
+    padding:11px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#1a271e;
+    color:var(--text);
+    font-weight:800;
+    font-size:10px;
+    margin-top:8px;
+}
+
+.btn.primary{
+    background:var(--orange);
+    color:#070a08;
+    border-color:var(--orange);
+}
+
+.btn.blue{
+    background:#17313b;
+    border-color:#285969;
+}
+
+.btn.danger{
+    background:#3b1715;
+    border-color:#6d2b26;
+}
+
+/* ================= SETTINGS ================= */
+
+.field{
+    margin-top:9px;
+}
+
+.field label{
+    display:block;
+    color:var(--muted);
+    font-size:8px;
+    margin-bottom:4px;
+}
+
+.field input,
+.field select,
+.field textarea{
+    width:100%;
+    padding:10px;
+    background:#080d09;
+    color:var(--text);
+    border:1px solid var(--line);
+    border-radius:7px;
+    outline:none;
+}
+
+.field textarea{
+    min-height:90px;
+    resize:vertical;
+}
+
+/* ================= TOAST ================= */
+
+#toast{
+    position:fixed;
+    left:50%;
+    bottom:82px;
+    transform:translate(-50%,20px);
+    background:#101711;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 14px;
+    font-size:9px;
+    opacity:0;
+    pointer-events:none;
+    transition:.25s;
+    z-index:10000;
+}
+
+#toast.show{
+    opacity:1;
+    transform:translate(-50%,0);
+}
+
+/* ================= BOOT ================= */
+
+#boot{
+    position:fixed;
+    inset:0;
+    z-index:11000;
+    background:#050806;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+.boot-logo{
+    color:var(--orange);
+    font-size:28px;
+    font-weight:950;
+    letter-spacing:4px;
+}
+
+.boot-sub{
+    margin-top:5px;
+    color:var(--muted);
+    font-size:7px;
+    letter-spacing:2px;
+}
+
+.boot-status{
+    margin-top:20px;
+    color:#9ba89f;
+    font-size:9px;
+}
+
+.boot-track{
+    width:230px;
+    height:4px;
+    background:#182019;
+    border-radius:5px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.boot-bar{
+    width:0;
+    height:100%;
+    background:var(--orange);
+    transition:width .35s;
+}
+
+/* ================= AUTH ================= */
+
+#auth{
+    position:fixed;
+    inset:0;
+    z-index:10500;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:#050806;
+}
+
+.auth-card{
+    width:100%;
+    max-width:390px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    box-shadow:var(--shadow);
+}
+
+.auth-card h1{
+    margin:0;
+    color:var(--orange);
+    letter-spacing:2px;
+}
+
+.auth-card p{
+    color:var(--muted);
+    font-size:9px;
+}
+
+.auth-message{
+    color:var(--red);
+    text-align:center;
+    font-size:9px;
+    margin-top:8px;
+}
+
+.auth-switch{
+    text-align:center;
+    margin-top:12px;
+    color:var(--blue);
+    font-size:9px;
+    cursor:pointer;
+}
+
+/* ================= DESKTOP ================= */
+
+@media(min-width:800px){
+
+    .gallery{
+        grid-template-columns:repeat(6,1fr);
+    }
+
+    .panel{
+        padding:20px;
+    }
+
+    .bottom-nav{
+        height:60px;
+    }
+}
+</style>
 </head>
+
 <body>
 
-    <!-- Auth Overlay -->
-    <div id="auth-modal">
-        <div class="auth-card">
-            <h2 id="auth-title">BUCKTRACK Login</h2>
-            <form id="auth-form">
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="auth-username" required autocomplete="username">
-                </div>
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="auth-password" required autocomplete="current-password">
-                </div>
-                <button type="submit" class="btn-tactical" id="auth-submit-btn">LOGIN</button>
-            </form>
-            <span style="color:var(--accent-snow); text-decoration:underline; cursor:pointer; font-size:0.8rem; margin-top:10px; display:inline-block;" onclick="toggleAuthMode()">Need account? Register</span>
-            <div id="auth-msg" style="margin-top:10px; font-size:0.8rem;"></div>
+<!-- BOOT -->
+
+<div id="boot">
+    <div class="boot-logo">BUCKTRACK</div>
+    <div class="boot-sub">FIELD INTELLIGENCE SYSTEM</div>
+    <div class="boot-status" id="bootStatus">INITIALIZING</div>
+    <div class="boot-track">
+        <div class="boot-bar" id="bootBar"></div>
+    </div>
+</div>
+
+<!-- AUTH -->
+
+<div id="auth">
+    <div class="auth-card">
+
+        <h1>BUCKTRACK</h1>
+        <p id="authSubtitle">TACTICAL HUNTING INTELLIGENCE</p>
+
+        <form id="authForm">
+
+            <div class="field">
+                <label>USERNAME</label>
+                <input id="authUser" autocomplete="username" required>
+            </div>
+
+            <div class="field">
+                <label>PASSWORD</label>
+                <input id="authPass" type="password" autocomplete="current-password" required>
+            </div>
+
+            <button class="btn primary" id="authSubmit" type="submit">
+                LOGIN
+            </button>
+
+        </form>
+
+        <div class="auth-switch" id="authSwitch">
+            CREATE ACCOUNT
         </div>
+
+        <div class="auth-message" id="authMessage"></div>
+
+    </div>
+</div>
+
+<!-- APPLICATION -->
+
+<div id="app">
+
+<header class="header">
+
+    <div class="logo">
+        BUCKTRACK
+        <small>FIELD INTELLIGENCE</small>
     </div>
 
-    <!-- Header -->
-    <header>
-        <h1>BUCKTRACK AI</h1>
-        <div>
-            <span class="badge" id="user-badge">OFFLINE</span>
-            <button onclick="logout()" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; cursor:pointer;">[Exit]</button>
+    <div class="header-right">
+
+        <div class="live">
+            <span class="live-dot"></span>
+            <span id="systemStatus">LIVE</span>
         </div>
-    </header>
 
-    <!-- App Viewports -->
-    <main class="main-viewport">
-        
-        <!-- Tab 1: Map -->
-        <section id="map-view" class="tab-content active">
-            <div id="map"></div>
-        </section>
+        <button class="user-btn" onclick="logout()">
+            EXIT
+        </button>
 
-        <!-- Tab 2: Bulk Photo Dump & AI Analysis -->
-        <section id="photos-view" class="tab-content">
-            <div class="card">
-                <h2>📸 Bulk Photo Dump Intake</h2>
-                <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-                    <p style="margin:0; font-weight:bold; font-size:1rem; color:var(--accent-orange);">DROP HUNDREDS OF PHOTOS HERE</p>
-                    <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">IndexedDB Engine • Auto Metadata • Travel Direction Analysis</p>
-                </div>
-                <input type="file" id="file-input" multiple accept="image/*" style="display:none;" onchange="handleBulkDump(event)">
-                
-                <div class="input-group">
-                    <label>Camera Station Assignment</label>
-                    <select id="photo-tag">
-                        <option value="Ridge Cam 01">Ridge Trail Cam 01 (Funnel)</option>
-                        <option value="South Mash Cam">South Mash Cam (Bait/Feed)</option>
-                        <option value="Hardwood Scrape Cam">Hardwood Scrape Cam</option>
-                    </select>
-                </div>
+    </div>
 
-                <div class="ai-log" id="ai-processing-log">Ready for photo dump ingestion...</div>
+</header>
+
+<main class="main">
+
+<!-- =====================================================
+     MAP
+===================================================== -->
+
+<section class="view active" id="mapView">
+
+    <div id="map"></div>
+
+    <div class="map-top">
+
+        <div class="map-stat orange">
+            <label>Target</label>
+            <strong>GHOST 9</strong>
+        </div>
+
+        <div class="map-stat">
+            <label>Activity</label>
+            <strong id="mapActivity">87%</strong>
+        </div>
+
+        <div class="map-stat">
+            <label>Wind</label>
+            <strong id="mapWind">--</strong>
+        </div>
+
+        <div class="map-stat">
+            <label>Temp</label>
+            <strong id="mapTemp">--</strong>
+        </div>
+
+    </div>
+
+    <div class="map-tools">
+
+        <button class="map-tool" onclick="centerMap()">
+            ◎
+        </button>
+
+        <button class="map-tool" onclick="locateUser()">
+            📍
+        </button>
+
+        <button class="map-tool" onclick="togglePrediction()">
+            🎯
+        </button>
+
+        <button class="map-tool" onclick="toggleSatellite()">
+            🛰️
+        </button>
+
+    </div>
+
+    <div class="map-bottom">
+
+        <div class="command-card">
+
+            <div class="command-title">
+                <span>LIVE FIELD SOLUTION</span>
+                <span class="confidence" id="confidence">
+                    87% CONFIDENCE
+                </span>
             </div>
 
-            <div class="card">
-                <h2>AI Analyzed Vault <span id="photo-count">(0)</span></h2>
-                <div class="gallery-grid" id="photo-gallery"></div>
+            <div class="command-main">
+                <strong id="interceptText">
+                    BEST INTERCEPT: NORTH RIDGE
+                </strong>
+                <span>🦌</span>
             </div>
-        </section>
 
-        <!-- Tab 3: Target Intelligence & AI Predictions -->
-        <section id="ai-intelligence-view" class="tab-content">
-            <div class="card">
-                <h2>AI Target Analysis // Ghost Nine</h2>
-                <div class="stat-grid">
-                    <div class="stat-item"><label>Estimated Score</label><strong>154 3/8" Gross</strong></div>
-                    <div class="stat-item"><label>Age Class</label><strong>4.5+ Years (Mature)</strong></div>
-                    <div class="stat-item"><label>Primary Travel</label><strong id="ai-travel-dir">Analyzing Dump...</strong></div>
-                    <div class="stat-item"><label>Bedding Vector</label><strong id="ai-bedding-loc">Calculating...</strong></div>
+            <div class="command-data">
+
+                <div>
+                    🌬 <span id="windDirection">--</span>
+                </div>
+
+                <div>
+                    🌡 <span id="mapTemperature">--</span>
+                </div>
+
+                <div>
+                    💧 <span id="mapHumidity">--</span>
+                </div>
+
+                <div>
+                    🕐 06:10–07:05
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- =====================================================
+     TARGET
+===================================================== -->
+
+<section class="view" id="targetView">
+
+<div class="panel">
+
+    <div class="card">
+
+        <div class="card-title">
+            TARGET PROFILE
+            <span class="confidence">ACTIVE</span>
+        </div>
+
+        <div class="target">
+
+            <div class="target-photo">
+                🦌
+            </div>
+
+            <div>
+                <h1>GHOST NINE</h1>
+                <p>PRIMARY TARGET // FIELD TRACK</p>
+                <p id="targetSightings">
+                    0 OBSERVATIONS
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            TARGET METRICS
+        </div>
+
+        <div class="grid2">
+
+            <div class="metric">
+                <label>ESTIMATED SCORE</label>
+                <strong class="orange">154 3/8"</strong>
+            </div>
+
+            <div class="metric">
+                <label>AGE CLASS</label>
+                <strong>4.5+ YEARS</strong>
+            </div>
+
+            <div class="metric">
+                <label>OBSERVATIONS</label>
+                <strong id="targetCount">0</strong>
+            </div>
+
+            <div class="metric">
+                <label>PRIMARY VECTOR</label>
+                <strong>NW → SE</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            24-HOUR ACTIVITY
+        </div>
+
+        <div class="activity" id="activityChart"></div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            MOVEMENT MODEL
+        </div>
+
+        <div class="ai-box">
+
+            <strong>FIELD ANALYSIS</strong>
+
+            <p>
+                BUCKTRACK compares observation timestamps,
+                movement direction, weather and mapped
+                locations to identify recurring movement
+                patterns.
+            </p>
+
+            <strong>MODEL CONFIDENCE</strong>
+
+            <div class="progress">
+                <span id="modelProgress" style="width:87%"></span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+<!-- =====================================================
+     PHOTOS
+===================================================== -->
+
+<section class="view" id="photosView">
+
+<div class="panel">
+
+    <div class="card">
+
+        <div class="card-title">
+            PHOTO INTELLIGENCE
+            <span id="photoCount">0</span>
+        </div>
+
+        <label class="upload">
+
+            <strong>
+                📸 IMPORT TRAIL-CAMERA PHOTOS
+            </strong>
+
+            <span>
+                Import large batches directly into the
+                local BUCKTRACK intelligence vault.
+            </span>
+
+            <input
+                class="file-input"
+                id="photoInput"
+                type="file"
+                accept="image/*"
+                multiple
+            >
+
+        </label>
+
+        <div class="import-progress" id="importProgress">
+
+            <div class="import-text" id="importText">
+                Preparing...
+            </div>
+
+            <div class="progress">
+                <span id="importBar" style="width:0"></span>
+            </div>
+
+        </div>
+
+        <button
+            class="btn primary"
+            onclick="document.getElementById('photoInput').click()">
+
+            SELECT PHOTOS
+
+        </button>
+
+        <button
+            class="btn"
+            onclick="exportDatabase()">
+
+            💾 EXPORT BUCKTRACK DATA
+
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            VISUAL VAULT
+            <span id="vaultStatus">LOCAL</span>
+        </div>
+
+        <div class="gallery" id="gallery"></div>
+
+    </div>
+
+</div>
+
+</section>
+
+<!-- =====================================================
+     WEATHER
+===================================================== -->
+
+<section class="view" id="weatherView">
+
+<div class="panel">
+
+    <div class="card">
+
+        <div class="card-title">
+            LIVE FIELD WEATHER
+            <span id="weatherStatus">LOADING</span>
+        </div>
+
+        <div class="weather-hero">
+
+            <div>
+                <div class="temperature" id="temperature">
+                    --°
+                </div>
+
+                <div class="condition" id="condition">
+                    Waiting for weather...
                 </div>
             </div>
 
-            <div class="card">
-                <h2>Predicted Bedding & Movement Corridors</h2>
-                <div id="ai-corridor-summary" style="font-size:0.85rem; line-height:1.4;">
-                    Upload trail camera photo dumps to activate visual light vectoring and movement timing predictions.
-                </div>
-                <button class="btn-tactical" onclick="plotAIBeddingOnMap()">Plot AI Bedding & Corridors on Map</button>
+            <div class="weather-icon" id="weatherIcon">
+                🌦️
             </div>
-        </section>
 
-    </main>
+        </div>
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('map-view', this)"><span>🗺️ Map</span></button>
-        <button class="nav-item" onclick="switchTab('photos-view', this)"><span>📸 Dump</span></button>
-        <button class="nav-item" onclick="switchTab('ai-intelligence-view', this)"><span>🦌 AI Lab</span></button>
-    </nav>
+        <div class="grid2" style="margin-top:12px">
 
-    <script>
-        // ----------------------------------------------------
-        // 1. INDEXEDDB ENGINE
-        // ----------------------------------------------------
-        let db = null;
-        let currentUser = null;
-        let map = null;
-        let userCoords = { lat: 45.816, lon: -64.218 };
+            <div class="metric">
+                <label>WIND</label>
+                <strong id="weatherWind">--</strong>
+            </div>
 
-        function initDatabase() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open("BuckTrackAI_DB", 1);
-                request.onupgradeneeded = (e) => {
-                    const dbInst = e.target.result;
-                    if (!dbInst.objectStoreNames.contains("users")) dbInst.createObjectStore("users", { keyPath: "username" });
-                    if (!dbInst.objectStoreNames.contains("photos")) {
-                        const store = dbInst.createObjectStore("photos", { keyPath: "id", autoIncrement: true });
-                        store.createIndex("username", "username", { unique: false });
-                    }
-                };
-                request.onsuccess = (e) => { db = e.target.result; resolve(db); };
-                request.onerror = () => reject("IndexedDB boot failed");
-            });
-        }
+            <div class="metric">
+                <label>HUMIDITY</label>
+                <strong id="weatherHumidity">--</strong>
+            </div>
 
-        async function hashPassword(pwd) {
-            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+            <div class="metric">
+                <label>PRESSURE</label>
+                <strong id="weatherPressure">--</strong>
+            </div>
 
-        // ----------------------------------------------------
-        // 2. AUTHENTICATION
-        // ----------------------------------------------------
-        let isRegister = false;
-        function toggleAuthMode() {
-            isRegister = !isRegister;
-            document.getElementById('auth-title').innerText = isRegister ? "Register BUCKTRACK" : "BUCKTRACK Login";
-            document.getElementById('auth-submit-btn').innerText = isRegister ? "CREATE ACCOUNT" : "LOGIN";
-        }
+            <div class="metric">
+                <label>PRECIPITATION</label>
+                <strong id="weatherPrecip">--</strong>
+            </div>
 
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const u = document.getElementById('auth-username').value.trim().toLowerCase();
-            const p = document.getElementById('auth-password').value;
-            const h = await hashPassword(p);
-            const tx = db.transaction(["users"], isRegister ? "readwrite" : "readonly");
-            const store = tx.objectStore("users");
+        </div>
 
-            if (isRegister) {
-                store.add({ username: u, password: h, createdAt: new Date() });
-                completeLogin(u);
-            } else {
-                const req = store.get(u);
-                req.onsuccess = () => {
-                    if (req.result && req.result.password === h) completeLogin(u);
-                    else document.getElementById('auth-msg').innerText = "Invalid credentials";
-                };
-            }
-        });
+    </div>
 
-        function completeLogin(u) {
-            currentUser = u;
-            localStorage.setItem("bt_session", u);
-            document.getElementById('auth-modal').style.display = 'none';
-            document.getElementById('user-badge').innerText = u.toUpperCase();
+    <div class="card">
+
+        <div class="card-title">
+            FIVE-DAY OUTLOOK
+        </div>
+
+        <div class="forecast" id="forecast"></div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            HUNTING WINDOWS
+        </div>
+
+        <div class="grid2">
+
+            <div class="metric">
+                <label>MORNING</label>
+                <strong>FIRST LIGHT → 08:00</strong>
+            </div>
+
+            <div class="metric">
+                <label>EVENING</label>
+                <strong>16:00 → LAST LIGHT</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            STORM MODE
+        </div>
+
+        <div class="ai-box">
+
+            <strong>❄️ WEATHER MOVEMENT ANALYSIS</strong>
+
+            <p id="stormText">
+                Waiting for current weather data.
+                When precipitation and pressure changes
+                are detected, BUCKTRACK can flag the
+                observation period for review.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+<!-- =====================================================
+     INTELLIGENCE
+===================================================== -->
+
+<section class="view" id="intelView">
+
+<div class="panel">
+
+    <div class="card">
+
+        <div class="card-title">
+            FIELD INTELLIGENCE ENGINE
+            <span class="confidence">ACTIVE</span>
+        </div>
+
+        <div class="ai-box">
+
+            <strong>🧠 OBSERVATION MODEL</strong>
+
+            <p>
+                The intelligence engine uses your stored
+                observations as evidence. Predictions are
+                presented as estimates rather than facts.
+            </p>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            MOVEMENT CORRIDOR
+        </div>
+
+        <div class="grid2">
+
+            <div class="metric">
+                <label>BEDDING</label>
+                <strong>NORTH RIDGE</strong>
+            </div>
+
+            <div class="metric">
+                <label>FEEDING</label>
+                <strong>SOUTH VALLEY</strong>
+            </div>
+
+            <div class="metric">
+                <label>MORNING</label>
+                <strong>SE → NW</strong>
+            </div>
+
+            <div class="metric">
+                <label>EVENING</label>
+                <strong>NW → SE</strong>
+            </div>
+
+        </div>
+
+        <button class="btn primary" onclick="showPrediction()">
+            🎯 SHOW PREDICTION ON MAP
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            FIELD DATA
+        </div>
+
+        <div class="grid3">
+
+            <div class="metric">
+                <label>PHOTOS</label>
+                <strong id="intelPhotos">0</strong>
+            </div>
+
+            <div class="metric">
+                <label>CAMERAS</label>
+                <strong>3</strong>
+            </div>
+
+            <div class="metric">
+                <label>LOCATION</label>
+                <strong id="locationStatus">WAITING</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            FIELD NOTES
+        </div>
+
+        <div class="field">
+            <label>OBSERVATION</label>
+            <textarea
+                id="fieldNotes"
+                placeholder="Record wind, deer movement, sign, weather, time and other field observations..."></textarea>
+        </div>
+
+        <button class="btn primary" onclick="saveNotes()">
+            SAVE FIELD NOTE
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <div class="card-title">
+            DATABASE MANAGEMENT
+        </div>
+
+        <button class="btn" onclick="exportDatabase()">
+            💾 EXPORT BACKUP
+        </button>
+
+        <label class="btn" style="display:block;text-align:center">
+            📥 IMPORT BACKUP
+            <input
+                id="backupInput"
+                class="file-input"
+                type="file"
+                accept=".json,application/json"
+            >
+        </label>
+
+        <button class="btn danger" onclick="clearPhotos()">
+            DELETE PHOTO VAULT
+        </button>
+
+    </div>
+
+</div>
+
+</section>
+
+</main>
+
+<!-- NAV -->
+
+<nav class="bottom-nav">
+
+    <button class="nav-btn active"
+            onclick="showView('mapView',this)">
+        <span>🗺️</span>
+        MAP
+    </button>
+
+    <button class="nav-btn"
+            onclick="showView('targetView',this)">
+        <span>🦌</span>
+        TARGET
+    </button>
+
+    <button class="nav-btn"
+            onclick="showView('photosView',this)">
+        <span>📸</span>
+        PHOTOS
+    </button>
+
+    <button class="nav-btn"
+            onclick="showView('weatherView',this)">
+        <span>🌦️</span>
+        WEATHER
+    </button>
+
+    <button class="nav-btn"
+            onclick="showView('intelView',this)">
+        <span>🧠</span>
+        INTEL
+    </button>
+
+</nav>
+
+</div>
+
+<!-- IMAGE VIEWER -->
+
+<div class="viewer" id="viewer">
+
+    <button
+        class="viewer-close"
+        onclick="closeViewer()">
+        ×
+    </button>
+
+    <img id="viewerImage" alt="BUCKTRACK photo">
+
+</div>
+
+<div id="toast"></div>
+
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+crossorigin="">
+</script>
+
+<script>
+"use strict";
+
+/* =========================================================
+   BUCKTRACK CORE
+========================================================= */
+
+let DB = null;
+let MAP = null;
+let USER = null;
+
+let userLocation = {
+    lat: 45.816,
+    lon: -64.218
+};
+
+let predictionLayers = [];
+let satelliteMode = false;
+let satelliteLayer = null;
+let normalLayer = null;
+let registering = false;
+
+const $ = id => document.getElementById(id);
+
+function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve,ms));
+}
+
+function toast(message){
+
+    const el = $("toast");
+
+    el.textContent = message;
+    el.classList.add("show");
+
+    clearTimeout(window.__toastTimer);
+
+    window.__toastTimer = setTimeout(() => {
+        el.classList.remove("show");
+    },2500);
+}
+
+
+/* =========================================================
+   SAFE BOOT
+========================================================= */
+
+async function boot(){
+
+    try{
+
+        bootStep("STARTING CORE",10);
+        await sleep(100);
+
+        bootStep("STARTING LOCAL DATABASE",25);
+        await initDatabase();
+
+        bootStep("STARTING MAP ENGINE",42);
+        initMap();
+
+        bootStep("REQUESTING FIELD LOCATION",58);
+        requestLocation();
+
+        bootStep("STARTING WEATHER ENGINE",72);
+        loadWeather();
+
+        bootStep("STARTING INTELLIGENCE",86);
+        createActivityChart();
+
+        bootStep("SYSTEM READY",100);
+        await sleep(300);
+
+        $("boot").style.display="none";
+
+        const session =
+            localStorage.getItem("bucktrack_session");
+
+        if(session){
+
+            USER = session;
+
             loadPhotos();
+
+        }else{
+
+            $("auth").style.display="flex";
+
         }
 
-        function logout() { localStorage.removeItem("bt_session"); location.reload(); }
-        function checkSession() {
-            const s = localStorage.getItem("bt_session");
-            if (s) completeLogin(s);
+    }catch(error){
+
+        console.error("BOOT FAILURE:",error);
+
+        bootStep("SAFE MODE",100);
+
+        await sleep(700);
+
+        $("boot").style.display="none";
+
+        $("auth").style.display="flex";
+
+    }
+
+}
+
+
+function bootStep(text,percent){
+
+    $("bootStatus").textContent=text;
+    $("bootBar").style.width=percent+"%";
+
+}
+
+
+/* =========================================================
+   DATABASE
+========================================================= */
+
+function initDatabase(){
+
+    return new Promise((resolve,reject)=>{
+
+        if(!window.indexedDB){
+
+            reject(new Error("IndexedDB unavailable"));
+            return;
+
         }
 
-        // ----------------------------------------------------
-        // 3. PHOTO DUMP & AI PARSING ENGINE
-        // ----------------------------------------------------
-        const dropZone = document.getElementById('drop-zone');
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
-            dropZone.addEventListener(eName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
-        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-        dropZone.addEventListener('drop', (e) => {
-            dropZone.classList.remove('dragover');
-            handleBulkDump({ target: { files: e.dataTransfer.files } });
-        });
+        let request;
 
-        function handleBulkDump(e) {
-            const files = Array.from(e.target.files);
-            if (!files.length || !currentUser) return;
+        try{
 
-            const log = document.getElementById('ai-processing-log');
-            log.innerText = `[AI DUMP ENGINE] Processing ${files.length} images...\n`;
+            request =
+                indexedDB.open("BUCKTRACK_PRO_DB",3);
 
-            const tag = document.getElementById('photo-tag').value;
-            let processed = 0;
+        }catch(error){
 
-            files.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    // Extract embedded photo date or file timestamp
-                    const fileTime = file.lastModified ? new Date(file.lastModified) : new Date();
-                    const hour = fileTime.getHours();
+            reject(error);
+            return;
 
-                    // AI Travel Direction & Bedding Vector Logic based on timestamp
-                    let travelDir = "NW -> SE";
-                    let beddingType = "North Softwood Thick Block";
-                    if (hour >= 5 && hour <= 9) {
-                        travelDir = "SE -> NW (Returning to Bed)";
-                        beddingType = "North Cedar Ridge";
-                    } else if (hour >= 16 && hour <= 20) {
-                        travelDir = "NW -> SE (Leaving Bed to Feed)";
-                        beddingType = "South Valley Marsh";
-                    } else {
-                        travelDir = "Internal Core Movement";
-                    }
+        }
 
-                    const photoObj = {
-                        username: currentUser,
-                        tag: tag,
-                        fileName: file.name,
-                        dataUrl: evt.target.result,
-                        timestamp: fileTime,
-                        travelDir: travelDir,
-                        beddingType: beddingType
-                    };
+        request.onupgradeneeded = event => {
 
-                    const tx = db.transaction(["photos"], "readwrite");
-                    tx.objectStore("photos").add(photoObj);
+            const db = event.target.result;
 
-                    processed++;
-                    log.innerText += `✓ Analyzed: ${file.name} [${travelDir}]\n`;
-                    log.scrollTop = log.scrollHeight;
+            if(!db.objectStoreNames.contains("users")){
 
-                    if (processed === files.length) {
-                        log.innerText += `\n[COMPLETE] Dumped ${files.length} files into IndexedDB with AI analysis tags.`;
-                        loadPhotos();
-                        updateAIIntelligenceUI();
-                    }
-                };
-                reader.readAsDataURL(file);
+                db.createObjectStore(
+                    "users",
+                    {keyPath:"username"}
+                );
+
+            }
+
+            if(!db.objectStoreNames.contains("photos")){
+
+                const store =
+                    db.createObjectStore(
+                        "photos",
+                        {
+                            keyPath:"id",
+                            autoIncrement:true
+                        }
+                    );
+
+                store.createIndex(
+                    "username",
+                    "username",
+                    {unique:false}
+                );
+
+                store.createIndex(
+                    "timestamp",
+                    "timestamp",
+                    {unique:false}
+                );
+
+            }
+
+            if(!db.objectStoreNames.contains("notes")){
+
+                const store =
+                    db.createObjectStore(
+                        "notes",
+                        {
+                            keyPath:"id",
+                            autoIncrement:true
+                        }
+                    );
+
+                store.createIndex(
+                    "username",
+                    "username",
+                    {unique:false}
+                );
+
+            }
+
+        };
+
+        request.onsuccess = event => {
+
+            DB = event.target.result;
+
+            DB.onversionchange = () => DB.close();
+
+            resolve(DB);
+
+        };
+
+        request.onerror = () => {
+
+            reject(
+                new Error("IndexedDB initialization failed")
+            );
+
+        };
+
+    });
+
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+async function hashPassword(password){
+
+    if(!window.crypto?.subtle){
+
+        return password;
+
+    }
+
+    const buffer =
+        await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(password)
+        );
+
+    return Array
+        .from(new Uint8Array(buffer))
+        .map(v => v.toString(16).padStart(2,"0"))
+        .join("");
+
+}
+
+
+$("authSwitch").addEventListener("click",()=>{
+
+    registering = !registering;
+
+    $("authSubtitle").textContent =
+        registering
+        ? "CREATE YOUR FIELD PROFILE"
+        : "TACTICAL HUNTING INTELLIGENCE";
+
+    $("authSubmit").textContent =
+        registering
+        ? "CREATE ACCOUNT"
+        : "LOGIN";
+
+});
+
+
+$("authForm").addEventListener("submit",async event=>{
+
+    event.preventDefault();
+
+    if(!DB){
+
+        $("authMessage").textContent =
+            "DATABASE NOT READY";
+
+        return;
+
+    }
+
+    const username =
+        $("authUser").value.trim().toLowerCase();
+
+    const password =
+        $("authPass").value;
+
+    if(!username || !password) return;
+
+    const hash =
+        await hashPassword(password);
+
+    try{
+
+        if(registering){
+
+            const tx =
+                DB.transaction("users","readwrite");
+
+            tx.objectStore("users").add({
+                username,
+                password:hash,
+                createdAt:Date.now()
             });
-        }
 
-        function loadPhotos() {
-            if (!currentUser) return;
-            const tx = db.transaction(["photos"], "readonly");
-            tx.objectStore("photos").index("username").getAll(currentUser).onsuccess = (e) => {
-                const photos = e.target.result;
-                document.getElementById('photo-count').innerText = `(${photos.length})`;
-                const gallery = document.getElementById('photo-gallery');
-                gallery.innerHTML = '';
-                photos.forEach(p => {
-                    gallery.innerHTML += `
-                        <div class="gallery-item">
-                            <button class="delete-btn" onclick="deletePhoto(${p.id})">×</button>
-                            <img src="${p.dataUrl}">
-                            <div class="ai-badge">${p.travelDir.slice(0, 15)}...</div>
-                        </div>
-                    `;
-                });
+            tx.oncomplete = () => {
+
+                login(username);
+
             };
+
+            tx.onerror = () => {
+
+                $("authMessage").textContent =
+                    "USERNAME ALREADY EXISTS";
+
+            };
+
+        }else{
+
+            const tx =
+                DB.transaction("users","readonly");
+
+            const req =
+                tx.objectStore("users")
+                  .get(username);
+
+            req.onsuccess = () => {
+
+                const account = req.result;
+
+                if(
+                    account &&
+                    account.password === hash
+                ){
+
+                    login(username);
+
+                }else{
+
+                    $("authMessage").textContent =
+                        "INVALID USERNAME OR PASSWORD";
+
+                }
+
+            };
+
         }
 
-        function deletePhoto(id) {
-            const tx = db.transaction(["photos"], "readwrite");
-            tx.objectStore("photos").delete(id);
-            tx.oncomplete = () => loadPhotos();
-        }
+    }catch(error){
 
-        function updateAIIntelligenceUI() {
-            document.getElementById('ai-travel-dir').innerText = "NW -> SE (Feeding Loop)";
-            document.getElementById('ai-bedding-loc').innerText = "North Ridge Thick Cover";
-            document.getElementById('ai-corridor-summary').innerHTML = `
-                <strong>AI Vectoring Output:</strong><br>
-                Photo dump timestamp clusters indicate target buck bedding on <em>North Ridge Thick Cover</em> during morning daylight and transitioning South-East toward feeding areas between 17:15 and 18:30.
-            `;
-        }
+        console.error(error);
 
-        // ----------------------------------------------------
-        // 4. MAP & BEDDING PLOTTING ENGINE
-        // ----------------------------------------------------
-        let aiLayers = [];
+        $("authMessage").textContent =
+            "AUTHENTICATION ERROR";
 
-        function initMap() {
-            map = L.map('map').setView([userCoords.lat, userCoords.lon], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    }
 
-            L.marker([45.816, -64.218]).addTo(map).bindPopup('<b>Ridge Trail Cam 01</b><br>Primary Camera Station');
-        }
+});
 
-        function plotAIBeddingOnMap() {
-            if (!map) return;
-            switchTab('map-view', document.querySelectorAll('.nav-item')[0]);
 
-            // Clear previous AI layers
-            aiLayers.forEach(l => map.removeLayer(l));
-            aiLayers = [];
+function login(username){
 
-            // AI Bedding Zone (Red Circle)
-            const beddingCircle = L.circle([45.828, -64.228], {
-                color: '#c0392b',
-                fillColor: '#e74c3c',
-                fillOpacity: 0.4,
-                radius: 300
-            }).addTo(map).bindPopup('<b>AI Predicted Bedding Zone</b><br>North Softwood Cedar Block');
+    USER = username;
 
-            // Travel Corridor Line (Orange Dash)
-            const travelCorridor = L.polyline([
-                [45.828, -64.228],
-                [45.816, -64.218],
-                [45.805, -64.210]
-            ], {
-                color: '#d97724',
-                weight: 4,
-                dashArray: '8, 8'
-            }).addTo(map).bindPopup('<b>AI Predicted Travel Corridor</b><br>Bedding -> Feed Transition');
+    localStorage.setItem(
+        "bucktrack_session",
+        username
+    );
 
-            aiLayers.push(beddingCircle, travelCorridor);
-            map.fitBounds(travelCorridor.getBounds());
-        }
+    $("auth").style.display="none";
 
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if (btn) btn.classList.add('active');
-            if (tabId === 'map-view' && map) setTimeout(() => map.invalidateSize(), 200);
-        }
+    $("authMessage").textContent="";
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await initDatabase();
-            checkSession();
-            initMap();
+    loadPhotos();
+
+    toast("BUCKTRACK ONLINE");
+
+}
+
+
+function logout(){
+
+    localStorage.removeItem(
+        "bucktrack_session"
+    );
+
+    location.reload();
+
+}
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+function initMap(){
+
+    try{
+
+        MAP =
+            L.map("map",{
+                zoomControl:false,
+                preferCanvas:true
+            })
+            .setView(
+                [userLocation.lat,userLocation.lon],
+                13
+            );
+
+        normalLayer =
+            L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom:19,
+                    attribution:"© OpenStreetMap"
+                }
+            ).addTo(MAP);
+
+        addFieldMarkers();
+
+    }catch(error){
+
+        console.error("MAP ERROR:",error);
+
+    }
+
+}
+
+
+function addFieldMarkers(){
+
+    if(!MAP)return;
+
+    const cameraIcon =
+        L.divIcon({
+            className:"",
+            html:
+                '<div style="background:#101711;border:2px solid #e47c28;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">📷</div>',
+            iconSize:[28,28],
+            iconAnchor:[14,14]
         });
-    </script>
+
+    L.marker(
+        [45.816,-64.218],
+        {icon:cameraIcon}
+    )
+    .addTo(MAP)
+    .bindPopup(
+        "<b>📷 RIDGE TRAIL CAM 01</b><br>Primary funnel camera"
+    );
+
+
+    L.marker(
+        [45.808,-64.210],
+        {icon:cameraIcon}
+    )
+    .addTo(MAP)
+    .bindPopup(
+        "<b>📷 SOUTH MASH CAM</b><br>Feeding-area camera"
+    );
+
+
+    L.circleMarker(
+        [45.820,-64.224],
+        {
+            radius:8,
+            color:"#e47c28",
+            fillColor:"#e47c28",
+            fillOpacity:.9
+        }
+    )
+    .addTo(MAP)
+    .bindPopup(
+        "<b>🔥 SCRAPE CLUSTER</b><br>Observation point"
+    );
+
+
+    L.circle(
+        [45.828,-64.228],
+        {
+            radius:330,
+            color:"#d34c3e",
+            fillColor:"#d34c3e",
+            fillOpacity:.16,
+            weight:2
+        }
+    )
+    .addTo(MAP)
+    .bindPopup(
+        "<b>🛏 BEDDING AREA</b><br>Model-estimated zone"
+    );
+
+}
+
+
+function centerMap(){
+
+    if(!MAP)return;
+
+    MAP.setView(
+        [
+            userLocation.lat,
+            userLocation.lon
+        ],
+        14
+    );
+
+}
+
+
+function locateUser(){
+
+    if(!navigator.geolocation){
+
+        toast("LOCATION NOT SUPPORTED");
+        return;
+
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+        position => {
+
+            userLocation.lat =
+                position.coords.latitude;
+
+            userLocation.lon =
+                position.coords.longitude;
+
+            if(MAP){
+
+                MAP.setView(
+                    [
+                        userLocation.lat,
+                        userLocation.lon
+                    ],
+                    15
+                );
+
+                L.circleMarker(
+                    [
+                        userLocation.lat,
+                        userLocation.lon
+                    ],
+                    {
+                        radius:8,
+                        color:"#67afd0",
+                        fillColor:"#67afd0",
+                        fillOpacity:1
+                    }
+                )
+                .addTo(MAP)
+                .bindPopup("📍 YOUR LOCATION");
+
+            }
+
+            $("locationStatus").textContent =
+                "GPS READY";
+
+            toast("LOCATION UPDATED");
+
+            loadWeather();
+
+        },
+
+        () => {
+
+            toast("LOCATION PERMISSION UNAVAILABLE");
+
+        },
+
+        {
+            enableHighAccuracy:true,
+            timeout:8000,
+            maximumAge:300000
+        }
+
+    );
+
+}
+
+
+function requestLocation(){
+
+    if(!navigator.geolocation){
+
+        $("locationStatus").textContent =
+            "MANUAL";
+
+        return;
+
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+        position => {
+
+            userLocation.lat =
+                position.coords.latitude;
+
+            userLocation.lon =
+                position.coords.longitude;
+
+            $("locationStatus").textContent =
+                "GPS READY";
+
+            if(MAP){
+
+                MAP.setView(
+                    [
+                        userLocation.lat,
+                        userLocation.lon
+                    ],
+                    13
+                );
+
+            }
+
+            loadWeather();
+
+        },
+
+        () => {
+
+            $("locationStatus").textContent =
+                "DEFAULT";
+
+        },
+
+        {
+            enableHighAccuracy:true,
+            timeout:7000,
+            maximumAge:600000
+        }
+
+    );
+
+}
+
+
+/* =========================================================
+   PREDICTION
+========================================================= */
+
+function togglePrediction(){
+
+    if(predictionLayers.length){
+
+        clearPrediction();
+
+    }else{
+
+        showPrediction();
+
+    }
+
+}
+
+
+function clearPrediction(){
+
+    if(!MAP)return;
+
+    predictionLayers.forEach(layer=>{
+        try{
+            MAP.removeLayer(layer);
+        }catch(e){}
+    });
+
+    predictionLayers=[];
+
+    toast("PREDICTION LAYER OFF");
+
+}
+
+
+function showPrediction(){
+
+    if(!MAP)return;
+
+    clearPrediction();
+
+    const bedding =
+        L.circle(
+            [45.828,-64.228],
+            {
+                radius:350,
+                color:"#d34c3e",
+                fillColor:"#d34c3e",
+                fillOpacity:.22,
+                weight:2
+            }
+        )
+        .addTo(MAP)
+        .bindPopup(
+            "<b>🛏 MODEL BEDDING ZONE</b><br>Estimated from stored observations"
+        );
+
+
+    const corridor =
+        L.polyline(
+            [
+                [45.828,-64.228],
+                [45.821,-64.224],
+                [45.816,-64.218],
+                [45.810,-64.214],
+                [45.808,-64.210]
+            ],
+            {
+                color:"#e47c28",
+                weight:5,
+                dashArray:"11 8"
+            }
+        )
+        .addTo(MAP)
+        .bindPopup(
+            "<b>🦌 MOVEMENT CORRIDOR</b><br>Estimated bedding → feeding transition"
+        );
+
+
+    const intercept =
+        L.circle(
+            [45.816,-64.218],
+            {
+                radius:190,
+                color:"#ff9d49",
+                fillColor:"#ff9d49",
+                fillOpacity:.24,
+                weight:2
+            }
+        )
+        .addTo(MAP)
+        .bindPopup(
+            "<b>🎯 INTERCEPT ZONE</b><br>Model confidence: 87%"
+        );
+
+
+    predictionLayers = [
+        bedding,
+        corridor,
+        intercept
+    ];
+
+    MAP.fitBounds(
+        corridor.getBounds(),
+        {padding:[30,30]}
+    );
+
+    toast("FIELD PREDICTION ACTIVE");
+
+}
+
+
+function toggleSatellite(){
+
+    if(!MAP)return;
+
+    if(!satelliteLayer){
+
+        satelliteLayer =
+            L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+                    maxZoom:19,
+                    attribution:"Esri"
+                }
+            );
+
+    }
+
+    if(satelliteMode){
+
+        if(MAP.hasLayer(satelliteLayer))
+            MAP.removeLayer(satelliteLayer);
+
+        if(!MAP.hasLayer(normalLayer))
+            normalLayer.addTo(MAP);
+
+        satelliteMode=false;
+
+    }else{
+
+        if(MAP.hasLayer(normalLayer))
+            MAP.removeLayer(normalLayer);
+
+        satelliteLayer.addTo(MAP);
+
+        satelliteMode=true;
+
+    }
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function showView(id,button){
+
+    document
+        .querySelectorAll(".view")
+        .forEach(view=>{
+            view.classList.remove("active");
+        });
+
+    document
+        .querySelectorAll(".nav-btn")
+        .forEach(btn=>{
+            btn.classList.remove("active");
+        });
+
+    const view=$(id);
+
+    if(view)
+        view.classList.add("active");
+
+    if(button)
+        button.classList.add("active");
+
+    if(id==="mapView" && MAP){
+
+        setTimeout(()=>{
+            MAP.invalidateSize();
+        },150);
+
+    }
+
+    if(id==="weatherView"){
+
+        loadWeather();
+
+    }
+
+}
+
+
+/* =========================================================
+   WEATHER
+========================================================= */
+
+async function loadWeather(){
+
+    try{
+
+        const url =
+            "https://api.open-meteo.com/v1/forecast"+
+            "?latitude="+encodeURIComponent(userLocation.lat)+
+            "&longitude="+encodeURIComponent(userLocation.lon)+
+            "&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure"+
+            "&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m"+
+            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset"+
+            "&timezone=auto"+
+            "&forecast_days=5";
+
+        const response =
+            await fetch(
+                url,
+                {
+                    signal:AbortSignal.timeout(8000)
+                }
+            );
+
+        if(!response.ok)
+            throw new Error("Weather request failed");
+
+        const data =
+            await response.json();
+
+        updateWeatherUI(data);
+
+        $("weatherStatus").textContent =
+            "LIVE";
+
+        $("systemStatus").textContent =
+            "LIVE";
+
+    }catch(error){
+
+        console.warn(
+            "WEATHER ERROR:",
+            error
+        );
+
+        $("weatherStatus").textContent =
+            "OFFLINE";
+
+        $("condition").textContent =
+            "Weather temporarily unavailable";
+
+        $("systemStatus").textContent =
+            "WEATHER FALLBACK";
+
+    }
+
+}
+
+
+function updateWeatherUI(data){
+
+    const c=data.current;
+
+    const temp =
+        Math.round(c.temperature_2m);
+
+    const wind =
+        Math.round(c.wind_speed_10m);
+
+    const humidity =
+        c.relative_humidity_2m;
+
+    const pressure =
+        Math.round(c.surface_pressure);
+
+    const precip =
+        Number(c.precipitation || 0);
+
+    const direction =
+        degreesToCompass(
+            c.wind_direction_10m
+        );
+
+    $("temperature").textContent =
+        temp+"°";
+
+    $("condition").textContent =
+        weatherText(c.weather_code);
+
+    $("weatherWind").textContent =
+        wind+" km/h "+direction;
+
+    $("weatherHumidity").textContent =
+        humidity+"%";
+
+    $("weatherPressure").textContent =
+        pressure+" hPa";
+
+    $("weatherPrecip").textContent =
+        precip+" mm";
+
+    $("mapTemp").textContent =
+        temp+"°";
+
+    $("mapTemperature").textContent =
+        temp+"°";
+
+    $("mapHumidity").textContent =
+        humidity+"%";
+
+    $("mapWind").textContent =
+        direction;
+
+    $("windDirection").textContent =
+        direction;
+
+    $("windDirection").title =
+        "Wind direction "+c.wind_direction_10m+"°";
+
+    $("weatherIcon").textContent =
+        weatherEmoji(c.weather_code);
+
+    renderForecast(data.daily);
+
+    analyzeStorm(data);
+
+}
+
+
+function renderForecast(daily){
+
+    const container =
+        $("forecast");
+
+    container.innerHTML="";
+
+    if(!daily)return;
+
+    for(let i=0;i<Math.min(5,daily.time.length);i++){
+
+        const item =
+            document.createElement("div");
+
+        item.className="forecast-item";
+
+        const date =
+            new Date(
+                daily.time[i]+"T12:00:00"
+            );
+
+        const day =
+            date.toLocaleDateString(
+                undefined,
+                {weekday:"short"}
+            );
+
+        item.innerHTML = `
+            <small>${escapeHTML(day)}</small>
+            <div>${weatherEmoji(daily.weather_code[i])}</div>
+            <b>${Math.round(daily.temperature_2m_max[i])}°</b>
+            <small>${Math.round(daily.temperature_2m_min[i])}°</small>
+        `;
+
+        container.appendChild(item);
+
+    }
+
+}
+
+
+function analyzeStorm(data){
+
+    const code =
+        data.current.weather_code;
+
+    const precip =
+        Number(data.current.precipitation||0);
+
+    let message =
+        "No significant active precipitation signal. Continue comparing field observations with weather changes.";
+
+    if(code>=71 && code<=77){
+
+        message =
+            "SNOW SIGNAL DETECTED. Compare movement observations before, during and after the event.";
+
+    }else if(code>=51 && code<=67){
+
+        message =
+            "PRECIPITATION SIGNAL DETECTED. Weather may be useful as an observation variable.";
+
+    }else if(precip>0){
+
+        message =
+            "ACTIVE PRECIPITATION. Log new sightings carefully against the event timing.";
+
+    }
+
+    $("stormText").textContent =
+        message;
+
+}
+
+
+function weatherText(code){
+
+    if(code===0)return"Clear";
+    if(code<=3)return"Partly cloudy";
+    if(code<=48)return"Fog";
+    if(code<=67)return"Rain";
+    if(code<=77)return"Snow";
+    if(code<=82)return"Showers";
+    if(code<=86)return"Snow showers";
+    if(code>=95)return"Thunderstorm";
+
+    return"Variable";
+
+}
+
+
+function weatherEmoji(code){
+
+    if(code===0)return"☀️";
+    if(code<=3)return"🌤️";
+    if(code<=48)return"🌫️";
+    if(code<=67)return"🌧️";
+    if(code<=77)return"❄️";
+    if(code<=82)return"🌦️";
+    if(code<=86)return"🌨️";
+    if(code>=95)return"⛈️";
+
+    return"🌦️";
+
+}
+
+
+function degreesToCompass(degrees){
+
+    if(!Number.isFinite(degrees))
+        return "--";
+
+    const dirs=[
+        "N","NE","E","SE",
+        "S","SW","W","NW"
+    ];
+
+    return dirs[
+        Math.round(degrees/45)%8
+    ];
+
+}
+
+
+/* =========================================================
+   PHOTOS
+========================================================= */
+
+$("photoInput").addEventListener(
+    "change",
+    event=>{
+        processPhotos(event.target.files);
+        event.target.value="";
+    }
+);
+
+
+async function processPhotos(fileList){
+
+    if(!USER){
+
+        toast("LOGIN REQUIRED");
+        return;
+
+    }
+
+    const files =
+        Array.from(fileList||[])
+        .filter(file =>
+            file.type.startsWith("image/")
+        );
+
+    if(!files.length)return;
+
+    $("importProgress").classList.add("active");
+
+    let completed=0;
+
+    for(const file of files){
+
+        try{
+
+            const dataUrl =
+                await readFile(file);
+
+            const timestamp =
+                file.lastModified ||
+                Date.now();
+
+            const date =
+                new Date(timestamp);
+
+            const hour =
+                date.getHours();
+
+            let direction =
+                "INTERNAL";
+
+            let phase =
+                "CORE MOVEMENT";
+
+            if(hour>=5 && hour<=9){
+
+                direction="SE → NW";
+                phase="MORNING / BED";
+
+            }else if(hour>=16 && hour<=20){
+
+                direction="NW → SE";
+                phase="EVENING / FEED";
+
+            }
+
+            await addPhoto({
+
+                username:USER,
+
+                fileName:file.name,
+
+                dataUrl:dataUrl,
+
+                timestamp:timestamp,
+
+                direction:direction,
+
+                phase:phase,
+
+                camera:"FIELD IMPORT",
+
+                latitude:userLocation.lat,
+
+                longitude:userLocation.lon
+
+            });
+
+            completed++;
+
+            const percent =
+                Math.round(
+                    completed/files.length*100
+                );
+
+            $("importText").textContent =
+                "IMPORTING "+
+                completed+
+                " / "+
+                files.length+
+                " — "+
+                file.name;
+
+            $("importBar").style.width =
+                percent+"%";
+
+        }catch(error){
+
+            console.warn(
+                "PHOTO IMPORT ERROR:",
+                file.name,
+                error
+            );
+
+        }
+
+        /*
+         * Yield to browser so very large imports
+         * don't lock the UI.
+         */
+
+        if(completed%5===0)
+            await sleep(0);
+
+    }
+
+    await loadPhotos();
+
+    setTimeout(()=>{
+
+        $("importProgress")
+            .classList.remove("active");
+
+        $("importBar").style.width="0";
+
+    },700);
+
+    toast(
+        "IMPORTED "+
+        completed+
+        " PHOTOS"
+    );
+
+}
+
+
+function readFile(file){
+
+    return new Promise((resolve,reject)=>{
+
+        const reader =
+            new FileReader();
+
+        reader.onload =
+            () => resolve(reader.result);
+
+        reader.onerror =
+            () => reject(
+                new Error("Unable to read image")
+            );
+
+        reader.readAsDataURL(file);
+
+    });
+
+}
+
+
+function addPhoto(photo){
+
+    return new Promise((resolve,reject)=>{
+
+        try{
+
+            const tx =
+                DB.transaction(
+                    "photos",
+                    "readwrite"
+                );
+
+            tx.objectStore("photos")
+              .add(photo);
+
+            tx.oncomplete=resolve;
+
+            tx.onerror=()=>{
+                reject(tx.error);
+            };
+
+        }catch(error){
+
+            reject(error);
+
+        }
+
+    });
+
+}
+
+
+async function loadPhotos(){
+
+    if(!USER || !DB)return;
+
+    return new Promise(resolve=>{
+
+        try{
+
+            const tx =
+                DB.transaction(
+                    "photos",
+                    "readonly"
+                );
+
+            const req =
+                tx.objectStore("photos")
+                  .index("username")
+                  .getAll(USER);
+
+            req.onsuccess=()=>{
+
+                const photos =
+                    req.result || [];
+
+                renderGallery(photos);
+
+                updatePhotoStats(photos);
+
+                resolve();
+
+            };
+
+            req.onerror=()=>{
+                resolve();
+            };
+
+        }catch(error){
+
+            console.warn(error);
+            resolve();
+
+        }
+
+    });
+
+}
+
+
+function renderGallery(photos){
+
+    const gallery =
+        $("gallery");
+
+    gallery.innerHTML="";
+
+    $("photoCount").textContent =
+        photos.length;
+
+    $("intelPhotos").textContent =
+        photos.length;
+
+    $("targetCount").textContent =
+        photos.length;
+
+    $("targetSightings").textContent =
+        photos.length+
+        " OBSERVATIONS";
+
+    /*
+     * Don't insert thousands of DOM nodes.
+     * The complete database remains stored locally.
+     */
+
+    const visible =
+        photos
+        .slice()
+        .sort(
+            (a,b)=>
+                (b.timestamp||0)-
+                (a.timestamp||0)
+        )
+        .slice(0,150);
+
+    if(!visible.length){
+
+        gallery.innerHTML = `
+            <div style="
+                grid-column:1/-1;
+                text-align:center;
+                padding:35px;
+                color:#829087;
+                font-size:10px">
+                NO PHOTOS IN VAULT
+            </div>
+        `;
+
+        return;
+
+    }
+
+    visible.forEach(photo=>{
+
+        const item =
+            document.createElement("div");
+
+        item.className="photo";
+
+        const img =
+            document.createElement("img");
+
+        img.loading="lazy";
+        img.src=photo.dataUrl;
+        img.alt=photo.fileName||"BUCKTRACK";
+
+        img.addEventListener(
+            "click",
+            ()=>{
+                openViewer(photo.dataUrl);
+            }
+        );
+
+        const info =
+            document.createElement("div");
+
+        info.className="photo-info";
+
+        info.textContent =
+            (photo.direction||"UNKNOWN")+
+            " • "+
+            (photo.phase||"");
+
+        const del =
+            document.createElement("button");
+
+        del.className="photo-delete";
+        del.textContent="×";
+
+        del.onclick=event=>{
+
+            event.stopPropagation();
+
+            deletePhoto(photo.id);
+
+        };
+
+        item.appendChild(img);
+        item.appendChild(info);
+        item.appendChild(del);
+
+        gallery.appendChild(item);
+
+    });
+
+}
+
+
+function updatePhotoStats(photos){
+
+    $("photoCount").textContent =
+        photos.length;
+
+    $("intelPhotos").textContent =
+        photos.length;
+
+    $("targetCount").textContent =
+        photos.length;
+
+    $("targetSightings").textContent =
+        photos.length+
+        " OBSERVATIONS";
+
+    createActivityChart(photos);
+
+}
+
+
+function deletePhoto(id){
+
+    if(!DB)return;
+
+    const tx =
+        DB.transaction(
+            "photos",
+            "readwrite"
+        );
+
+    tx.objectStore("photos")
+      .delete(id);
+
+    tx.oncomplete=()=>{
+
+        loadPhotos();
+
+        toast("PHOTO REMOVED");
+
+    };
+
+}
+
+
+function clearPhotos(){
+
+    if(!USER || !DB)return;
+
+    const confirmation =
+        confirm(
+            "Delete the entire local photo vault for this account?"
+        );
+
+    if(!confirmation)return;
+
+    const tx =
+        DB.transaction(
+            "photos",
+            "readwrite"
+        );
+
+    const store =
+        tx.objectStore("photos");
+
+    const index =
+        store.index("username");
+
+    index.openCursor(
+        IDBKeyRange.only(USER)
+    ).onsuccess=event=>{
+
+        const cursor =
+            event.target.result;
+
+        if(cursor){
+
+            cursor.delete();
+            cursor.continue();
+
+        }
+
+    };
+
+    tx.oncomplete=()=>{
+
+        loadPhotos();
+
+        toast("PHOTO VAULT CLEARED");
+
+    };
+
+}
+
+
+/* =========================================================
+   PHOTO VIEWER
+========================================================= */
+
+function openViewer(src){
+
+    $("viewerImage").src=src;
+
+    $("viewer").classList.add("active");
+
+}
+
+
+function closeViewer(){
+
+    $("viewer").classList.remove("active");
+
+    $("viewerImage").src="";
+
+}
+
+
+$("viewer").addEventListener(
+    "click",
+    event=>{
+
+        if(event.target === $("viewer"))
+            closeViewer();
+
+    }
+);
+
+
+/* =========================================================
+   ACTIVITY MODEL
+========================================================= */
+
+function createActivityChart(photos=[]){
+
+    const chart =
+        $("activityChart");
+
+    if(!chart)return;
+
+    chart.innerHTML="";
+
+    const values =
+        new Array(24).fill(0);
+
+    photos.forEach(photo=>{
+
+        if(!photo.timestamp)return;
+
+        const hour =
+            new Date(
+                photo.timestamp
+            ).getHours();
+
+        if(hour>=0 && hour<24)
+            values[hour]++;
+
+    });
+
+    /*
+     * When there are no observations,
+     * show a neutral visual model rather
+     * than pretending observations exist.
+     */
+
+    if(!photos.length){
+
+        const demo=[
+            3,2,1,1,2,5,8,12,8,4,2,2,
+            2,2,3,5,9,13,16,11,7,4,3,2
+        ];
+
+        demo.forEach((value,hour)=>{
+
+            addActivityBar(
+                chart,
+                value,
+                16,
+                hour
+            );
+
+        });
+
+        return;
+
+    }
+
+    const max =
+        Math.max(...values,1);
+
+    values.forEach((value,hour)=>{
+
+        addActivityBar(
+            chart,
+            value,
+            max,
+            hour
+        );
+
+    });
+
+}
+
+
+function addActivityBar(
+    chart,
+    value,
+    max,
+    hour
+){
+
+    const bar =
+        document.createElement("div");
+
+    bar.className =
+        "activity-bar"+
+        (
+            (hour>=5&&hour<=8)||
+            (hour>=17&&hour<=20)
+            ?" hot":""
+        );
+
+    const height =
+        Math.max(
+            3,
+            (value/max)*100
+        );
+
+    bar.style.height =
+        height+"%";
+
+    bar.title =
+        hour+
+        ":00 — "+
+        value+
+        " observations";
+
+    chart.appendChild(bar);
+
+}
+
+
+/* =========================================================
+   FIELD NOTES
+========================================================= */
+
+function saveNotes(){
+
+    const text =
+        $("fieldNotes").value.trim();
+
+    if(!text){
+
+        toast("ENTER A FIELD NOTE");
+        return;
+
+    }
+
+    if(!DB||!USER){
+
+        toast("DATABASE NOT READY");
+        return;
+
+    }
+
+    const tx =
+        DB.transaction(
+            "notes",
+            "readwrite"
+        );
+
+    tx.objectStore("notes")
+      .add({
+
+          username:USER,
+
+          text:text,
+
+          timestamp:Date.now(),
+
+          latitude:userLocation.lat,
+
+          longitude:userLocation.lon
+
+      });
+
+    tx.oncomplete=()=>{
+
+        $("fieldNotes").value="";
+
+        toast("FIELD NOTE SAVED");
+
+    };
+
+}
+
+
+/* =========================================================
+   DATABASE EXPORT
+========================================================= */
+
+async function exportDatabase(){
+
+    if(!DB||!USER){
+
+        toast("DATABASE NOT READY");
+        return;
+
+    }
+
+    try{
+
+        const photos =
+            await getAllStore(
+                "photos",
+                "username"
+            );
+
+        const notes =
+            await getAllStore(
+                "notes",
+                "username"
+            );
+
+        const backup = {
+
+            format:"BUCKTRACK_BACKUP",
+
+            version:1,
+
+            exportedAt:
+                new Date().toISOString(),
+
+            username:USER,
+
+            location:userLocation,
+
+            photos:photos,
+
+            notes:notes
+
+        };
+
+        const blob =
+            new Blob(
+                [
+                    JSON.stringify(
+                        backup
+                    )
+                ],
+                {
+                    type:"application/json"
+                }
+            );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href=url;
+
+        link.download =
+            "BUCKTRACK_BACKUP_"+
+            new Date()
+            .toISOString()
+            .slice(0,10)+
+            ".json";
+
+        link.click();
+
+        setTimeout(()=>{
+            URL.revokeObjectURL(url);
+        },1000);
+
+        toast("BACKUP EXPORTED");
+
+    }catch(error){
+
+        console.error(error);
+
+        toast("BACKUP FAILED");
+
+    }
+
+}
+
+
+function getAllStore(storeName,indexName){
+
+    return new Promise(resolve=>{
+
+        const tx =
+            DB.transaction(
+                storeName,
+                "readonly"
+            );
+
+        const store =
+            tx.objectStore(storeName);
+
+        let request;
+
+        if(indexName){
+
+            request =
+                store
+                .index(indexName)
+                .getAll(USER);
+
+        }else{
+
+            request =
+                store.getAll();
+
+        }
+
+        request.onsuccess=()=>{
+            resolve(request.result||[]);
+        };
+
+        request.onerror=()=>{
+            resolve([]);
+        };
+
+    });
+
+}
+
+
+/* =========================================================
+   BACKUP IMPORT
+========================================================= */
+
+$("backupInput").addEventListener(
+    "change",
+    event=>{
+
+        const file =
+            event.target.files[0];
+
+        if(!file)return;
+
+        importBackup(file);
+
+        event.target.value="";
+
+    }
+);
+
+
+async function importBackup(file){
+
+    try{
+
+        const text =
+            await file.text();
+
+        const backup =
+            JSON.parse(text);
+
+        if(
+            !backup ||
+            backup.format!=="BUCKTRACK_BACKUP"
+        ){
+
+            throw new Error(
+                "Invalid BUCKTRACK backup"
+            );
+
+        }
+
+        if(
+            !confirm(
+                "Import this backup into the current account?"
+            )
+        ){
+
+            return;
+
+        }
+
+        const photos =
+            Array.isArray(backup.photos)
+            ?backup.photos
+            :[];
+
+        for(const photo of photos){
+
+            await addPhoto({
+                username:USER,
+                fileName:photo.fileName||"imported",
+                dataUrl:photo.dataUrl,
+                timestamp:photo.timestamp||Date.now(),
+                direction:photo.direction||"UNKNOWN",
+                phase:photo.phase||"UNKNOWN",
+                camera:photo.camera||"IMPORTED",
+                latitude:photo.latitude||userLocation.lat,
+                longitude:photo.longitude||userLocation.lon
+            });
+
+        }
+
+        await loadPhotos();
+
+        toast(
+            "IMPORTED "+
+            photos.length+
+            " PHOTOS"
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        toast("BACKUP IMPORT FAILED");
+
+    }
+
+}
+
+
+/* =========================================================
+   SECURITY / HTML SAFETY
+========================================================= */
+
+function escapeHTML(value){
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================================================
+   GLOBAL ERROR RECOVERY
+========================================================= */
+
+window.addEventListener(
+    "error",
+    event=>{
+
+        console.error(
+            "BUCKTRACK ERROR",
+            event.error
+        );
+
+        const status =
+            $("systemStatus");
+
+        if(status)
+            status.textContent =
+                "RECOVERY MODE";
+
+    }
+);
+
+
+window.addEventListener(
+    "unhandledrejection",
+    event=>{
+
+        console.error(
+            "BUCKTRACK ASYNC ERROR",
+            event.reason
+        );
+
+    }
+);
+
+
+/* =========================================================
+   START APPLICATION
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    ()=>{
+        boot();
+    }
+);
+
+</script>
+
 </body>
 </html>
