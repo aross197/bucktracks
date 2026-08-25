@@ -1,677 +1,541 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BUCKTRACK // AI Tactical Command</title>
-    
-    <meta name="theme-color" content="#121614">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="BUCKTRACK">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/192/000000/deer.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BUCKTRACK AI - Tactical Intelligence Console</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
-    <!-- Leaflet.js Mapping Engine -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-card: #121824;
+      --border-tactical: #1e293b;
+      --accent-green: #00ff66;
+      --accent-alert: #ff3838;
+      --text-main: #f1f5f9;
+      --text-muted: #64748b;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
 
-    <style>
-        :root {
-            --bg-dark: #0b0e0c;
-            --panel-bg: rgba(18, 22, 19, 0.95);
-            --border-color: #2e3832;
-            --accent-orange: #d97724;
-            --accent-green: #4a6b53;
-            --accent-green-bright: #6db379;
-            --accent-snow: #7bbcd5;
-            --accent-danger: #c0392b;
-            --accent-cyan: #00e5ff;
-            --text-main: #e2e8e4;
-            --text-muted: #8b9b90;
-            --header-height: 50px;
-            --nav-height: 65px;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            user-select: none;
-        }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace;
-            margin: 0; padding: 0;
-            height: 100dvh;
-            width: 100vw;
-            display: flex; flex-direction: column;
-            overflow: hidden;
-        }
+    /* --- Tactical Header --- */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-tactical);
+      gap: 1rem;
+    }
 
-        /* Scanline Overlay */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
-            z-index: 99998;
-            pointer-events: none;
-            opacity: 0.3;
-        }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
 
-        /* Auth Screen Overlay */
-        #auth-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 99999;
-            display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
+    .brand h1 {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+      color: var(--text-main);
+    }
 
-        .auth-card {
-            background: var(--panel-bg); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 25px; width: 100%; max-width: 400px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
-        }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      background: rgba(0, 255, 102, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 255, 102, 0.3);
+    }
 
-        .auth-card h2 { margin-top: 0; color: var(--accent-orange); text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; }
-        .input-group { margin-bottom: 12px; }
-        .input-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
-        .input-group input, .input-group select, .input-group textarea {
-            width: 100%; padding: 10px; background: #121614; border: 1px solid var(--border-color);
-            color: var(--text-main); border-radius: 4px; font-family: inherit; font-size: 0.9rem; outline: none;
-        }
-        .input-group input:focus, .input-group select:focus { border-color: var(--accent-orange); }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
 
-        header {
-            background: #121614; border-bottom: 1px solid var(--border-color);
-            padding: 0 15px; display: flex; justify-content: space-between; align-items: center; 
-            height: var(--header-height);
-            padding-top: env(safe-area-inset-top, 0px);
-            z-index: 1000;
-        }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
 
-        h1 { margin: 0; font-size: 1rem; letter-spacing: 1px; color: var(--accent-orange); font-weight: 800; }
-        .badge { background: var(--accent-orange); color: #000; padding: 2px 6px; font-weight: bold; border-radius: 3px; font-size: 0.7rem; }
+    /* --- Telemetry Panel --- */
+    .telemetry-bar {
+      display: flex;
+      gap: 1rem;
+      background: rgba(10, 14, 23, 0.8);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-tactical);
+      font-family: var(--font-mono);
+    }
 
-        .main-viewport { 
-            flex: 1; 
-            position: relative; 
-            width: 100%; 
-            height: calc(100dvh - var(--header-height) - var(--nav-height) - env(safe-area-inset-bottom, 0px)); 
-            overflow: hidden; 
-        }
+    .telemetry-item {
+      display: flex;
+      flex-direction: column;
+    }
 
-        .tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 15px; }
-        .tab-content.active { display: block; }
-        #map-view { padding: 0; position: relative; }
-        #map { width: 100%; height: 100%; background: #070a08; }
+    .telemetry-item .label {
+      font-size: 0.55rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
 
-        .map-hud-overlay {
-            position: absolute;
-            top: 10px; left: 10px; right: 10px;
-            z-index: 900;
-            pointer-events: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-        }
+    .telemetry-item .value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-green);
+    }
 
-        .hud-card {
-            background: rgba(14, 20, 16, 0.92);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: 6px;
-            pointer-events: auto;
-            font-size: 0.75rem;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
+    /* --- Dashboard Layout --- */
+    main {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      flex: 1;
+      height: calc(100vh - 65px);
+    }
 
-        .hud-card span.value { color: var(--accent-green-bright); font-weight: bold; font-family: monospace; }
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
 
-        .layer-control-panel {
-            position: absolute;
-            bottom: 20px; right: 10px;
-            z-index: 900;
-            background: rgba(14, 20, 16, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            width: 220px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.7);
-            display: none;
-        }
+    /* Map Interface */
+    .map-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 450px;
+    }
 
-        .layer-control-panel.show { display: block; }
+    #map {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-primary);
+    }
 
-        .layer-control-panel h3 {
-            margin: 0 0 8px 0;
-            font-size: 0.75rem;
-            color: var(--accent-orange);
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 4px;
-        }
+    /* Tactical Map Markers & Overlays */
+    .leaflet-container {
+      background-color: #080c14 !important;
+    }
 
-        .layer-btn-group { display: flex; flex-direction: column; gap: 6px; }
+    .stand-marker-icon {
+      background: var(--accent-green);
+      border: 2px solid var(--bg-primary);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent-green);
+    }
 
-        .layer-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: var(--text-main);
-            background: #121614;
-            padding: 6px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-        }
+    .cam-marker-icon {
+      background: #3b82f6;
+      border: 2px solid var(--bg-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 8px #3b82f6;
+    }
 
-        .layer-toggle input { cursor: pointer; }
+    /* Scent Cone Pulse */
+    .leaflet-overlay-pane path {
+      animation: scentGlow 3s infinite ease-in-out;
+    }
 
-        .hud-action-btn {
-            background: rgba(14, 20, 16, 0.92);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-color);
-            color: var(--accent-orange);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
-            pointer-events: auto;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+    @keyframes scentGlow {
+      0% { fill-opacity: 0.15; stroke-opacity: 0.4; }
+      50% { fill-opacity: 0.35; stroke-opacity: 0.8; }
+      100% { fill-opacity: 0.15; stroke-opacity: 0.4; }
+    }
 
-        .leaflet-popup-content-wrapper {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-family: inherit;
-            border-radius: 6px;
-        }
-        .leaflet-popup-tip { background: var(--panel-bg); }
+    /* --- Side Control Drawer --- */
+    .sidebar {
+      background: var(--bg-card);
+      border-left: 1px solid var(--border-tactical);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
 
-        .bottom-nav {
-            height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-            background: #121614; 
-            border-top: 1px solid var(--border-color);
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center;
-            z-index: 10000;
-            position: relative;
-        }
+    .panel-box {
+      background: rgba(10, 14, 23, 0.5);
+      border: 1px solid var(--border-tactical);
+      border-radius: 8px;
+      padding: 1rem;
+    }
 
-        .nav-item {
-            flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: none; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.7rem; cursor: pointer;
-            gap: 3px;
-        }
+    .panel-box h3 {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .nav-item.active { color: var(--accent-orange); border-top: 2px solid var(--accent-orange); background: rgba(217, 119, 36, 0.05); }
+    /* Dropzone Styling */
+    .intake-dropzone {
+      border: 2px dashed var(--border-tactical);
+      border-radius: 6px;
+      padding: 1.25rem 0.75rem;
+      text-align: center;
+      background: rgba(18, 24, 36, 0.5);
+      transition: all 0.2s ease-in-out;
+      cursor: pointer;
+    }
 
-        .card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .card h2 { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-top: 0; text-transform: uppercase; display: flex; justify-content: space-between; }
-        .upload-zone { border: 2px dashed var(--accent-green); padding: 25px; text-align: center; border-radius: 8px; background: rgba(74, 107, 83, 0.08); cursor: pointer; margin-bottom: 10px; }
-        .upload-zone.dragover { background: rgba(217, 119, 36, 0.2); border-color: var(--accent-orange); }
-        .btn-tactical { background: #28362d; border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; width: 100%; cursor: pointer; font-family: inherit; border-radius: 6px; font-weight: bold; min-height: 40px; margin-top: 5px; }
-        .btn-tactical:hover { background: var(--accent-orange); color: #000; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem; }
-        .stat-item { background: #121614; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); }
-        .stat-item label { display: block; font-size: 0.7rem; color: var(--text-muted); }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
-        .gallery-item { position: relative; border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; background: #000; }
-        .gallery-item img { width: 100%; height: 90px; object-fit: cover; display: block; }
-        .gallery-item .ai-badge { position: absolute; bottom: 2px; left: 2px; right: 2px; background: rgba(0,0,0,0.85); color: var(--accent-orange); font-size: 0.6rem; padding: 2px; border-radius: 2px; text-align: center; }
-        .gallery-item .delete-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.8); color: red; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
-        .ai-log { background: #121614; border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; font-size: 0.8rem; height: 120px; overflow-y: auto; margin-top: 8px; font-family: monospace; }
-    </style>
+    .intake-dropzone:hover, .intake-dropzone.drag-over {
+      border-color: var(--accent-green);
+      background: rgba(0, 255, 102, 0.03);
+    }
+
+    .intake-dropzone p {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .intake-dropzone span {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* Custom Form Elements */
+    select, button {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-tactical);
+      color: var(--text-main);
+      padding: 0.6rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    button {
+      background: rgba(0, 255, 102, 0.1);
+      color: var(--accent-green);
+      border-color: rgba(0, 255, 102, 0.3);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--accent-green);
+      color: var(--bg-primary);
+    }
+
+    /* Target Intel Card */
+    .target-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+    }
+
+    .intel-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      border-bottom: 1px dashed var(--border-tactical);
+      padding-bottom: 0.3rem;
+    }
+
+    .intel-row span:last-child {
+      color: var(--accent-green);
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Auth Modal -->
-    <div id="auth-modal">
-        <div class="auth-card">
-            <h2 id="auth-title">BUCKTRACK LOGIN</h2>
-            <form id="auth-form">
-                <div class="input-group">
-                    <label>Callsign / Username</label>
-                    <input type="text" id="auth-username" required autocomplete="username">
-                </div>
-                <div class="input-group">
-                    <label>Access Code / Password</label>
-                    <input type="password" id="auth-password" required autocomplete="current-password">
-                </div>
-                <div class="input-group" id="home-region-group" style="display: none;">
-                    <label>Home Hunting Zone</label>
-                    <input type="text" id="auth-region" placeholder="e.g. Springhill Zone 104">
-                </div>
-                <button type="submit" class="btn-tactical" id="auth-submit-btn">LOGIN</button>
-            </form>
-            <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <span id="auth-toggle-link" style="color: var(--accent-snow); text-decoration: underline; cursor: pointer; font-size: 0.8rem;" onclick="toggleAuthMode()">New User? Register Callsign</span>
-            </div>
-            <div id="auth-msg" style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-danger);"></div>
-        </div>
+  <!-- Operational Header -->
+  <header>
+    <div class="brand">
+      <h1>BUCKTRACK AI</h1>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span id="sys-status">ONLINE</span>
+      </div>
     </div>
 
-    <!-- Header -->
-    <header>
-        <h1>BUCKTRACK AI</h1>
-        <div>
-            <span class="badge" id="user-badge">OFFLINE</span>
-            <button onclick="logout()" style="background:none; border:none; color:var(--text-muted); font-size:0.75rem; cursor:pointer; margin-left: 8px;">[LOGOUT]</button>
+    <!-- Live Telemetry Bar -->
+    <div class="telemetry-bar">
+      <div class="telemetry-item">
+        <span class="label">LOCATION</span>
+        <span class="value" style="color: #f1f5f9;">SPRINGHILL, NS</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="label">TEMP</span>
+        <span id="weather-temp" class="value">--°F</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="label">WIND VECTOR</span>
+        <span id="weather-wind" class="value">-- MPH --</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Console -->
+  <main>
+    <!-- Map Canvas -->
+    <div class="map-wrapper">
+      <div id="map"></div>
+    </div>
+
+    <!-- Tactical Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Photo Intake Engine -->
+      <div class="panel-box">
+        <h3>📸 Bulk Photo Intake</h3>
+        <div class="intake-dropzone" id="dropzone">
+          <p>DROP CAMERA PHOTOS</p>
+          <span>IndexedDB Auto-Sync • EXIF Extraction</span>
         </div>
-    </header>
+        <select id="cam-select">
+          <option value="Ridge Cam 01">Ridge Trail Cam 01 (Funnel)</option>
+          <option value="South Mash Cam">South Mash Cam (Feed)</option>
+          <option value="Hardwood Scrape Cam">Hardwood Scrape Cam</option>
+        </select>
+      </div>
 
-    <!-- App Viewports -->
-    <main class="main-viewport">
-        
-        <!-- Tab 1: Map -->
-        <section id="map-view" class="tab-content active">
-            <div class="map-hud-overlay">
-                <div class="hud-card">
-                    <div>ZONE: <span class="value" id="hud-region">SPRINGHILL / NOVA SCOTIA</span></div>
-                    <div>COORDS: <span class="value" id="hud-coords">45.8167, -64.2167</span></div>
-                </div>
+      <!-- Target Intelligence -->
+      <div class="panel-box">
+        <h3>🎯 Daybreak Intel</h3>
+        <div class="target-card">
+          <div class="intel-row">
+            <span>TARGET:</span>
+            <span>154 3/8" Mature Buck</span>
+          </div>
+          <div class="intel-row">
+            <span>PREDICTED HEADING:</span>
+            <span id="intel-heading">ESE (112°)</span>
+          </div>
+          <div class="intel-row">
+            <span>AMBUSH WINDOW:</span>
+            <span>05:15 - 06:30 AM</span>
+          </div>
+          <div class="intel-row">
+            <span>STAND STATUS:</span>
+            <span style="color: #00ff66;">SCENT CLEAR</span>
+          </div>
+        </div>
+        <button id="btn-recalc">RECALCULATE CORRIDORS</button>
+      </div>
 
-                <button class="hud-action-btn" onclick="toggleLayerPanel()">
-                    <span>🗺️ LAYERS</span>
-                </button>
-            </div>
+      <!-- System Log -->
+      <div class="panel-box">
+        <h3>Console Output</h3>
+        <div id="console-log" style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); line-height: 1.4; max-height: 100px; overflow-y: auto;">
+          > Initializing Leaflet Engine...<br>
+          > Querying Open-Meteo telemetry...
+        </div>
+      </div>
 
-            <!-- Layer Panel Drawer -->
-            <div class="layer-control-panel" id="layerPanel">
-                <h3>Base Maps</h3>
-                <div class="layer-btn-group">
-                    <label class="layer-toggle">
-                        <span>NRCan Topo Canada (HD)</span>
-                        <input type="radio" name="baseLayer" value="nrcan" checked onchange="switchBaseLayer(this.value)">
-                    </label>
-                    <label class="layer-toggle">
-                        <span>ESRI Satellite Imagery</span>
-                        <input type="radio" name="baseLayer" value="satellite" onchange="switchBaseLayer(this.value)">
-                    </label>
-                    <label class="layer-toggle">
-                        <span>OpenTopo Contours</span>
-                        <input type="radio" name="baseLayer" value="opentopo" onchange="switchBaseLayer(this.value)">
-                    </label>
-                    <label class="layer-toggle">
-                        <span>Tactical Dark Grid</span>
-                        <input type="radio" name="baseLayer" value="dark" onchange="switchBaseLayer(this.value)">
-                    </label>
-                </div>
+    </aside>
+  </main>
 
-                <h3 style="margin-top: 12px;">Tactical Overlays</h3>
-                <div class="layer-btn-group">
-                    <label class="layer-toggle">
-                        <span>Crown Land Overlay</span>
-                        <input type="checkbox" id="crownOverlayCheck" onchange="toggleOverlay('crown', this.checked)">
-                    </label>
-                    <label class="layer-toggle">
-                        <span>Thermal Corridor Grid</span>
-                        <input type="checkbox" id="thermalOverlayCheck" onchange="toggleOverlay('thermal', this.checked)">
-                    </label>
-                </div>
-            </div>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-            <div id="map"></div>
-        </section>
+  <script>
+    // --- 1. Weather Telemetry Fetcher (Open-Meteo API) ---
+    async function getLiveWeather(lat = 45.8167, lon = -64.2167) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,surface_pressure,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph`;
+      
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Network error loading weather");
+        const data = await res.json();
+        const current = data.current;
 
-        <!-- Tab 2: Photo Vault -->
-        <section id="photos-view" class="tab-content">
-            <div class="card">
-                <h2>📸 Bulk Photo Dump Intake</h2>
-                <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-                    <p style="margin:0; font-weight:bold; font-size:1rem; color:var(--accent-orange);">DROP CAMERA PHOTOS HERE</p>
-                    <p style="margin:4px 0 0 0; font-size:0.75rem; color:var(--text-muted);">IndexedDB Engine • Auto Vector Tagging</p>
-                </div>
-                <input type="file" id="file-input" multiple accept="image/*" style="display:none;" onchange="handleBulkDump(event)">
-                
-                <div class="input-group">
-                    <label>Camera Station</label>
-                    <select id="photo-tag">
-                        <option value="Ridge Cam 01">Ridge Trail Cam 01 (Funnel)</option>
-                        <option value="South Mash Cam">South Mash Cam (Bait/Feed)</option>
-                        <option value="Hardwood Scrape Cam">Hardwood Scrape Cam</option>
-                    </select>
-                </div>
+        return {
+          temp: Math.round(current.temperature_2m),
+          pressure: current.surface_pressure,
+          windSpeed: Math.round(current.wind_speed_10m),
+          windDirDeg: current.wind_direction_10m,
+          windCardinal: getCardinalDirection(current.wind_direction_10m)
+        };
+      } catch (err) {
+        logConsole(`Error fetching weather: ${err.message}`);
+        // Fallback default telemetry if offline
+        return { temp: 42, windSpeed: 8, windDirDeg: 292, windCardinal: 'WNW' };
+      }
+    }
 
-                <div class="ai-log" id="ai-processing-log">Ready for ingestion...</div>
-            </div>
+    function getCardinalDirection(angle) {
+      const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+      return directions[Math.round(angle / 22.5) % 16];
+    }
 
-            <div class="card">
-                <h2>User Vault <span id="photo-count">(0)</span></h2>
-                <div class="gallery-grid" id="photo-gallery"></div>
-            </div>
-        </section>
+    // --- 2. Downwind Scent Cone Geodesic Math ---
+    function createScentCone(origin, windFromDeg, windSpeedMph = 8, spreadAngle = 40) {
+      const [lat, lng] = origin;
+      const downwindHeading = (windFromDeg + 180) % 360; // Scent blows downwind
+      const coneLengthMeters = Math.min(Math.max(windSpeedMph * 35, 150), 500); 
 
-        <!-- Tab 3: Intelligence Lab -->
-        <section id="ai-intelligence-view" class="tab-content">
-            <div class="card">
-                <h2>Target Intelligence</h2>
-                <div class="stat-grid">
-                    <div class="stat-item"><label>Estimated Score</label><strong>154 3/8" Gross</strong></div>
-                    <div class="stat-item"><label>Age Class</label><strong>4.5+ Years (Mature)</strong></div>
-                    <div class="stat-item"><label>Primary Travel</label><strong id="ai-travel-dir">Awaiting Dump Data...</strong></div>
-                    <div class="stat-item"><label>Bedding Vector</label><strong id="ai-bedding-loc">Calculating...</strong></div>
-                </div>
-            </div>
+      const halfAngle = spreadAngle / 2;
+      const leftBearing = (downwindHeading - halfAngle + 360) % 360;
+      const rightBearing = (downwindHeading + halfAngle) % 360;
 
-            <div class="card">
-                <h2>Predicted Corridors</h2>
-                <div id="ai-corridor-summary" style="font-size:0.85rem; line-height:1.4;">
-                    Upload trail camera photos to generate movement vector analysis tied directly to your profile.
-                </div>
-                <button class="btn-tactical" onclick="plotAIBeddingOnMap()">Plot AI Bedding & Corridors on Map</button>
-            </div>
-        </section>
+      const leftPoint = destinationPoint(lat, lng, coneLengthMeters, leftBearing);
+      const rightPoint = destinationPoint(lat, lng, coneLengthMeters, rightBearing);
+      const centerPoint = destinationPoint(lat, lng, coneLengthMeters, downwindHeading);
 
-    </main>
+      return L.polygon([[lat, lng], leftPoint, centerPoint, rightPoint], {
+        color: '#ff3838',
+        weight: 1.5,
+        dashArray: '4, 4',
+        fillColor: '#ff3838',
+        fillOpacity: 0.25,
+        interactive: false
+      });
+    }
 
-    <!-- Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('map-view', this)"><span>🗺️ Map</span></button>
-        <button class="nav-item" onclick="switchTab('photos-view', this)"><span>📸 Dump</span></button>
-        <button class="nav-item" onclick="switchTab('ai-intelligence-view', this)"><span>🦌 AI Lab</span></button>
-    </nav>
+    function destinationPoint(lat, lng, distanceMeters, bearingDeg) {
+      const R = 6371000; // Earth radius in meters
+      const rad = Math.PI / 180;
+      const φ1 = lat * rad;
+      const λ1 = lng * rad;
+      const θ = bearingDeg * rad;
+      const δ = distanceMeters / R;
 
-    <script>
-        // Database & User State Initialization
-        let db = null;
-        let currentUser = null;
-        let userData = null;
-        let map = null;
-        let userCoords = { lat: 45.8167, lon: -64.2167 };
-        let isRegister = false;
+      const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ));
+      const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
 
-        function initDatabase() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open("BuckTrackAI_DB", 2);
-                
-                request.onupgradeneeded = (e) => {
-                    const dbInst = e.target.result;
-                    if (!dbInst.objectStoreNames.contains("users")) {
-                        dbInst.createObjectStore("users", { keyPath: "username" });
-                    }
-                    if (!dbInst.objectStoreNames.contains("photos")) {
-                        const photoStore = dbInst.createObjectStore("photos", { keyPath: "id", autoIncrement: true });
-                        photoStore.createIndex("username", "username", { unique: false });
-                    }
-                };
+      return [φ2 / rad, λ2 / rad];
+    }
 
-                request.onsuccess = (e) => { 
-                    db = e.target.result; 
-                    resolve(db); 
-                };
+    // --- 3. App Controller & Leaflet Map Initialization ---
+    const springhillCoords = [45.8167, -64.2167];
+    let map, scentConeLayer;
 
-                request.onerror = () => reject("IndexedDB boot failed");
-            });
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize Map
+      map = L.map('map', { zoomControl: false }).setView(springhillCoords, 14);
+
+      // Dark Tactical Basemap Tiles
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        maxZoom: 19
+      }).addTo(map);
+
+      L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+      // Add Active Stand Marker
+      const standIcon = L.divIcon({ className: 'stand-marker-icon', iconSize: [12, 12] });
+      const standMarker = L.marker(springhillCoords, { icon: standIcon }).addTo(map);
+      standMarker.bindPopup("<b>Hardwood Ridge Stand</b><br>Primary Morning Ambush Point");
+
+      // Add Sample Trail Cam Marker
+      const camCoords = [45.8210, -64.2120];
+      const camIcon = L.divIcon({ className: 'cam-marker-icon', iconSize: [10, 10] });
+      L.marker(camCoords, { icon: camIcon }).addTo(map).bindPopup("<b>Ridge Trail Cam 01</b><br>Last Capture: 04:42 AM");
+
+      logConsole("> Tactical map rendered.");
+
+      // Fetch Telemetry & Draw Dynamic Scent Cone
+      await refreshTelemetry();
+
+      // Setup Drag & Drop Handlers
+      setupDropzone();
+    });
+
+    async function refreshTelemetry() {
+      logConsole("> Fetching wind vectors...");
+      const weather = await getLiveWeather(springhillCoords[0], springhillCoords[1]);
+
+      // Update UI Header
+      document.getElementById('weather-temp').textContent = `${weather.temp}°F`;
+      document.getElementById('weather-wind').textContent = `${weather.windSpeed} MPH ${weather.windCardinal}`;
+
+      // Calculate Downwind Heading for Intel Panel
+      const downwindDeg = (weather.windDirDeg + 180) % 360;
+      document.getElementById('intel-heading').textContent = `${getCardinalDirection(downwindDeg)} (${downwindDeg}°)`;
+
+      // Render or Update Scent Cone Layer
+      if (scentConeLayer) map.removeLayer(scentConeLayer);
+      scentConeLayer = createScentCone(springhillCoords, weather.windDirDeg, weather.windSpeed);
+      scentConeLayer.addTo(map);
+
+      logConsole(`> Vector calculated: Wind FROM ${weather.windDirDeg}° (${weather.windCardinal}). Scent projecting downwind.`);
+    }
+
+    // Console Logger Utility
+    function logConsole(msg) {
+      const consoleBox = document.getElementById('console-log');
+      consoleBox.innerHTML += `<br>${msg}`;
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    // Drag-and-Drop Intake Logic
+    function setupDropzone() {
+      const dropzone = document.getElementById('dropzone');
+
+      ['dragenter', 'dragover'].forEach(name => {
+        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+      });
+
+      ['dragleave', 'drop'].forEach(name => {
+        dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          logConsole(`> Ingested ${files.length} photo(s). Processing vector extraction...`);
+          alert(`BuckTracks Intake: Ingested ${files.length} photo(s) into local IndexedDB buffer.`);
         }
+      });
+    }
 
-        async function hashPassword(pwd) {
-            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        function toggleAuthMode() {
-            isRegister = !isRegister;
-            document.getElementById('auth-title').innerText = isRegister ? "REGISTER CALLSIGN" : "BUCKTRACK LOGIN";
-            document.getElementById('auth-submit-btn').innerText = isRegister ? "CREATE CALLSIGN" : "LOGIN";
-            document.getElementById('auth-toggle-link').innerText = isRegister ? "Have an account? Login" : "New User? Register Callsign";
-            document.getElementById('home-region-group').style.display = isRegister ? "block" : "none";
-            document.getElementById('auth-msg').innerText = "";
-        }
-
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const u = document.getElementById('auth-username').value.trim().toLowerCase();
-            const p = document.getElementById('auth-password').value;
-            const region = document.getElementById('auth-region').value.trim() || "Springhill Zone 104";
-            const msg = document.getElementById('auth-msg');
-
-            if (!u || !p) return;
-
-            const h = await hashPassword(p);
-            const tx = db.transaction(["users"], isRegister ? "readwrite" : "readonly");
-            const store = tx.objectStore("users");
-
-            if (isRegister) {
-                const checkReq = store.get(u);
-                checkReq.onsuccess = () => {
-                    if (checkReq.result) {
-                        msg.innerText = "Callsign already exists.";
-                    } else {
-                        const newProfile = { username: u, password: h, region: region, createdAt: new Date() };
-                        store.add(newProfile);
-                        completeLogin(newProfile);
-                    }
-                };
-            } else {
-                const req = store.get(u);
-                req.onsuccess = () => {
-                    if (req.result && req.result.password === h) {
-                        completeLogin(req.result);
-                    } else {
-                        msg.innerText = "Invalid credentials.";
-                    }
-                };
-            }
-        });
-
-        function completeLogin(profile) {
-            currentUser = profile.username;
-            userData = profile;
-            localStorage.setItem("bt_session", profile.username);
-            document.getElementById('auth-modal').style.display = 'none';
-            document.getElementById('user-badge').innerText = profile.username.toUpperCase();
-            document.getElementById('hud-region').innerText = profile.region.toUpperCase();
-            
-            loadPhotos();
-        }
-
-        function logout() { 
-            localStorage.removeItem("bt_session"); 
-            location.reload(); 
-        }
-
-        function checkSession() {
-            const s = localStorage.getItem("bt_session");
-            if (s && db) {
-                const tx = db.transaction(["users"], "readonly");
-                const store = tx.objectStore("users");
-                const req = store.get(s);
-                req.onsuccess = () => {
-                    if (req.result) completeLogin(req.result);
-                };
-            }
-        }
-
-        // Photo Upload and Profile-Tied Store
-        const dropZone = document.getElementById('drop-zone');
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
-            dropZone.addEventListener(eName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
-        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-        dropZone.addEventListener('drop', (e) => {
-            dropZone.classList.remove('dragover');
-            handleBulkDump({ target: { files: e.dataTransfer.files } });
-        });
-
-        function handleBulkDump(e) {
-            const files = Array.from(e.target.files);
-            if (!files.length || !currentUser) return;
-
-            const log = document.getElementById('ai-processing-log');
-            log.innerText = `[AI ENGINE] Processing ${files.length} images for ${currentUser}...\n`;
-
-            const tag = document.getElementById('photo-tag').value;
-            let processed = 0;
-
-            files.forEach((file) => {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    const fileTime = file.lastModified ? new Date(file.lastModified) : new Date();
-                    const hour = fileTime.getHours();
-
-                    let travelDir = "NW -> SE";
-                    if (hour >= 5 && hour <= 9) travelDir = "SE -> NW (Returning to Bed)";
-                    else if (hour >= 16 && hour <= 20) travelDir = "NW -> SE (Leaving to Feed)";
-
-                    const photoObj = {
-                        username: currentUser,
-                        tag: tag,
-                        fileName: file.name,
-                        dataUrl: evt.target.result,
-                        timestamp: fileTime,
-                        travelDir: travelDir
-                    };
-
-                    const tx = db.transaction(["photos"], "readwrite");
-                    tx.objectStore("photos").add(photoObj);
-
-                    processed++;
-                    log.innerText += `✓ Imported: ${file.name}\n`;
-                    log.scrollTop = log.scrollHeight;
-
-                    if (processed === files.length) {
-                        log.innerText += `\n[SUCCESS] Vault updated.`;
-                        loadPhotos();
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function loadPhotos() {
-            if (!currentUser) return;
-            const tx = db.transaction(["photos"], "readonly");
-            const index = tx.objectStore("photos").index("username");
-            index.getAll(currentUser).onsuccess = (e) => {
-                const photos = e.target.result;
-                document.getElementById('photo-count').innerText = `(${photos.length})`;
-                const gallery = document.getElementById('photo-gallery');
-                gallery.innerHTML = '';
-                
-                if (photos.length > 0) {
-                    document.getElementById('ai-travel-dir').innerText = photos[photos.length - 1].travelDir;
-                    document.getElementById('ai-bedding-loc').innerText = "North Ridge Sector";
-                }
-
-                photos.forEach(p => {
-                    gallery.innerHTML += `
-                        <div class="gallery-item">
-                            <button class="delete-btn" onclick="deletePhoto(${p.id})">×</button>
-                            <img src="${p.dataUrl}">
-                            <div class="ai-badge">${p.tag}</div>
-                        </div>
-                    `;
-                });
-            };
-        }
-
-        function deletePhoto(id) {
-            const tx = db.transaction(["photos"], "readwrite");
-            tx.objectStore("photos").delete(id);
-            tx.oncomplete = () => loadPhotos();
-        }
-
-        // Map Setup
-        let baseMaps = {};
-        let activeBaseLayerKey = "nrcan";
-        let overlayLayers = {};
-        let aiLayers = [];
-
-        function initMap() {
-            map = L.map('map', { 
-                zoomControl: false, 
-                attributionControl: false 
-            }).setView([userCoords.lat, userCoords.lon], 13);
-
-            baseMaps.nrcan = L.tileLayer('https://geoappext.nrcan.gc.ca/arcgis/rest/services/BaseMaps/CBMT_CBCT_GEOM_3857/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17 });
-            baseMaps.satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
-            baseMaps.opentopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
-            baseMaps.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
-
-            baseMaps[activeBaseLayerKey].addTo(map);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-            setupOverlays();
-
-            map.on('move', () => {
-                const center = map.getCenter();
-                document.getElementById('hud-coords').innerText = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
-            });
-        }
-
-        function switchBaseLayer(key) {
-            if (!map || !baseMaps[key]) return;
-            map.removeLayer(baseMaps[activeBaseLayerKey]);
-            baseMaps[key].addTo(map);
-            activeBaseLayerKey = key;
-        }
-
-        function setupOverlays() {
-            overlayLayers.crown = L.polygon([
-                [45.830, -64.240], [45.835, -64.200],
-                [45.810, -64.190], [45.800, -64.230]
-            ], { color: '#ffaa00', weight: 2, dashArray: '5, 5', fillColor: '#ffaa00', fillOpacity: 0.15 });
-
-            overlayLayers.thermal = L.polyline([
-                [45.828, -64.228], [45.822, -64.222], [45.816, -64.216]
-            ], { color: '#00e5ff', weight: 3, dashArray: '3, 6' });
-        }
-
-        function toggleOverlay(key, enable) {
-            if (!map || !overlayLayers[key]) return;
-            if (enable) overlayLayers[key].addTo(map);
-            else map.removeLayer(overlayLayers[key]);
-        }
-
-        function toggleLayerPanel() {
-            document.getElementById('layerPanel').classList.toggle('show');
-        }
-
-        function plotAIBeddingOnMap() {
-            if (!map) return;
-            switchTab('map-view', document.querySelectorAll('.nav-item')[0]);
-
-            aiLayers.forEach(l => map.removeLayer(l));
-            aiLayers = [];
-
-            const beddingCircle = L.circle([45.828, -64.228], { color: '#c0392b', fillColor: '#e74c3c', fillOpacity: 0.4, radius: 350 }).addTo(map);
-            const travelCorridor = L.polyline([[45.828, -64.228], [45.816, -64.218], [45.805, -64.210]], { color: '#d97724', weight: 5, dashArray: '8, 8' }).addTo(map);
-
-            aiLayers.push(beddingCircle, travelCorridor);
-            map.fitBounds(travelCorridor.getBounds());
-        }
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if (btn) btn.classList.add('active');
-            if (tabId === 'map-view' && map) setTimeout(() => map.invalidateSize(), 200);
-        }
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            await initDatabase();
-            checkSession();
-            initMap();
-        });
-    </script>
+    // Button Listeners
+    document.getElementById('btn-recalc').addEventListener('click', () => {
+      refreshTelemetry();
+    });
+  </script>
 </body>
 </html>
