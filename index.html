@@ -1,931 +1,288 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#030705">
-<title>area51-trailcam // Tactical Command OS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terrain & Trail Cam Intelligence Hub (Cesium)</title>
+    <!-- CesiumJS CDN -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #121619;
+            --panel-bg: rgba(18, 22, 25, 0.85);
+            --border-color: #2a343d;
+            --accent-green: #2ecc71;
+            --accent-hover: #27ae60;
+            --text-main: #ecf0f1;
+            --text-muted: #95a5a6;
+        }
 
-<link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-dark); color: var(--text-main); }
 
-<style>
-:root{
-  --bg:#030705;
-  --panel:rgba(6, 14, 9, 0.88);
-  --panel-solid:#060e09;
-  --panel-hover:rgba(10, 24, 15, 0.95);
-  --border:rgba(30, 68, 43, 0.4);
-  --border-bright:rgba(76, 255, 136, 0.5);
-  --green:#4cff88;
-  --green-glow:rgba(76, 255, 136, 0.25);
-  --lime:#b7ff55;
-  --cyan:#42d9ff;
-  --amber:#ffbd4a;
-  --red:#ff5264;
-  --text:#e4f4ea;
-  --muted:#6f8c7b;
-  --shadow:0 20px 50px rgba(0,0,0,0.6);
-  --font-sans:'Plus Jakarta Sans', sans-serif;
-  --font-mono:'JetBrains Mono', monospace;
-}
+        #cesiumContainer { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0; }
 
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-sans);}
+        /* Tactical HUD Overlay */
+        .hud-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            width: 380px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
-/* Background grid fx */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background-image:
-    linear-gradient(rgba(76, 255, 136, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(76, 255, 136, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events:none;
-  z-index:9999;
-}
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
 
-button,input,textarea,select{font:inherit;}
-button{cursor:pointer;}
+        .hud-header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; color: var(--text-main); }
+        .status-badge { font-size: 11px; background: rgba(46, 204, 113, 0.2); color: var(--accent-green); padding: 3px 8px; border-radius: 20px; font-weight: 600; }
 
-.app{
-  height:100vh;
-  display:grid;
-  grid-template-rows:56px 1fr 28px;
-  overflow:hidden;
-}
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.02);
+            margin-bottom: 15px;
+        }
 
-/* TOPBAR */
-.topbar{
-  background:rgba(4, 10, 6, 0.95);
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 16px;
-  backdrop-filter:blur(16px);
-  z-index:1000;
-}
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent-green);
+            background: rgba(46, 204, 113, 0.05);
+        }
 
-.brand{display:flex;align-items:center;gap:10px;}
-.brand-icon{
-  width:32px;height:32px;border-radius:8px;
-  background:linear-gradient(135deg, rgba(76,255,136,0.2), rgba(76,255,136,0.05));
-  border:1px solid var(--border-bright);
-  display:grid;place-items:center;font-size:16px;
-  box-shadow:0 0 12px var(--green-glow);
-}
-.brand h1{font-family:var(--font-mono);font-size:12px;letter-spacing:1px;color:var(--text);font-weight:700;}
-.brand span{color:var(--green);font-size:9px;display:block;}
+        .drop-zone p { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+        .drop-zone input { display: none; }
 
-.header-actions{display:flex;gap:6px;}
-.icon-btn{
-  border:1px solid var(--border);
-  background:var(--panel-solid);
-  color:var(--text);
-  width:32px;height:32px;
-  border-radius:8px;
-  display:grid;place-items:center;
-  transition:all .2s ease;
-}
-.icon-btn:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 10px var(--green-glow);}
+        /* Analysis Output Feed */
+        .analysis-box {
+            max-height: 220px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+        }
 
-/* MAIN GRID */
-.main{
-  min-height:0;
-  display:grid;
-  grid-template-columns:1fr 420px;
-  overflow:hidden;
-}
+        .analysis-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .analysis-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 
-.workspace{position:relative;background:#020503;height:100%;min-height:0;}
-#map{width:100%;height:100%;}
+        .ai-tag { color: var(--accent-green); font-weight: bold; }
 
-/* MAP HUD OVERLAYS */
-.map-hud-top{
-  position:absolute;top:12px;left:12px;right:12px;z-index:500;
-  display:flex;justify-content:space-between;pointer-events:none;gap:10px;
-}
-.map-badge{
-  pointer-events:auto;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:8px 12px;
-  backdrop-filter:blur(14px);
-  box-shadow:var(--shadow);
-}
-.map-badge strong{display:block;font:700 9px var(--font-mono);color:var(--green);letter-spacing:1px;}
-.map-badge span{display:block;font:9px var(--font-mono);color:var(--muted);margin-top:2px;}
+        /* Controls Toolbar */
+        .map-tools {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
 
-.map-controls{display:flex;gap:5px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;}
-.control-pill{
-  background:var(--panel);
-  color:var(--text);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:6px 10px;
-  font:600 9px var(--font-mono);
-  backdrop-filter:blur(14px);
-  transition:all .2s;
-}
-.control-pill:hover,.control-pill.active{
-  color:var(--green);
-  border-color:var(--green);
-  background:rgba(12,38,22,0.9);
-  box-shadow:0 0 12px var(--green-glow);
-}
+        .btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            transition: background 0.2s;
+        }
 
-/* SIDEBAR - STRICT NO SCROLL BLEED */
-.sidebar{
-  height:100%;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  background:var(--panel);
-  border-left:1px solid var(--border);
-  padding:12px;
-  gap:12px;
-  backdrop-filter:blur(20px);
-  overflow:hidden;
-}
-
-.sidebar-scroll-area{
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  padding-right:2px;
-}
-.sidebar-scroll-area::-webkit-scrollbar{width:4px;}
-.sidebar-scroll-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-
-/* SECTION & TABS */
-.section-header{
-  display:flex;justify-content:space-between;align-items:center;
-  font:700 10px var(--font-mono);color:var(--green);letter-spacing:1px;
-}
-.filter-row{display:flex;gap:6px;margin-top:6px;}
-.tab-chip{
-  flex:1;border:1px solid var(--border);background:var(--panel-solid);
-  color:var(--muted);padding:6px;border-radius:6px;
-  font:700 9px var(--font-mono);letter-spacing:.5px;text-align:center;
-  transition:all .2s;
-}
-.tab-chip.active{
-  background:var(--green);color:#030705;border-color:var(--green);
-  box-shadow:0 0 12px var(--green-glow);
-}
-
-/* CAPTURE FEED LIST */
-.capture-feed{display:flex;flex-direction:column;gap:10px;}
-.capture-card{
-  background:linear-gradient(145deg, rgba(8,20,12,0.95), rgba(4,10,6,0.95));
-  border:1px solid var(--border);
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:var(--shadow);
-  transition:border-color .2s, transform .2s;
-}
-.capture-card:hover{border-color:var(--border-bright);transform:translateY(-1px);}
-
-.capture-media{position:relative;width:100%;aspect-ratio:16/9;background:#010302;cursor:pointer;}
-.capture-media img{width:100%;height:100%;object-fit:cover;display:block;}
-
-.cam-pill{
-  position:absolute;top:8px;left:8px;
-  background:rgba(3,7,5,0.85);border:1px solid var(--green);
-  color:var(--green);font:700 8px var(--font-mono);padding:3px 6px;border-radius:4px;letter-spacing:1px;
-}
-.rack-pill{
-  position:absolute;bottom:8px;right:8px;
-  background:var(--amber);color:#030705;font:700 8px var(--font-mono);
-  padding:3px 6px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.5);
-}
-.media-overlay-bar{
-  position:absolute;bottom:0;left:0;right:0;
-  background:linear-gradient(180deg, transparent, rgba(2,5,3,0.9));
-  padding:12px 10px 6px;display:flex;justify-content:space-between;align-items:center;
-  font:8px var(--font-mono);color:#a8d5be;
-}
-
-.capture-body{padding:10px;}
-.capture-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px;}
-.capture-title{font:700 11px var(--font-mono);color:var(--text);letter-spacing:.3px;line-height:1.2;}
-.capture-time{font:8px var(--font-mono);color:var(--muted);text-align:right;}
-
-.capture-meta{display:flex;flex-direction:column;gap:3px;font:9px var(--font-mono);color:var(--muted);margin-bottom:8px;}
-.capture-meta span{color:var(--text);}
-
-.capture-footer{
-  display:flex;justify-content:space-between;align-items:center;
-  border-top:1px solid var(--border);padding-top:8px;font:8px var(--font-mono);
-}
-.tag-badge{color:var(--green);font-weight:700;}
-
-/* HARVEST DISPATCH BUTTON */
-.harvest-btn{
-  background:linear-gradient(180deg, rgba(255,82,100,0.2), rgba(255,82,100,0.05));
-  border:1px solid var(--red);
-  color:#ff99a4;
-  padding:5px 8px;
-  border-radius:6px;
-  font:700 8px var(--font-mono);
-  letter-spacing:.5px;
-  transition:all .2s;
-}
-.harvest-btn:hover{
-  background:var(--red);
-  color:#030705;
-  box-shadow:0 0 12px rgba(255,82,100,0.4);
-}
-
-/* CARDS GENERAL */
-.hud-card{
-  background:linear-gradient(145deg, rgba(8,18,11,0.9), rgba(4,10,6,0.9));
-  border:1px solid var(--border);border-radius:12px;padding:10px;
-}
-.hud-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.hud-card-title{font:700 9px var(--font-mono);letter-spacing:1px;color:var(--green);}
-
-/* WEATHER WIDGET */
-.weather-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font:9px var(--font-mono);}
-.weather-box{background:#020503;border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;}
-.weather-box strong{display:block;color:var(--green);font-size:11px;margin-top:2px;}
-.weather-box span{color:var(--muted);font-size:8px;}
-
-/* DROPZONE */
-.dropzone{
-  border:1px dashed var(--border-bright);
-  background:rgba(76,255,136,0.02);
-  border-radius:8px;padding:10px;text-align:center;cursor:pointer;
-  transition:all .2s;
-}
-.dropzone:hover,.dropzone.drag{background:rgba(76,255,136,0.08);border-color:var(--green);}
-.dropzone strong{display:block;font:700 9px var(--font-mono);color:var(--text);margin-top:4px;}
-.dropzone small{display:block;color:var(--muted);font-size:8px;margin-top:2px;}
-
-.action-btn{
-  margin-top:8px;width:100%;border:1px solid var(--border-bright);
-  background:linear-gradient(180deg, rgba(18,61,33,0.9), rgba(11,43,23,0.9));
-  color:var(--green);padding:8px;border-radius:6px;font:700 9px var(--font-mono);
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all .2s;
-}
-.action-btn:hover{background:rgba(20,80,35,0.9);box-shadow:0 0 12px var(--green-glow);}
-
-/* AI CHAT INTERFACE */
-.chat-container{display:flex;flex-direction:column;gap:6px;}
-.chat-log{
-  height:110px;overflow-y:auto;background:#020503;
-  border:1px solid var(--border);border-radius:8px;padding:8px;
-  font-size:10px;line-height:1.4;display:flex;flex-direction:column;gap:6px;
-}
-.chat-msg{word-break:break-word;padding:6px 8px;border-radius:6px;max-width:90%;}
-.chat-msg.ai{background:rgba(16,36,22,0.8);color:#b6e8cd;border:1px solid var(--border);align-self:flex-start;}
-.chat-msg.user{background:rgba(25,50,35,0.8);color:var(--text);border:1px solid var(--border-bright);align-self:flex-end;}
-
-.chat-settings{
-  display:flex;gap:5px;align-items:center;background:#040a06;
-  border:1px solid var(--border);padding:5px 8px;border-radius:6px;font:8px var(--font-mono);color:var(--muted);
-}
-.chat-settings select,.chat-settings input{
-  background:#020402;color:var(--text);border:1px solid var(--border);
-  border-radius:4px;padding:3px 6px;font:8px var(--font-mono);outline:none;
-}
-.chat-settings input{flex:1;}
-
-.chat-input-row{display:flex;gap:5px;}
-.chat-input-row input{
-  flex:1;background:#040a06;border:1px solid var(--border);color:var(--text);
-  border-radius:6px;padding:8px;outline:none;font-size:10px;
-}
-.chat-input-row input:focus{border-color:var(--green);}
-.chat-input-row button{
-  width:36px;border:1px solid var(--border-bright);background:rgba(18,61,33,0.9);
-  color:var(--green);border-radius:6px;font-weight:bold;
-}
-
-/* FOOTER */
-.footer{
-  background:#020503;border-top:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;
-  padding:0 16px;color:var(--muted);font:8px var(--font-mono);
-}
-
-/* LEAFLET & MARKERS */
-.leaflet-control-zoom a{background:#060e09!important;color:var(--text)!important;border-color:var(--border)!important;}
-.leaflet-control-attribution{background:rgba(3,7,5,0.9)!important;color:var(--muted)!important;}
-
-.tactical-pin{
-  width:28px;height:28px;border-radius:50%;
-  border:2px solid #030705;background:var(--green);color:#030705;
-  display:grid;place-items:center;font-size:12px;
-  box-shadow:0 0 0 3px var(--green-glow), 0 0 15px var(--green);
-  animation:pulsePin 2s infinite;
-}
-.operator-pin{
-  width:32px;height:32px;border-radius:50%;
-  border:2px solid #030705;background:var(--cyan);color:#030705;
-  display:grid;place-items:center;font-size:14px;
-  box-shadow:0 0 0 4px rgba(66,217,255,0.3), 0 0 20px var(--cyan);
-  animation:pulseOperator 1.5s infinite;
-}
-@keyframes pulsePin {
-  0% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0.4), 0 0 8px var(--green); }
-  70% { box-shadow: 0 0 0 8px rgba(76, 255, 136, 0), 0 0 20px var(--green); }
-  100% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0), 0 0 8px var(--green); }
-}
-@keyframes pulseOperator {
-  0% { box-shadow: 0 0 0 0 rgba(66, 217, 255, 0.5), 0 0 10px var(--cyan); }
-  70% { box-shadow: 0 0 0 12px rgba(66, 217, 255, 0), 0 0 25px var(--cyan); }
-  100% { box-shadow: 0 0 0 0 rgba(66, 217, 255, 0), 0 0 10px var(--cyan); }
-}
-
-/* MODALS */
-.modal{
-  position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);
-  backdrop-filter:blur(8px);display:none;place-items:center;padding:16px;
-}
-.modal.show{display:grid;}
-.modal-box{
-  width:min(500px,100%);background:var(--panel-solid);
-  border:1px solid var(--border-bright);border-radius:14px;box-shadow:var(--shadow);padding:16px;
-}
-.modal-box.wide{width:min(800px,100%);max-height:85vh;overflow:auto;}
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.modal-head strong{font:10px var(--font-mono);color:var(--green);letter-spacing:1px;}
-.close-btn{border:1px solid var(--border);background:#030705;color:var(--text);border-radius:6px;padding:5px 8px;font:8px var(--font-mono);}
-.modal-preview{width:100%;max-height:65vh;object-fit:contain;background:#000;border-radius:8px;}
-
-.form-group{margin-bottom:10px;font:9px var(--font-mono);}
-.form-group label{display:block;color:var(--muted);margin-bottom:4px;}
-.form-group select,.form-group textarea{
-  width:100%;background:#020503;color:var(--text);border:1px solid var(--border);
-  border-radius:6px;padding:8px;font:9px var(--font-mono);outline:none;
-}
-.form-group textarea{height:80px;resize:none;}
-.form-group select:focus,.form-group textarea:focus{border-color:var(--green);}
-
-/* RESPONSIVE */
-@media(max-width:960px){
-  .app{grid-template-rows:50px 1fr 24px;}
-  .main{grid-template-columns:1fr;grid-template-rows:45vh 55vh;}
-}
-</style>
+        .btn:hover { background: rgba(255,255,255,0.1); border-color: var(--accent-green); }
+        
+        /* Hide default Cesium elements for cleaner look */
+        .cesium-viewer-bottom { display: none !important; }
+    </style>
 </head>
 <body>
 
-<div class="app">
+    <!-- 3D Globe Container -->
+    <div id="cesiumContainer"></div>
 
-  <!-- TOPBAR -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-icon">🦌</div>
-      <div>
-        <h1>AREA51-TRAILCAM OS</h1>
-        <span>TACTICAL WILDLIFE COMMAND</span>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn active" id="toggleLiveGps" title="Toggle Live GPS Tracking">🧭</button>
-      <button class="icon-btn" id="locateBtn" title="Recenter Map">⌖</button>
-      <button class="icon-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
-    </div>
-  </header>
-
-  <!-- MAIN INTERFACE -->
-  <main class="main">
-    
-    <!-- MAP WORKSPACE -->
-    <section class="workspace">
-      <div id="map"></div>
-      <div class="map-hud-top">
-        <div class="map-badge">
-          <strong>OPERATOR GPS TELEMETRY</strong>
-          <span id="mapCoords">Acquiring satellite lock...</span>
-        </div>
-        <div class="map-controls">
-          <button class="control-pill active" id="streetBtn">STREET</button>
-          <button class="control-pill" id="satelliteBtn">SATELLITE</button>
-          <button class="control-pill" id="toggleCrown">CROWN LAND</button>
-          <button class="control-pill" id="toggleTrails">ATV TRAILS</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- SIDEBAR COMMAND PANEL -->
-    <aside class="sidebar">
-      
-      <!-- FIXED HEADER CONTROLS -->
-      <div>
-        <div class="section-header">
-          <span>CAPTURE FEED // DETECTIONS</span>
-          <span id="feedCount" style="color:var(--muted);font-size:8px;">1 CAPTURE</span>
-        </div>
-        <div class="filter-row">
-          <button class="tab-chip active" id="filterAll" onclick="setFilter('all')">ALL FEEDS</button>
-          <button class="tab-chip" id="filterBucks" onclick="setFilter('bucks')">BUCKS ONLY</button>
-        </div>
-      </div>
-
-      <!-- SCROLLABLE MODULES CONTAINER -->
-      <div class="sidebar-scroll-area">
-
-        <!-- CAPTURE FEED LIST -->
-        <div class="capture-feed" id="captureFeedContainer"></div>
-
-        <!-- WEATHER & WIND VECTOR HUD CARD -->
-        <div class="hud-card">
-          <div class="hud-card-head">
-            <div class="hud-card-title">METEOROLOGICAL VECTOR</div>
-            <span style="color:var(--cyan);font-size:8px;font-family:var(--font-mono);">LIVE FEED</span>
-          </div>
-          <div class="weather-grid">
-            <div class="weather-box">
-              <span>WIND VECTOR</span>
-              <strong id="wxWind">NW 14 km/h</strong>
-            </div>
-            <div class="weather-box">
-              <span>BAROMETER</span>
-              <strong id="wxBaro">1018 hPa</strong>
-            </div>
-            <div class="weather-box">
-              <span>TEMP / HUMID</span>
-              <strong id="wxTemp">4°C / 78%</strong>
-            </div>
-          </div>
+    <!-- UI Overlay Panel -->
+    <div class="hud-panel">
+        <div class="hud-header">
+            <h1>Trail Cam & Habitat AI</h1>
+            <span class="status-badge">Cesium 3D Active</span>
         </div>
 
-        <!-- INGEST CARD -->
-        <div class="hud-card">
-          <div class="hud-card-head">
-            <div class="hud-card-title">INGEST NEW TRAIL-CAM FRAME</div>
-          </div>
-          <div class="dropzone" id="dropzone">
-            <div style="font-size:20px;">📸</div>
-            <strong>DROP IMAGES TO AUTO-ANALYZE</strong>
-            <small>JPG / PNG / WEBP • Instant telemetry parser</small>
-            <button class="action-btn" id="choosePhotos">BROWSE FILES</button>
-            <input id="fileInput" type="file" accept="image/*" multiple hidden>
-          </div>
+        <!-- Photo Drop Area -->
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: var(--accent-green);"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p><strong>Drop trail cam photos here</strong> or click to upload</p>
+            <input type="file" id="fileInput" accept="image/*" multiple>
         </div>
 
-        <!-- ADVANCED AI CHAT ASSISTANT -->
-        <div class="hud-card">
-          <div class="hud-card-head">
-            <div class="hud-card-title">TACTICAL AI ASSISTANT</div>
-            <span style="color:var(--green);font-size:8px;font-family:var(--font-mono);">● ONLINE</span>
-          </div>
-          <div class="chat-container">
-            <div class="chat-settings">
-              <span>Model:</span>
-              <select id="aiProvider">
-                <option value="builtin">Area51 Neural Expert</option>
-                <option value="openai">OpenAI GPT-4o-mini</option>
-                <option value="gemini">Google Gemini Flash</option>
-              </select>
+        <div class="analysis-box" id="analysisFeed">
+            <div class="analysis-item">
+                <span class="ai-tag">[System Ready]</span> Upload a trail photo to calculate animal trajectory, plot bedding zones, and project terrain vectors.
             </div>
-            <div class="chat-settings" id="apiKeyRow" style="display:none;">
-              <span>Key:</span>
-              <input id="apiKeyInput" type="password" placeholder="Enter API Key...">
-            </div>
-            <div class="chat-log" id="chatLog">
-              <div class="chat-msg ai">AREA51 OS: Neural intelligence online. Query wind vectors, stand movement patterns, or trigger timestamps.</div>
-            </div>
-            <div class="chat-input-row">
-              <input id="chatInput" placeholder="Ask tactical query..." autocomplete="off">
-              <button id="chatSend">➤</button>
-            </div>
-          </div>
         </div>
-
-      </div>
-
-    </aside>
-
-  </main>
-
-  <footer class="footer">
-    <span>AREA51 // SECURE WILDLIFE TELEMETRY NODE</span>
-    <span>MAP ENGINE © OPENSTREETMAP & ESRI</span>
-  </footer>
-
-</div>
-
-<!-- INSPECTION MODAL -->
-<div class="modal" id="imageModal">
-  <div class="modal-box wide">
-    <div class="modal-head">
-      <strong id="modalTitle">FRAME INSPECTION</strong>
-      <button class="close-btn" id="closeModal">CLOSE</button>
     </div>
-    <img id="modalImage" class="modal-preview" src="" alt="Zoom preview">
-  </div>
-</div>
 
-<!-- HARVEST EMAIL DISPATCH MODAL -->
-<div class="modal" id="harvestModal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <strong>HARVEST DISPATCH // PLATFORM NOTIFICATION</strong>
-      <button class="close-btn" id="closeHarvestModal">CLOSE</button>
+    <!-- Bottom Quick Controls -->
+    <div class="map-tools">
+        <button class="btn" onclick="toggleTerrainView()">Toggle 3D Terrain</button>
+        <button class="btn" onclick="addSampleBeddingZone()">Plot Sample Bedding Zone</button>
+        <button class="btn" onclick="resetView()">Reset Home View</button>
     </div>
-    <div class="form-group">
-      <label>TARGET REFERENCE</label>
-      <input id="harvestTargetId" type="text" readonly style="background:#020503;color:var(--green);border:1px solid var(--border);padding:8px;border-radius:6px;width:100%;font:9px var(--font-mono);">
-    </div>
-    <div class="form-group">
-      <label>SELECT PLATFORM RECIPIENT</label>
-      <select id="recipientSelect">
-        <option value="command.node@area51.org">Command Node Alpha (Admin)</option>
-        <option value="bob.fieldops@area51.org">Bob (Field Operative & Fabrication)</option>
-        <option value="miranda.support@area51.org">Miranda (Home Base Dispatch)</option>
-        <option value="son.scout@area51.org">Junior Scout Unit</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>TRANSMISSION MEMORANDUM</label>
-      <textarea id="harvestMemo">Harvest confirmed! Target secured in sector. Telemetry coordinates verified and logged successfully.</textarea>
-    </div>
-    <button class="action-btn" id="sendHarvestEmail">TRANSMIT DISPATCH VIA PLATFORM</button>
-  </div>
-</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-const state = {
-  lat: 45.8167, lon: -64.2167,
-  filter: 'all',
-  records: [
-    {
-      id: "DET-7837",
-      name: "WHITETAIL BUCK (MAINFRAME 10)",
-      cam: "CAM-01",
-      score: '155"',
-      confidence: "93.2%",
-      temp: "4°C / 39°F",
-      notes: "Archived capture – 11/16/2025 06:46 PM.",
-      timeStr: "Today @ 02:45 AM",
-      timestamp: "11/16/2025 18:46:21",
-      isBuck: true,
-      url: "https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=1200&q=80",
-      lat: 45.8167, lon: -64.2167
-    }
-  ],
-  map: null,
-  streetLayer: null,
-  satelliteLayer: null,
-  crownLayer: null,
-  trailsLayer: null,
-  showCrown: false,
-  showTrails: false,
-  markers: {},
-  liveGpsActive: true,
-  watchId: null,
-  operatorMarker: null,
-  accuracyCircle: null
-};
+    <script>
+        // TODO: Replace with your actual Cesium ion access token from https://ion.cesium.com/
+        Cesium.Ion.defaultAccessToken = 'YOUR_CESIUM_ION_TOKEN_HERE';
 
-const $ = id => document.getElementById(id);
+        // Initialize Cesium Viewer with high-precision World Terrain
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrain: Cesium.Terrain.fromWorldTerrain(),
+            baseLayerPicker: false,
+            geocoder: true,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            animation: false,
+            timeline: false
+        });
 
-const mockCrown = {
-  type: "FeatureCollection",
-  features: [{
-    type: "Feature",
-    properties: { NAME: "Crown Land Parcel A-1", HECTARES: 142.5 },
-    geometry: { type: "Polygon", coordinates: [[[-64.23,45.82],[-64.20,45.825],[-64.195,45.805],[-64.225,45.8],[-64.23,45.82]]] }
-  }]
-};
+        // Default home view (Springhill / Northern Nova Scotia region framework)
+        const homePosition = Cesium.Cartesian3.fromDegrees(-64.0600, 45.6500, 5000);
+        viewer.camera.flyTo({
+            destination: homePosition,
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-45.0),
+                roll: 0.0
+            }
+        });
 
-const mockTrails = {
-  type: "FeatureCollection",
-  features: [{
-    type: "Feature",
-    properties: { FEAT_NAME: "CanVec Main Ridge Trail", CLASS: "Access ATV Route" },
-    geometry: { type: "LineString", coordinates: [[-64.25,45.81],[-64.22,45.815],[-64.19,45.8]] }
-  }]
-};
-
-function initMap(){
-  state.map = L.map("map", { zoomControl: true, attributionControl: true }).setView([state.lat, state.lon], 13);
-
-  state.streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(state.map);
-  state.satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "Esri" });
-
-  state.crownLayer = L.geoJSON(mockCrown, {
-    style: { color: "#4cff88", weight: 2, fillColor: "#4cff88", fillOpacity: 0.15 },
-    onEachFeature: (f, l) => l.bindPopup(`<b>${f.properties.NAME}</b><br>Area: ${f.properties.HECTARES} ha`)
-  });
-
-  state.trailsLayer = L.geoJSON(mockTrails, {
-    style: { color: "#42d9ff", weight: 3, dashArray: "6, 6" },
-    onEachFeature: (f, l) => l.bindPopup(`<b>${f.properties.FEAT_NAME}</b><br>Type: ${f.properties.CLASS}`)
-  });
-
-  renderFeed();
-  addPin(state.records[0]);
-  startLiveGps();
-}
-
-function addPin(rec){
-  const pinIcon = L.divIcon({
-    className: "",
-    html: `<div class="tactical-pin">🦌</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14]
-  });
-  const marker = L.marker([rec.lat, rec.lon], {icon: pinIcon})
-    .addTo(state.map)
-    .bindPopup(`<b>${rec.name}</b><br>ID: ${rec.id}<br>Telemetry: ${rec.lat}, ${rec.lon}`)
-    .on('click', () => state.map.setView([rec.lat, rec.lon], 15));
-  
-  state.markers[rec.id] = marker;
-}
-
-function startLiveGps(){
-  if(!navigator.geolocation){
-    $("mapCoords").textContent = "Geolocation not supported by device";
-    return;
-  }
-
-  state.watchId = navigator.geolocation.watchPosition(
-    pos => {
-      const { latitude, longitude, accuracy } = pos.coords;
-      state.lat = latitude;
-      state.lon = longitude;
-
-      $("mapCoords").textContent = `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° W (Acc: ±${Math.round(accuracy)}m)`;
-
-      const operatorIcon = L.divIcon({
-        className: "",
-        html: `<div class="operator-pin">📍</div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
-
-      if(state.operatorMarker){
-        state.operatorMarker.setLatLng([latitude, longitude]);
-        state.accuracyCircle.setLatLng([latitude, longitude]);
-        state.accuracyCircle.setRadius(accuracy);
-      } else {
-        state.operatorMarker = L.marker([latitude, longitude], {icon: operatorIcon})
-          .addTo(state.map)
-          .bindPopup(`<b>OPERATOR POSITION (YOU)</b><br>Lat/Lon: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}<br>Accuracy: ±${Math.round(accuracy)}m`);
-        
-        state.accuracyCircle = L.circle([latitude, longitude], {
-          radius: accuracy,
-          color: "#42d9ff",
-          weight: 1,
-          fillColor: "#42d9ff",
-          fillOpacity: 0.1
-        }).addTo(state.map);
-
-        if(state.liveGpsActive){
-          state.map.setView([latitude, longitude], 15);
+        function resetView() {
+            viewer.camera.flyTo({ destination: homePosition, duration: 1.5 });
         }
-      }
-    },
-    err => {
-      $("mapCoords").textContent = "GPS Lock Failed: " + err.message;
-    },
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-  );
-}
 
-function setFilter(mode){
-  state.filter = mode;
-  $("filterAll").className = mode === 'all' ? "tab-chip active" : "tab-chip";
-  $("filterBucks").className = mode === 'bucks' ? "tab-chip active" : "tab-chip";
-  renderFeed();
-}
+        let terrainEnabled = true;
+        function toggleTerrainView() {
+            terrainEnabled = !terrainEnabled;
+            viewer.terrainProvider = terrainEnabled 
+                ? Cesium.Terrain.fromWorldTerrain() 
+                : new Cesium.EllipsoidTerrainProvider();
+        }
 
-function renderFeed(){
-  const container = $("captureFeedContainer");
-  container.innerHTML = "";
-  const filtered = state.records.filter(r => state.filter === 'all' || (state.filter === 'bucks' && r.isBuck));
+        // Handle Drag and Drop for AI Photo Analysis Simulation
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const analysisFeed = document.getElementById('analysisFeed');
 
-  $("feedCount").textContent = `${filtered.length} CAPTURE${filtered.length === 1 ? '' : 'S'}`;
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }, false);
+        });
 
-  if(!filtered.length){
-    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font:9px var(--font-mono);">NO CAPTURES FOUND IN CURRENT FILTER</div>`;
-    return;
-  }
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }, false);
+        });
 
-  filtered.forEach(r => {
-    const card = document.createElement("div");
-    card.className = "capture-card";
-    card.innerHTML = `
-      <div class="capture-media" data-url="${r.url}" data-id="${r.id}">
-        <div class="cam-pill">${r.cam}</div>
-        <img src="${r.url}" alt="${r.name}">
-        ${r.score ? `<div class="rack-pill">Rack Score ~ ${r.score}</div>` : ''}
-        <div class="media-overlay-bar">
-          <span>🌙 ${r.temp}</span>
-          <span>${r.timestamp}</span>
-        </div>
-      </div>
-      <div class="capture-body">
-        <div class="capture-title-row">
-          <div class="capture-title">${r.name}</div>
-          <div class="capture-time">${r.timeStr}</div>
-        </div>
-        <div class="capture-meta">
-          <div>Confidence: <span>${r.confidence}</span></div>
-          <div>Temp: <span>${r.temp}</span></div>
-          <div>Notes: <i>${r.notes}</i></div>
-        </div>
-        <div class="capture-footer">
-          <span style="color:var(--muted);">ID: ${r.id}</span>
-          ${r.isBuck ? `<button class="harvest-btn" data-harvestid="${r.id}">🎯 HARVEST DISPATCH</button>` : `<span class="tag-badge">AI CLASSIFIED</span>`}
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
 
-  container.querySelectorAll('.capture-media').forEach(el => {
-    el.onclick = () => openModal(el.dataset.url, el.dataset.id);
-  });
-  container.querySelectorAll('.harvest-btn').forEach(el => {
-    el.onclick = (e) => {
-      e.stopPropagation();
-      openHarvestModal(el.dataset.harvestid);
-    };
-  });
-}
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
 
-function processFiles(files){
-  [...files].filter(f => f.type.startsWith("image/")).forEach((file, i) => {
-    const url = URL.createObjectURL(file);
-    const id = "DET-" + Math.floor(1000 + Math.random() * 9000);
-    const isBuck = Math.random() > 0.25;
-    const score = isBuck ? Math.floor(130 + Math.random() * 40) + '"' : null;
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                simulateAIAnalysis(file.name);
+            });
+        }
 
-    const rec = {
-      id: id,
-      name: isBuck ? "WHITETAIL BUCK (CANDIDATE)" : "WILDLIFE MOVEMENT DETECTED",
-      cam: "CAM-0" + (i + 2),
-      score: score,
-      confidence: (89 + Math.random() * 10).toFixed(1) + "%",
-      temp: "2°C / 36°F",
-      notes: `Automated detection trigger – ${new Date().toLocaleTimeString()}.`,
-      timeStr: "Just now",
-      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      isBuck: isBuck,
-      url: url,
-      lat: state.lat + (Math.random() - 0.5) * 0.015,
-      lon: state.lon + (Math.random() - 0.5) * 0.015
-    };
+        function simulateAIAnalysis(filename) {
+            // Generate pseudo-random coordinates near current view for demonstration mapping
+            const randLat = 45.645 + (Math.random() - 0.5) * 0.02;
+            const randLon = -64.055 + (Math.random() - 0.5) * 0.02;
 
-    state.records.unshift(rec);
-    addPin(rec);
-  });
-  renderFeed();
-}
+            // Add item to feed
+            const item = document.createElement('div');
+            item.className = 'analysis-item';
+            item.innerHTML = `<span class="ai-tag">[AI Vision]</span> Processed <strong>${filename}</strong>.<br>
+            • Detected: Mature buck moving North-West.<br>
+            • Origin Vector: Upwind ridge (Bedding probable).<br>
+            • Dropped Map Pin: (${randLat.toFixed(4)}, ${randLon.toFixed(4)})`;
+            analysisFeed.prepend(item);
 
-function openModal(url, id){
-  $("modalTitle").textContent = `FRAME INSPECTION // ${id}`;
-  $("modalImage").src = url;
-  $("imageModal").classList.add("show");
-}
+            // Plot interactive pin & vector cone on Cesium 3D Globe
+            plotIntelligencePoint(randLon, randLat, filename);
+        }
 
-function openHarvestModal(id){
-  $("harvestTargetId").value = id;
-  $("harvestModal").classList.add("show");
-}
+        function plotIntelligencePoint(lon, lat, label) {
+            // Trail Camera Marker
+            viewer.entities.add({
+                position: Cesium.Cartesian3.fromDegrees(lon, lat),
+                point: {
+                    pixelSize: 12,
+                    color: Cesium.Color.ORANGE,
+                    outlineColor: Cesium.Color.WHITE,
+                    outlineWidth: 2
+                },
+                label: {
+                    text: `Cam: ${label}`,
+                    font: '12px sans-serif',
+                    fillColor: Cesium.Color.WHITE,
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    outlineWidth: 2,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    pixelOffset: new Cesium.Cartesian2(0, -15)
+                }
+            });
 
-/* AI CHAT */
-async function sendChat(){
-  const input = $("chatInput");
-  const q = input.value.trim();
-  if(!q) return;
+            // Simulated Bedding Zone Polygon 
+            viewer.entities.add({
+                polygon: {
+                    hierarchy: Cesium.Cartesian3.fromDegreesArray([
+                        lon - 0.003, lat + 0.003,
+                        lon + 0.001, lat + 0.004,
+                        lon + 0.002, lat + 0.001,
+                        lon - 0.001, lat + 0.001
+                    ]),
+                    material: Cesium.Color.RED.withAlpha(0.3),
+                    outline: true,
+                    outlineColor: Cesium.Color.RED
+                }
+            });
 
-  const log = $("chatLog");
-  const uMsg = document.createElement("div");
-  uMsg.className = "chat-msg user";
-  uMsg.textContent = q;
-  log.appendChild(uMsg);
-  input.value = "";
-  log.scrollTop = log.scrollHeight;
+            // Fly camera smoothly to the new intel drop
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(lon, lat, 1200),
+                duration: 2.0
+            });
+        }
 
-  const load = document.createElement("div");
-  load.className = "chat-msg ai";
-  load.id = "tempLoad";
-  load.textContent = "Analyzing telemetry matrices...";
-  log.appendChild(load);
-  log.scrollTop = log.scrollHeight;
-
-  const provider = $("aiProvider").value;
-  const apiKey = $("apiKeyInput").value.trim();
-
-  try {
-    let reply = "";
-    if(provider === "builtin"){
-      await new Promise(r => setTimeout(r, 400));
-      reply = `Neural assessment for "${q}": Operator coordinates [${state.lat.toFixed(4)}, ${state.lon.toFixed(4)}] correlate with active western ridge corridors under NW winds.`;
-    } else {
-      if(!apiKey) throw new Error("API Key required for external provider.");
-      reply = `Connected to ${provider.toUpperCase()}: Operator telemetry synced with active target grids.`;
-    }
-
-    $("tempLoad")?.remove();
-    const aMsg = document.createElement("div");
-    aMsg.className = "chat-msg ai";
-    aMsg.textContent = reply;
-    log.appendChild(aMsg);
-  } catch(err){
-    $("tempLoad")?.remove();
-    const errDiv = document.createElement("div");
-    errDiv.className = "chat-msg ai";
-    errDiv.style.color = "var(--red)";
-    errDiv.textContent = "ERROR: " + err.message;
-    log.appendChild(errDiv);
-  }
-  log.scrollTop = log.scrollHeight;
-}
-
-/* BUTTON BINDINGS */
-$("streetBtn").onclick = () => {
-  state.map.removeLayer(state.satelliteLayer);
-  state.streetLayer.addTo(state.map);
-  $("streetBtn").classList.add("active");
-  $("satelliteBtn").classList.remove("active");
-};
-
-$("satelliteBtn").onclick = () => {
-  state.map.removeLayer(state.streetLayer);
-  state.satelliteLayer.addTo(state.map);
-  $("satelliteBtn").classList.add("active");
-  $("streetBtn").classList.remove("active");
-};
-
-$("toggleCrown").onclick = () => {
-  state.showCrown = !state.showCrown;
-  if(state.showCrown){ state.crownLayer.addTo(state.map); $("toggleCrown").classList.add("active"); }
-  else { state.map.removeLayer(state.crownLayer); $("toggleCrown").classList.remove("active"); }
-};
-
-$("toggleTrails").onclick = () => {
-  state.showTrails = !state.showTrails;
-  if(state.showTrails){ state.trailsLayer.addTo(state.map); $("toggleTrails").classList.add("active"); }
-  else { state.map.removeLayer(state.trailsLayer); $("toggleTrails").classList.remove("active"); }
-};
-
-$("toggleLiveGps").onclick = () => {
-  state.liveGpsActive = !state.liveGpsActive;
-  $("toggleLiveGps").classList.toggle("active", state.liveGpsActive);
-  if(state.liveGpsActive && state.operatorMarker){
-    state.map.setView(state.operatorMarker.getLatLng(), 15);
-  }
-};
-
-$("locateBtn").onclick = () => {
-  if(state.operatorMarker){
-    state.map.setView(state.operatorMarker.getLatLng(), 16);
-  } else if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos => {
-      state.map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-    });
-  }
-};
-
-$("fullscreenBtn").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-
-$("choosePhotos").onclick = () => $("fileInput").click();
-$("dropzone").onclick = e => { if(e.target.id !== "choosePhotos") $("fileInput").click(); };
-$("fileInput").onchange = e => processFiles(e.target.files);
-
-["dragenter","dragover"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.add("drag"); }));
-["dragleave","drop"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.remove("drag"); }));
-$("dropzone").addEventListener("drop", e => processFiles(e.dataTransfer.files));
-
-$("closeModal").onclick = () => $("imageModal").classList.remove("show");
-$("imageModal").onclick = e => { if(e.target.id === "imageModal") $("imageModal").classList.remove("show"); };
-
-$("closeHarvestModal").onclick = () => $("harvestModal").classList.remove("show");
-$("harvestModal").onclick = e => { if(e.target.id === "harvestModal") $("harvestModal").classList.remove("show"); };
-
-$("sendHarvestEmail").onclick = () => {
-  const targetId = $("harvestTargetId").value;
-  const recipient = $("recipientSelect").value;
-  const memo = $("harvestMemo").value;
-
-  alert(`SUCCESS: Harvest dispatch for [${targetId}] successfully transmitted via platform mail to <${recipient}>.\n\nMemorandum: "${memo}"`);
-  $("harvestModal").classList.remove("show");
-};
-
-$("aiProvider").onchange = e => { $("apiKeyRow").style.display = e.target.value === "builtin" ? "none" : "flex"; };
-$("chatSend").onclick = sendChat;
-$("chatInput").onkeydown = e => { if(e.key === "Enter") { e.preventDefault(); sendChat(); } };
-
-window.onresize = () => state.map?.invalidateSize();
-
-initMap();
-</script>
-
+        function addSampleBeddingZone() {
+            simulateAIAnalysis("Sample_TrailCam_042.jpg");
+        }
+    </script>
 </body>
 </html>
