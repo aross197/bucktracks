@@ -10,8 +10,7 @@
 <title>BUCKTRACK // Deer Intelligence Command</title>
 
 <link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
 :root{
@@ -63,7 +62,6 @@ button{
 }
 
 /* HEADER */
-
 .topbar{
   background:linear-gradient(180deg,#0c160f,#08100b);
   border-bottom:1px solid var(--line);
@@ -151,7 +149,6 @@ button{
 }
 
 /* MAIN */
-
 .main{
   min-height:0;
   display:grid;
@@ -172,7 +169,6 @@ button{
 }
 
 /* MAP UI */
-
 .map-top{
   position:absolute;
   top:15px;
@@ -279,10 +275,10 @@ button{
   height:100%;
   width:78%;
   background:linear-gradient(90deg,var(--amber),var(--green));
+  transition:width 0.3s ease;
 }
 
 /* SIDEBAR */
-
 .sidebar{
   min-height:0;
   overflow-y:auto;
@@ -388,7 +384,6 @@ button{
 }
 
 /* DROPZONE */
-
 .dropzone{
   border:1px dashed #35563e;
   background:rgba(76,255,136,.025);
@@ -396,6 +391,7 @@ button{
   padding:18px 10px;
   text-align:center;
   transition:.2s;
+  cursor:pointer;
 }
 
 .dropzone.drag{
@@ -437,7 +433,6 @@ button{
 }
 
 /* BUCK PROFILE */
-
 .buck{
   display:grid;
   grid-template-columns:65px 1fr;
@@ -449,8 +444,7 @@ button{
   width:65px;
   height:65px;
   border-radius:10px;
-  background:
-    radial-gradient(circle,#284e31,#07100a 70%);
+  background:radial-gradient(circle,#284e31,#07100a 70%);
   border:1px solid #355b3e;
   display:grid;
   place-items:center;
@@ -495,7 +489,6 @@ button{
 }
 
 /* CAMERA LIST */
-
 .camera-list{
   display:flex;
   flex-direction:column;
@@ -544,7 +537,6 @@ button{
 }
 
 /* ALBUM */
-
 .album{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -568,7 +560,6 @@ button{
 }
 
 /* AI */
-
 .chat{
   display:flex;
   flex-direction:column;
@@ -625,7 +616,6 @@ button{
 }
 
 /* FOOTER */
-
 .footer{
   background:#060d08;
   border-top:1px solid var(--line);
@@ -637,8 +627,7 @@ button{
   font:8px var(--mono);
 }
 
-/* LEAFLET */
-
+/* LEAFLET OVERRIDES */
 .leaflet-control-zoom a{
   background:#09120c!important;
   color:var(--text)!important;
@@ -664,7 +653,6 @@ button{
 }
 
 /* MODAL */
-
 .modal{
   position:fixed;
   inset:0;
@@ -720,7 +708,6 @@ button{
 }
 
 /* MOBILE */
-
 @media(max-width:900px){
   .app{
     grid-template-rows:58px 1fr 28px;
@@ -807,7 +794,6 @@ button{
 <div class="app">
 
 <header class="topbar">
-
   <div class="brand">
     <div class="logo">🦌</div>
     <div>
@@ -829,17 +815,14 @@ button{
     <button class="icon-btn" id="locateBtn" title="Locate me">⌖</button>
     <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
   </div>
-
 </header>
 
 <main class="main">
 
 <section class="workspace">
-
   <div id="map"></div>
 
   <div class="map-top">
-
     <div class="map-title">
       <strong>TACTICAL HUNT MAP</strong>
       <span id="mapLocation">INITIALIZING LOCATION...</span>
@@ -850,53 +833,44 @@ button{
       <button class="map-action" id="terrainBtn">TERRAIN</button>
       <button class="map-action" id="centerBtn">CENTER</button>
     </div>
-
   </div>
 
   <div class="map-score">
     <div class="score-label">CURRENT HUNT OPPORTUNITY</div>
 
     <div class="score">
-      <b id="huntScore">78</b>
-      <span>/ 100<br>HIGH</span>
+      <b id="huntScore">58</b>
+      <span>/ 100<br><small id="huntRank">MODERATE</small></span>
     </div>
 
     <div class="score-bar">
       <i id="huntBar"></i>
     </div>
   </div>
-
 </section>
 
 <aside class="sidebar">
 
-  <!-- CONDITIONS -->
-
+  <!-- LIVE CONDITIONS -->
   <div class="card">
-
     <div class="card-head">
       <div class="card-title">LIVE CONDITIONS</div>
       <div class="card-tag" id="weatherTime">LOCAL</div>
     </div>
 
     <div class="weather-main">
-
       <div>
         <div class="temperature" id="temperature">--°</div>
-        <div class="weather-desc" id="weatherDesc">
-          Acquiring weather...
-        </div>
+        <div class="weather-desc" id="weatherDesc">Acquiring weather...</div>
       </div>
 
       <div class="wind">
         <b id="windSpeed">-- km/h</b>
         <span id="windDirection">WIND --</span>
       </div>
-
     </div>
 
     <div class="metrics">
-
       <div class="metric">
         <label>PRESSURE</label>
         <strong id="pressure">--</strong>
@@ -914,97 +888,63 @@ button{
 
       <div class="metric">
         <label>DEER ACTIVITY</label>
-        <strong class="good" id="activity">HIGH</strong>
+        <strong class="good" id="activity">MODERATE</strong>
       </div>
-
     </div>
-
   </div>
 
-  <!-- BUCK PROFILE -->
-
+  <!-- TARGET BUCK PROFILE -->
   <div class="card">
-
     <div class="card-head">
       <div class="card-title">TARGET BUCK</div>
       <div class="card-tag">TRACK 01</div>
     </div>
 
     <div class="buck">
-
       <div class="buck-avatar">🦌</div>
-
       <div>
         <h3 id="buckName">PRIMARY TARGET</h3>
         <p id="buckDescription">
-          Build this profile from your trail-camera evidence,
-          sightings and movement history.
+          Build this profile from your trail-camera evidence, sightings and movement history.
         </p>
       </div>
-
     </div>
 
     <div class="confidence">
-
       <div class="confidence-top">
         <span>IDENTIFICATION CONFIDENCE</span>
         <b class="good">84%</b>
       </div>
-
       <div class="confidence-bar">
         <i></i>
       </div>
-
     </div>
-
   </div>
 
   <!-- PHOTO INGEST -->
-
   <div class="card">
-
     <div class="card-head">
       <div class="card-title">TRAIL CAMERA INGEST</div>
       <div class="card-tag" id="photoCount">0 PHOTOS</div>
     </div>
 
     <div class="dropzone" id="dropzone">
-
       <div class="big">📸</div>
-
       <strong>DROP TRAIL-CAM PHOTOS</strong>
-
-      <small>
-        JPG / PNG • GPS & metadata when available
-      </small>
-
-      <button class="primary" id="choosePhotos">
-        SELECT PHOTOS
-      </button>
-
-      <input
-        id="fileInput"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        multiple
-        hidden
-      >
-
+      <small>JPG / PNG • GPS & metadata when available</small>
+      <button class="primary" id="choosePhotos">SELECT PHOTOS</button>
+      <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
     </div>
-
   </div>
 
   <!-- CAMERAS -->
-
   <div class="card">
-
     <div class="card-head">
       <div class="card-title">CAMERA NETWORK</div>
       <div class="card-tag" id="cameraCount">0 ACTIVE</div>
     </div>
 
     <div class="camera-list" id="cameraList">
-
       <div class="camera">
         <div class="pin"></div>
         <div>
@@ -1013,59 +953,38 @@ button{
         </div>
         <em>--</em>
       </div>
-
     </div>
-
   </div>
 
   <!-- ALBUM -->
-
   <div class="card">
-
     <div class="card-head">
       <div class="card-title">INTELLIGENCE ALBUM</div>
       <div class="card-tag">LOCAL STORAGE</div>
     </div>
 
     <div class="album" id="album"></div>
-
   </div>
 
   <!-- ASSISTANT -->
-
   <div class="card">
-
     <div class="card-head">
       <div class="card-title">BUCKTRACK ASSISTANT</div>
       <div class="card-tag">TACTICAL</div>
     </div>
 
     <div class="chat">
-
       <div class="chat-log" id="chatLog">
-
         <div class="msg ai">
-          BUCKTRACK: Upload trail-camera images or ask about
-          wind, weather, movement, bedding, feeding or stand
-          placement.
+          BUCKTRACK: Upload trail-camera images or ask about wind, weather, movement, bedding, feeding or stand placement.
         </div>
-
       </div>
 
       <div class="chat-row">
-
-        <input
-          id="chatInput"
-          placeholder="Ask about your hunt..."
-          autocomplete="off"
-        >
-
+        <input id="chatInput" placeholder="Ask about your hunt..." autocomplete="off">
         <button id="chatSend">➤</button>
-
       </div>
-
     </div>
-
   </div>
 
 </aside>
@@ -1073,184 +992,107 @@ button{
 </main>
 
 <footer class="footer">
-
   <span>BUCKTRACK COMMAND • LOCAL-FIRST HUNT INTELLIGENCE</span>
-
-  <span>
-    MAP DATA © OPENSTREETMAP CONTRIBUTORS
-  </span>
-
+  <span>MAP DATA © OPENSTREETMAP CONTRIBUTORS</span>
 </footer>
 
 </div>
 
 <!-- IMAGE MODAL -->
-
 <div class="modal" id="imageModal">
-
   <div class="modal-box">
-
     <div class="modal-head">
-
       <strong id="modalTitle">FRAME INSPECTION</strong>
-
       <button class="close" id="closeModal">CLOSE</button>
-
     </div>
-
     <img id="modalImage" class="preview" alt="Trail camera image">
-
   </div>
-
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 /* =========================================================
-   BUCKTRACK COMMAND
-   SINGLE-FILE HUNT INTELLIGENCE ENGINE
+   BUCKTRACK COMMAND ENGINE
    ========================================================= */
 
 const state = {
-
-  location:{
-    lat:45.8167,
-    lon:-64.2167,
-    accuracy:null
+  location: {
+    lat: 45.8167,
+    lon: -64.2167,
+    accuracy: null
   },
-
-  records:[],
-
-  cameras:[],
-
-  map:null,
-
-  satellite:null,
-
-  street:null,
-
-  userMarker:null,
-
-  cameraMarkers:[],
-
-  currentLayer:"street",
-
-  weather:null
-
+  records: [],
+  map: null,
+  satellite: null,
+  street: null,
+  userMarker: null,
+  cameraMarkers: [],
+  currentLayer: "street",
+  weather: null
 };
-
-
-/* =========================================================
-   DOM
-   ========================================================= */
 
 const $ = id => document.getElementById(id);
 
-
 /* =========================================================
-   MAP
+   MAP ENGINE
    ========================================================= */
 
 function createMap(){
+  state.map = L.map("map", {
+    zoomControl: true,
+    attributionControl: true
+  }).setView([state.location.lat, state.location.lon], 13);
 
-  state.map = L.map("map",{
-    zoomControl:true,
-    attributionControl:true
-  }).setView(
-    [state.location.lat,state.location.lon],
-    13
-  );
+  state.street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "© OpenStreetMap"
+  }).addTo(state.map);
 
-  state.street = L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      maxZoom:19,
-      attribution:"© OpenStreetMap"
-    }
-  ).addTo(state.map);
-
-  /*
-    Satellite imagery is intentionally optional.
-    This keeps the GitHub Pages version operational
-    without requiring a paid map token.
-  */
-
-  state.satellite = L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    {
-      maxZoom:19,
-      attribution:"Tiles © Esri"
-    }
-  );
+  state.satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19,
+    attribution: "Tiles © Esri"
+  });
 
   updateMapLocation();
 }
 
-
-/* =========================================================
-   MAP LOCATION
-   ========================================================= */
-
 function updateMapLocation(){
-
   const lat = state.location.lat;
   const lon = state.location.lon;
 
-  $("mapLocation").textContent =
-    `${lat.toFixed(5)}°, ${lon.toFixed(5)}°`;
-
-  $("coordReadout")?.textContent =
-    `${lat.toFixed(5)}°, ${lon.toFixed(5)}°`;
-
-  $("locationStatus").textContent =
-    `GPS ${lat.toFixed(4)} / ${lon.toFixed(4)}`;
-
+  $("mapLocation").textContent = `${lat.toFixed(5)}°, ${lon.toFixed(5)}°`;
+  $("locationStatus").textContent = `GPS ${lat.toFixed(4)} / ${lon.toFixed(4)}`;
 }
 
-
 /* =========================================================
-   USER LOCATION
+   LOCATION ACQUISITION
    ========================================================= */
 
 function locateUser(){
-
   if(!navigator.geolocation){
-
-    $("locationStatus").textContent =
-      "GPS NOT AVAILABLE";
-
+    $("locationStatus").textContent = "GPS NOT AVAILABLE";
+    loadWeather();
     return;
   }
 
-  $("locationStatus").textContent =
-    "GPS ACQUIRING...";
+  $("locationStatus").textContent = "GPS ACQUIRING...";
 
   navigator.geolocation.getCurrentPosition(
-
     position => {
+      state.location.lat = position.coords.latitude;
+      state.location.lon = position.coords.longitude;
+      state.location.accuracy = position.coords.accuracy;
 
-      state.location.lat =
-        position.coords.latitude;
-
-      state.location.lon =
-        position.coords.longitude;
-
-      state.location.accuracy =
-        position.coords.accuracy;
-
-      state.map.setView(
-        [state.location.lat,state.location.lon],
-        14
-      );
+      state.map.setView([state.location.lat, state.location.lon], 14);
 
       if(state.userMarker){
         state.map.removeLayer(state.userMarker);
       }
 
       const icon = L.divIcon({
-        className:"",
-        html:`<div style="
+        className: "",
+        html: `<div style="
           width:18px;
           height:18px;
           border-radius:50%;
@@ -1259,545 +1101,221 @@ function locateUser(){
           box-shadow:0 0 0 7px rgba(66,217,255,.15),
                      0 0 20px rgba(66,217,255,.7);
         "></div>`,
-        iconSize:[18,18],
-        iconAnchor:[9,9]
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
       });
 
-      state.userMarker =
-        L.marker(
-          [state.location.lat,state.location.lon],
-          {icon}
-        )
+      state.userMarker = L.marker([state.location.lat, state.location.lon], {icon})
         .addTo(state.map)
-        .bindPopup(
-          `<b>YOUR LOCATION</b><br>
-           Accuracy: ${Math.round(state.location.accuracy)} m`
-        );
+        .bindPopup(`<b>YOUR LOCATION</b><br>Accuracy: ${Math.round(state.location.accuracy)} m`);
 
       updateMapLocation();
-
       loadWeather();
-
     },
-
     error => {
-
-      $("locationStatus").textContent =
-        "USING DEFAULT LOCATION";
-
+      $("locationStatus").textContent = "USING DEFAULT LOCATION";
       loadWeather();
-
     },
-
     {
-      enableHighAccuracy:true,
-      timeout:10000,
-      maximumAge:300000
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000
     }
-
   );
-
 }
 
-
 /* =========================================================
-   WEATHER
+   WEATHER DATA
    ========================================================= */
 
 async function loadWeather(){
-
   const lat = state.location.lat;
   const lon = state.location.lon;
 
-  try{
-
-    const url =
-      `https://api.open-meteo.com/v1/forecast` +
-      `?latitude=${lat}` +
-      `&longitude=${lon}` +
-      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m` +
-      `&hourly=visibility` +
-      `&timezone=auto`;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=visibility&timezone=auto`;
 
     const response = await fetch(url);
-
-    if(!response.ok)
-      throw new Error("Weather unavailable");
+    if(!response.ok) throw new Error("Weather service unreachable");
 
     const data = await response.json();
-
     state.weather = data.current;
-
     const c = data.current;
 
-    $("temperature").textContent =
-      `${Math.round(c.temperature_2m)}°`;
-
-    $("weatherDesc").textContent =
-      weatherDescription(c.weather_code);
-
-    $("windSpeed").textContent =
-      `${Math.round(c.wind_speed_10m)} km/h`;
-
-    $("windDirection").textContent =
-      `${degreesToCompass(c.wind_direction_10m)} WIND`;
-
-    $("pressure").textContent =
-      `${Math.round(c.surface_pressure)} hPa`;
-
-    $("humidity").textContent =
-      `${Math.round(c.relative_humidity_2m)}%`;
-
-    $("visibility").textContent =
-      "LIVE";
+    $("temperature").textContent = `${Math.round(c.temperature_2m)}°`;
+    $("weatherDesc").textContent = weatherDescription(c.weather_code);
+    $("windSpeed").textContent = `${Math.round(c.wind_speed_10m)} km/h`;
+    $("windDirection").textContent = `${degreesToCompass(c.wind_direction_10m)} WIND`;
+    $("pressure").textContent = `${Math.round(c.surface_pressure)} hPa`;
+    $("humidity").textContent = `${Math.round(c.relative_humidity_2m)}%`;
+    $("visibility").textContent = "LIVE";
 
     calculateHuntScore();
-
-  }catch(error){
-
-    $("weatherDesc").textContent =
-      "Weather unavailable";
-
+  } catch(error) {
+    $("weatherDesc").textContent = "Weather unavailable";
     calculateHuntScore();
-
   }
-
 }
-
 
 function weatherDescription(code){
-
   const map = {
-    0:"Clear",
-    1:"Mostly clear",
-    2:"Partly cloudy",
-    3:"Overcast",
-    45:"Fog",
-    48:"Freezing fog",
-    51:"Light drizzle",
-    53:"Drizzle",
-    55:"Heavy drizzle",
-    61:"Light rain",
-    63:"Rain",
-    65:"Heavy rain",
-    71:"Light snow",
-    73:"Snow",
-    75:"Heavy snow",
-    80:"Rain showers",
-    81:"Rain showers",
-    82:"Heavy showers",
-    95:"Thunderstorm"
+    0:"Clear", 1:"Mostly clear", 2:"Partly cloudy", 3:"Overcast",
+    45:"Fog", 48:"Freezing fog", 51:"Light drizzle", 53:"Drizzle", 55:"Heavy drizzle",
+    61:"Light rain", 63:"Rain", 65:"Heavy rain", 71:"Light snow", 73:"Snow", 75:"Heavy snow",
+    80:"Rain showers", 81:"Rain showers", 82:"Heavy showers", 95:"Thunderstorm"
   };
-
   return map[code] || "Variable conditions";
-
 }
-
 
 function degreesToCompass(deg){
-
-  const directions=[
-    "N","NE","E","SE","S","SW","W","NW"
-  ];
-
-  return directions[
-    Math.round(deg / 45) % 8
-  ];
-
+  const directions = ["N","NE","E","SE","S","SW","W","NW"];
+  return directions[Math.round(deg / 45) % 8];
 }
 
-
 /* =========================================================
-   HUNT SCORE
+   ALGORITHMIC OPPORTUNITY SCORING
    ========================================================= */
 
 function calculateHuntScore(){
-
   let score = 58;
-
   const w = state.weather;
 
   if(w){
-
     const wind = w.wind_speed_10m;
-
-    if(wind >= 8 && wind <= 28)
-      score += 8;
-
-    if(w.relative_humidity_2m >= 55)
-      score += 5;
-
-    if(w.precipitation > 0)
-      score += 4;
-
-    if(
-      w.weather_code === 71 ||
-      w.weather_code === 73 ||
-      w.weather_code === 75
-    )
-      score += 9;
-
+    if(wind >= 8 && wind <= 28) score += 8;
+    if(w.relative_humidity_2m >= 55) score += 5;
+    if(w.precipitation > 0) score += 4;
+    if([71, 73, 75].includes(w.weather_code)) score += 9;
   }
 
-  /*
-    Camera evidence becomes increasingly important.
-  */
+  if(state.records.length) score += Math.min(18, state.records.length * 2);
 
-  if(state.records.length)
-    score += Math.min(18,state.records.length * 2);
-
-  score = Math.max(0,Math.min(100,score));
+  score = Math.max(0, Math.min(100, score));
 
   $("huntScore").textContent = score;
   $("huntBar").style.width = score + "%";
 
-  $("activity").textContent =
-    score >= 75 ? "HIGH" :
-    score >= 55 ? "MODERATE" :
-    "LOW";
-
+  const rank = score >= 75 ? "HIGH" : score >= 55 ? "MODERATE" : "LOW";
+  $("huntRank").textContent = rank;
+  $("activity").textContent = rank;
 }
 
-
 /* =========================================================
-   IMAGE PROCESSING
+   CLIENT-SIDE IMAGE INGEST
    ========================================================= */
 
 function processFiles(files){
-
-  const valid =
-    [...files].filter(file =>
-      file.type.startsWith("image/")
-    );
-
-  if(!valid.length)
-    return;
-
+  const valid = [...files].filter(file => file.type.startsWith("image/"));
+  if(!valid.length) return;
   valid.forEach(processImage);
-
 }
 
-
 function processImage(file){
-
   const url = URL.createObjectURL(file);
-
   const img = new Image();
 
   img.onload = async () => {
-
-    /*
-      Downsample analysis to protect mobile browsers.
-    */
-
     const maxSize = 900;
+    const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
+    const width = Math.max(1, Math.round(img.naturalWidth * scale));
+    const height = Math.max(1, Math.round(img.naturalHeight * scale));
 
-    const scale =
-      Math.min(
-        1,
-        maxSize /
-        Math.max(img.naturalWidth,img.naturalHeight)
-      );
-
-    const width =
-      Math.max(1,Math.round(img.naturalWidth * scale));
-
-    const height =
-      Math.max(1,Math.round(img.naturalHeight * scale));
-
-    const canvas =
-      document.createElement("canvas");
-
+    const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
 
-    const ctx =
-      canvas.getContext("2d",{willReadFrequently:true});
+    const ctx = canvas.getContext("2d", {willReadFrequently: true});
+    ctx.drawImage(img, 0, 0, width, height);
 
-    ctx.drawImage(img,0,0,width,height);
-
-    const data =
-      ctx.getImageData(0,0,width,height).data;
-
+    const data = ctx.getImageData(0, 0, width, height).data;
     let lumaTotal = 0;
     let edges = 0;
 
-    /*
-      Analyze every second pixel for speed.
-    */
+    for(let y = 0; y < height - 1; y += 2){
+      for(let x = 0; x < width - 1; x += 2){
+        const i = (y * width + x) * 4;
+        const r = data[i], g = data[i+1], b = data[i+2];
 
-    for(let y=0;y<height-1;y+=2){
+        lumaTotal += (.299 * r + .587 * g + .114 * b);
 
-      for(let x=0;x<width-1;x+=2){
-
-        const i =
-          (y*width+x)*4;
-
-        const r=data[i];
-        const g=data[i+1];
-        const b=data[i+2];
-
-        const luma =
-          .299*r+
-          .587*g+
-          .114*b;
-
-        lumaTotal += luma;
-
-        const right =
-          (y*width+x+1)*4;
-
-        const difference =
-          Math.abs(r-data[right])+
-          Math.abs(g-data[right+1])+
-          Math.abs(b-data[right+2]);
-
-        if(difference > 75)
-          edges++;
-
+        const right = (y * width + x + 1) * 4;
+        const diff = Math.abs(r - data[right]) + Math.abs(g - data[right+1]) + Math.abs(b - data[right+2]);
+        if(diff > 75) edges++;
       }
-
     }
 
-    const samples =
-      Math.ceil(width/2)*
-      Math.ceil(height/2);
-
-    const average =
-      Math.round(lumaTotal/samples);
-
-    const edgeDensity =
-      Math.min(
-        100,
-        (edges/samples)*100
-      );
+    const samples = Math.ceil(width / 2) * Math.ceil(height / 2);
+    const averageLuma = Math.round(lumaTotal / samples);
+    const edgeDensity = Math.min(100, (edges / samples) * 100);
 
     const record = {
-
-      id:crypto.randomUUID
-        ? crypto.randomUUID()
-        : Date.now()+"-"+Math.random(),
-
-      name:file.name,
-
-      width:img.naturalWidth,
-
-      height:img.naturalHeight,
-
-      luma:average,
-
-      edge:edgeDensity,
-
-      timestamp:
-        new Date(file.lastModified || Date.now()),
-
-      url:url,
-
-      lat:null,
-
-      lon:null
-
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random(),
+      name: file.name,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+      luma: averageLuma,
+      edge: edgeDensity,
+      timestamp: new Date(file.lastModified || Date.now()),
+      url: url,
+      lat: state.location.lat,
+      lon: state.location.lon
     };
 
     state.records.unshift(record);
-
-    /*
-      Attempt browser metadata extraction where
-      available. The actual EXIF parser is intentionally
-      kept separate so the application doesn't crash
-      when a camera uses unusual metadata.
-    */
-
-    const gps =
-      await tryReadGPS(file);
-
-    if(gps){
-
-      record.lat=gps.lat;
-      record.lon=gps.lon;
-
-    }else{
-
-      /*
-        If no GPS exists, associate imagery with
-        current hunting location rather than pretending
-        the photograph contains GPS.
-      */
-
-      record.lat=state.location.lat;
-      record.lon=state.location.lon;
-
-    }
-
     addRecordToMap(record);
-
     updateCameraList();
-
     updateAlbum();
-
     updateStats();
-
     calculateHuntScore();
-
-    URL.revokeObjectURL(url);
-
   };
 
-  img.onerror=()=>{
+  img.onerror = () => {
     URL.revokeObjectURL(url);
   };
 
-  img.src=url;
-
+  img.src = url;
 }
 
-
 /* =========================================================
-   LIGHTWEIGHT JPEG GPS PARSER
-   ========================================================= */
-
-async function tryReadGPS(file){
-
-  /*
-    JPEG APP1 parser.
-    If unsupported/missing, safely returns null.
-  */
-
-  if(!file.type.includes("jpeg"))
-    return null;
-
-  try{
-
-    const buffer =
-      await file.arrayBuffer();
-
-    const view =
-      new DataView(buffer);
-
-    if(view.getUint16(0,false)!==0xFFD8)
-      return null;
-
-    let offset=2;
-
-    while(offset < buffer.byteLength-4){
-
-      if(view.getUint8(offset)!==0xFF){
-
-        offset++;
-        continue;
-
-      }
-
-      const marker =
-        view.getUint8(offset+1);
-
-      if(marker===0xDA ||
-         marker===0xD9)
-        break;
-
-      const length =
-        view.getUint16(offset+2,false);
-
-      if(marker===0xE1){
-
-        const header =
-          String.fromCharCode(
-            view.getUint8(offset+4),
-            view.getUint8(offset+5),
-            view.getUint8(offset+6),
-            view.getUint8(offset+7)
-          );
-
-        if(header==="Exif"){
-
-          /*
-            Full vendor-specific GPS parsing is deliberately
-            avoided here rather than risking corrupted reads.
-            The application continues normally.
-          */
-
-          return null;
-
-        }
-
-      }
-
-      offset += 2 + length;
-
-    }
-
-  }catch(e){}
-
-  return null;
-
-}
-
-
-/* =========================================================
-   MAP CAMERA MARKER
+   MAP MARKERS & OVERLAYS
    ========================================================= */
 
 function addRecordToMap(record){
+  const icon = L.divIcon({
+    className: "",
+    html: `<div class="camera-marker">📷</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
 
-  const icon =
-    L.divIcon({
-      className:"",
-      html:`<div class="camera-marker">📷</div>`,
-      iconSize:[28,28],
-      iconAnchor:[14,14]
-    });
-
-  const marker =
-    L.marker(
-      [record.lat,record.lon],
-      {icon}
-    )
-    .addTo(state.map);
+  const marker = L.marker([record.lat, record.lon], {icon}).addTo(state.map);
 
   marker.bindPopup(`
     <div style="font-family:monospace">
       <b>${escapeHTML(record.name)}</b><br>
       ${record.width} × ${record.height}<br>
-      Luma: ${record.luma}/255<br>
-      Edge signal: ${record.edge.toFixed(1)}%<br>
+      Luma Signal: ${record.luma}/255<br>
+      Edge Signal: ${record.edge.toFixed(1)}%<br>
       ${record.lat.toFixed(5)}, ${record.lon.toFixed(5)}
     </div>
   `);
 
-  marker.on("click",()=>{
-    openImage(record);
-  });
-
+  marker.on("click", () => openImage(record));
   state.cameraMarkers.push(marker);
-
 }
 
-
-/* =========================================================
-   CAMERA LIST
-   ========================================================= */
-
 function updateCameraList(){
+  const list = $("cameraList");
+  list.innerHTML = "";
 
-  const list=$("cameraList");
-
-  list.innerHTML="";
-
-  const groups=[];
-
-  state.records.forEach(record=>{
-
-    const key =
-      `${record.lat.toFixed(4)},${record.lon.toFixed(4)}`;
-
-    if(!groups.includes(key))
-      groups.push(key);
-
+  const groups = [];
+  state.records.forEach(record => {
+    const key = `${record.lat.toFixed(4)},${record.lon.toFixed(4)}`;
+    if(!groups.includes(key)) groups.push(key);
   });
 
   if(!groups.length){
-
-    list.innerHTML=`
+    list.innerHTML = `
       <div class="camera">
         <div class="pin"></div>
         <div>
@@ -1806,422 +1324,216 @@ function updateCameraList(){
         </div>
         <em>--</em>
       </div>`;
-
-    $("cameraCount").textContent="0 ACTIVE";
-
+    $("cameraCount").textContent = "0 ACTIVE";
     return;
-
   }
 
-  groups.forEach((group,index)=>{
-
-    const count =
-      state.records.filter(r =>
-        `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`
-        ===group
-      ).length;
-
-    const item =
-      document.createElement("div");
-
-    item.className="camera";
-
-    item.innerHTML=`
+  groups.forEach((group, index) => {
+    const count = state.records.filter(r => `${r.lat.toFixed(4)},${r.lon.toFixed(4)}` === group).length;
+    const item = document.createElement("div");
+    item.className = "camera";
+    item.innerHTML = `
       <div class="pin"></div>
       <div>
-        <b>CAMERA ${String(index+1).padStart(2,"0")}</b>
+        <b>CAMERA ${String(index + 1).padStart(2, "0")}</b>
         <span>${group}</span>
       </div>
       <em>${count}</em>
     `;
 
-    item.onclick=()=>{
-
-      const [lat,lon]=group.split(",").map(Number);
-
-      state.map.setView(
-        [lat,lon],
-        16
-      );
-
+    item.onclick = () => {
+      const [lat, lon] = group.split(",").map(Number);
+      state.map.setView([lat, lon], 16);
     };
 
     list.appendChild(item);
-
   });
 
-  $("cameraCount").textContent =
-    `${groups.length} ACTIVE`;
-
+  $("cameraCount").textContent = `${groups.length} ACTIVE`;
 }
-
-
-/* =========================================================
-   ALBUM
-   ========================================================= */
 
 function updateAlbum(){
+  const album = $("album");
+  album.innerHTML = "";
 
-  const album=$("album");
-
-  album.innerHTML="";
-
-  state.records
-    .slice(0,12)
-    .forEach(record=>{
-
-      const div =
-        document.createElement("div");
-
-      div.className="thumb";
-
-      const image =
-        document.createElement("img");
-
-      image.src=record.url;
-
-      image.loading="lazy";
-
-      image.alt=record.name;
-
-      div.appendChild(image);
-
-      div.onclick=()=>{
-        openImage(record);
-      };
-
-      album.appendChild(div);
-
-    });
-
+  state.records.slice(0, 12).forEach(record => {
+    const div = document.createElement("div");
+    div.className = "thumb";
+    const image = document.createElement("img");
+    image.src = record.url;
+    image.loading = "lazy";
+    image.alt = record.name;
+    div.appendChild(image);
+    div.onclick = () => openImage(record);
+    album.appendChild(div);
+  });
 }
-
 
 function openImage(record){
-
-  $("modalTitle").textContent =
-    record.name;
-
-  $("modalImage").src =
-    record.url;
-
+  $("modalTitle").textContent = record.name;
+  $("modalImage").src = record.url;
   $("imageModal").classList.add("show");
-
 }
-
-
-/* =========================================================
-   STATS
-   ========================================================= */
 
 function updateStats(){
-
-  const n=state.records.length;
-
-  $("frameStatus").textContent =
-    `${n} FRAMES`;
-
-  $("photoCount").textContent =
-    `${n} PHOTOS`;
-
+  const n = state.records.length;
+  $("frameStatus").textContent = `${n} FRAMES`;
+  $("photoCount").textContent = `${n} PHOTOS`;
 }
 
-
 /* =========================================================
-   AI-STYLE HUNT ASSISTANT
+   ASSISTANT CHAT
    ========================================================= */
 
 function assistantAnswer(question){
+  const q = question.toLowerCase();
 
-  const q =
-    question.toLowerCase();
-
-  if(
-    q.includes("wind") ||
-    q.includes("scent") ||
-    q.includes("smell")
-  ){
-
+  if(q.includes("wind") || q.includes("scent") || q.includes("smell")){
     if(state.weather){
-
-      return `Current wind is ${Math.round(
-        state.weather.wind_speed_10m
-      )} km/h from the ${degreesToCompass(
-        state.weather.wind_direction_10m
-      )}. Position your approach and stand so your scent does not cross the expected travel corridor.`;
-
+      return `Current wind is ${Math.round(state.weather.wind_speed_10m)} km/h from the ${degreesToCompass(state.weather.wind_direction_10m)}. Position your approach and stand so your scent does not cross the expected travel corridor.`;
     }
-
-    return "I need live weather conditions before making a wind-specific recommendation.";
-
+    return "Acquiring live weather data before giving exact wind recommendations...";
   }
 
-  if(
-    q.includes("snow") ||
-    q.includes("storm")
-  ){
-
-    return "During major weather changes, compare your camera timestamps before, during and after the event. Look for shifts in daylight movement, feeding locations and travel corridors rather than assuming one universal storm pattern.";
-
+  if(q.includes("snow") || q.includes("storm")){
+    return "During weather shifts, cross-reference camera timestamps before and after the event to track daylight shifts toward primary bedding or feeding.";
   }
 
-  if(
-    q.includes("stand") ||
-    q.includes("where")
-  ){
-
-    return "Use the map to identify the intersection of bedding cover, food, security cover and favorable wind. The best stand is normally the one that lets you enter and hunt without contaminating the travel corridor.";
-
+  if(q.includes("stand") || q.includes("where")){
+    return "Identify intersections between thick bedding cover, preferred feed, and favorable wind. Set up along transition edges to avoid blowing out travel lanes.";
   }
 
-  if(
-    q.includes("photo") ||
-    q.includes("camera") ||
-    q.includes("buck")
-  ){
-
-    return `I currently have ${state.records.length} trail-camera frame${
-      state.records.length===1?"":"s"
-    } in the intelligence database. Upload more images so the movement timeline becomes more useful.`;
-
+  if(q.includes("photo") || q.includes("camera") || q.includes("buck")){
+    return `Currently holding ${state.records.length} camera frame(s) in intelligence storage. Upload additional frames to build precise entry/exit patterns.`;
   }
 
-  return "I can help analyze wind, weather, camera timing, movement corridors, bedding areas, feeding areas, stand access and storm-period behavior. Ask me a specific hunting question.";
-
+  return "I analyze wind vectors, pressure changes, camera imagery, and travel corridors. Ask about stand placement, wind strategy, or camera positioning.";
 }
-
 
 function sendChat(){
+  const input = $("chatInput");
+  const question = input.value.trim();
+  if(!question) return;
 
-  const input=$("chatInput");
-
-  const question=input.value.trim();
-
-  if(!question)
-    return;
-
-  const log=$("chatLog");
-
-  const user=document.createElement("div");
-
-  user.className="msg user";
-
-  user.textContent=
-    question;
-
+  const log = $("chatLog");
+  const user = document.createElement("div");
+  user.className = "msg user";
+  user.textContent = question;
   log.appendChild(user);
 
-  input.value="";
+  input.value = "";
 
-  const answer=
-    assistantAnswer(question);
-
-  const ai=document.createElement("div");
-
-  ai.className="msg ai";
-
-  ai.textContent=
-    "BUCKTRACK: "+answer;
-
+  const answer = assistantAnswer(question);
+  const ai = document.createElement("div");
+  ai.className = "msg ai";
+  ai.textContent = "BUCKTRACK: " + answer;
   log.appendChild(ai);
 
-  log.scrollTop=
-    log.scrollHeight;
-
+  log.scrollTop = log.scrollHeight;
 }
 
-
 /* =========================================================
-   MAP LAYERS
+   EVENT CONTROLLERS
    ========================================================= */
 
-$("satelliteBtn").onclick=()=>{
-
-  if(state.currentLayer==="satellite")
-    return;
-
+$("satelliteBtn").onclick = () => {
+  if(state.currentLayer === "satellite") return;
   state.map.removeLayer(state.street);
-
   state.satellite.addTo(state.map);
-
-  state.currentLayer="satellite";
-
+  state.currentLayer = "satellite";
 };
 
-
-$("terrainBtn").onclick=()=>{
-
+$("terrainBtn").onclick = () => {
+  if(state.currentLayer === "street") return;
   state.map.removeLayer(state.satellite);
-
   state.street.addTo(state.map);
-
-  state.currentLayer="street";
-
+  state.currentLayer = "street";
 };
 
-
-$("centerBtn").onclick=()=>{
-
-  state.map.setView(
-    [state.location.lat,state.location.lon],
-    14
-  );
-
+$("centerBtn").onclick = () => {
+  state.map.setView([state.location.lat, state.location.lon], 14);
 };
 
+$("locateBtn").onclick = locateUser;
 
-/* =========================================================
-   PHOTO INPUT
-   ========================================================= */
-
-$("choosePhotos").onclick=e=>{
-
-  e.stopPropagation();
-
-  $("fileInput").click();
-
-};
-
-
-$("dropzone").onclick=e=>{
-
-  if(e.target.id!=="choosePhotos")
-    $("fileInput").click();
-
-};
-
-
-$("fileInput").addEventListener(
-  "change",
-  e=>{
-    processFiles(e.target.files);
-    e.target.value="";
-  }
-);
-
-
-["dragenter","dragover"].forEach(event=>{
-
-  $("dropzone").addEventListener(
-    event,
-    e=>{
-      e.preventDefault();
-      $("dropzone").classList.add("drag");
-    }
-  );
-
-});
-
-
-["dragleave","drop"].forEach(event=>{
-
-  $("dropzone").addEventListener(
-    event,
-    e=>{
-      e.preventDefault();
-      $("dropzone").classList.remove("drag");
-    }
-  );
-
-});
-
-
-$("dropzone").addEventListener(
-  "drop",
-  e=>{
-    processFiles(e.dataTransfer.files);
-  }
-);
-
-
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
-$("locateBtn").onclick=
-  locateUser;
-
-$("centerBtn").onclick=
-  ()=>{
-    state.map.setView(
-      [state.location.lat,state.location.lon],
-      14
-    );
-  };
-
-
-$("fullscreenBtn").onclick=()=>{
-
+$("fullscreenBtn").onclick = () => {
   if(!document.fullscreenElement){
-
-    document.documentElement.requestFullscreen
-      ?.();
-
-  }else{
-
+    document.documentElement.requestFullscreen?.();
+  } else {
     document.exitFullscreen?.();
-
   }
-
 };
 
+window.addEventListener('resize', () => {
+  if(state.map) state.map.invalidateSize();
+});
 
-$("closeModal").onclick=()=>{
+document.addEventListener('fullscreenchange', () => {
+  if(state.map) state.map.invalidateSize();
+});
+
+$("choosePhotos").onclick = e => {
+  e.stopPropagation();
+  $("fileInput").click();
+};
+
+$("dropzone").onclick = e => {
+  if(e.target.id !== "choosePhotos"){
+    $("fileInput").click();
+  }
+};
+
+$("fileInput").addEventListener("change", e => {
+  processFiles(e.target.files);
+  e.target.value = "";
+});
+
+["dragenter", "dragover"].forEach(evt => {
+  $("dropzone").addEventListener(evt, e => {
+    e.preventDefault();
+    $("dropzone").classList.add("drag");
+  });
+});
+
+["dragleave", "drop"].forEach(evt => {
+  $("dropzone").addEventListener(evt, e => {
+    e.preventDefault();
+    $("dropzone").classList.remove("drag");
+  });
+});
+
+$("dropzone").addEventListener("drop", e => {
+  processFiles(e.dataTransfer.files);
+});
+
+$("closeModal").onclick = () => {
   $("imageModal").classList.remove("show");
 };
 
-
-$("imageModal").onclick=e=>{
-
-  if(e.target.id==="imageModal")
-    $("imageModal").classList.remove("show");
-
+$("imageModal").onclick = e => {
+  if(e.target.id === "imageModal") $("imageModal").classList.remove("show");
 };
 
+$("chatSend").onclick = sendChat;
 
-$("chatSend").onclick=
-  sendChat;
+$("chatInput").addEventListener("keydown", e => {
+  if(e.key === "Enter") sendChat();
+});
 
-
-$("chatInput").addEventListener(
-  "keydown",
-  e=>{
-    if(e.key==="Enter")
-      sendChat();
-  }
-);
-
-
-/* =========================================================
-   SAFETY / HTML
-   ========================================================= */
-
-function escapeHTML(value){
-
-  return String(value)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-
+function escapeHTML(str){
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-
-/* =========================================================
-   STARTUP
-   ========================================================= */
-
+/* INITIALIZATION */
 createMap();
-
 locateUser();
-
-loadWeather();
-
 updateStats();
-
 calculateHuntScore();
-
 </script>
 
 </body>
