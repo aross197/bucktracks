@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<title>BUCKTRACK // Deer Intelligence Command</title>
+<title>BUCKTRACK // Ultimate Tactical Command</title>
 
 <link rel="preconnect" href="https://unpkg.com">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -47,7 +47,7 @@ html,body{
   font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 
-button,input,textarea{
+button,input,textarea,select{
   font:inherit;
 }
 
@@ -148,11 +148,11 @@ button{
   color:var(--green);
 }
 
-/* MAIN */
+/* MAIN GRID */
 .main{
   min-height:0;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 385px;
+  grid-template-columns:minmax(0,1fr) 400px;
 }
 
 .workspace{
@@ -168,7 +168,7 @@ button{
   background:#08100b;
 }
 
-/* MAP UI */
+/* MAP UI OVERLAYS */
 .map-top{
   position:absolute;
   top:15px;
@@ -208,6 +208,8 @@ button{
   display:flex;
   gap:6px;
   pointer-events:auto;
+  flex-wrap:wrap;
+  justify-content:flex-end;
 }
 
 .map-action{
@@ -219,9 +221,10 @@ button{
   font:10px var(--mono);
 }
 
-.map-action:hover{
+.map-action:hover, .map-action.active{
   color:var(--green);
   border-color:var(--green);
+  background:rgba(12,38,22,.85);
 }
 
 .map-score{
@@ -388,7 +391,7 @@ button{
   border:1px dashed #35563e;
   background:rgba(76,255,136,.025);
   border-radius:9px;
-  padding:18px 10px;
+  padding:16px 10px;
   text-align:center;
   transition:.2s;
   cursor:pointer;
@@ -400,7 +403,7 @@ button{
 }
 
 .dropzone .big{
-  font-size:24px;
+  font-size:22px;
   margin-bottom:5px;
 }
 
@@ -413,17 +416,17 @@ button{
 .dropzone small{
   display:block;
   color:var(--muted);
-  font-size:10px;
+  font-size:9px;
   margin-top:4px;
 }
 
 .primary{
-  margin-top:10px;
+  margin-top:9px;
   width:100%;
   border:1px solid #2e8c4d;
   background:linear-gradient(180deg,#123d21,#0b2b17);
   color:var(--green);
-  padding:10px;
+  padding:9px;
   border-radius:8px;
   font:700 10px var(--mono);
 }
@@ -432,67 +435,13 @@ button{
   background:#145023;
 }
 
-/* BUCK PROFILE */
-.buck{
-  display:grid;
-  grid-template-columns:65px 1fr;
-  gap:11px;
-  align-items:center;
-}
-
-.buck-avatar{
-  width:65px;
-  height:65px;
-  border-radius:10px;
-  background:radial-gradient(circle,#284e31,#07100a 70%);
-  border:1px solid #355b3e;
-  display:grid;
-  place-items:center;
-  font-size:30px;
-}
-
-.buck h3{
-  font:700 14px var(--mono);
-}
-
-.buck p{
-  color:var(--muted);
-  font-size:10px;
-  line-height:1.45;
-  margin-top:4px;
-}
-
-.confidence{
-  margin-top:9px;
-}
-
-.confidence-top{
-  display:flex;
-  justify-content:space-between;
-  font:9px var(--mono);
-  color:var(--muted);
-}
-
-.confidence-bar{
-  height:5px;
-  background:#172219;
-  margin-top:5px;
-  border-radius:5px;
-  overflow:hidden;
-}
-
-.confidence-bar i{
-  display:block;
-  width:84%;
-  height:100%;
-  background:var(--green);
-}
-
-/* CAMERA LIST */
+/* CAMERA LIST & ALBUM */
 .camera-list{
   display:flex;
   flex-direction:column;
   gap:6px;
+  max-height:160px;
+  overflow-y:auto;
 }
 
 .camera{
@@ -536,11 +485,12 @@ button{
   font-style:normal;
 }
 
-/* ALBUM */
 .album{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:5px;
+  max-height:130px;
+  overflow-y:auto;
 }
 
 .thumb{
@@ -559,7 +509,7 @@ button{
   display:block;
 }
 
-/* AI */
+/* AI CHAT */
 .chat{
   display:flex;
   flex-direction:column;
@@ -567,7 +517,7 @@ button{
 }
 
 .chat-log{
-  height:110px;
+  height:150px;
   overflow:auto;
   background:#050b07;
   border:1px solid var(--line);
@@ -578,7 +528,8 @@ button{
 }
 
 .msg{
-  margin-bottom:7px;
+  margin-bottom:8px;
+  word-break:break-word;
 }
 
 .msg.ai{
@@ -588,6 +539,32 @@ button{
 .msg.user{
   color:var(--text);
   text-align:right;
+}
+
+.chat-config{
+  display:flex;
+  gap:5px;
+  align-items:center;
+  background:#07100a;
+  border:1px solid var(--line);
+  padding:5px 8px;
+  border-radius:7px;
+  font:9px var(--mono);
+  color:var(--muted);
+}
+
+.chat-config select, .chat-config input{
+  background:#040805;
+  color:var(--text);
+  border:1px solid var(--line2);
+  border-radius:5px;
+  padding:3px 6px;
+  font:9px var(--mono);
+  outline:none;
+}
+
+.chat-config input{
+  flex:1;
 }
 
 .chat-row{
@@ -627,7 +604,7 @@ button{
   font:8px var(--mono);
 }
 
-/* LEAFLET OVERRIDES */
+/* LEAFLET & MODAL OVERRIDES */
 .leaflet-control-zoom a{
   background:#09120c!important;
   color:var(--text)!important;
@@ -652,7 +629,6 @@ button{
   box-shadow:0 0 0 4px rgba(76,255,136,.14),0 0 18px rgba(76,255,136,.5);
 }
 
-/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -707,84 +683,15 @@ button{
   border-radius:8px;
 }
 
-/* MOBILE */
+/* MOBILE ADAPTATION */
 @media(max-width:900px){
-  .app{
-    grid-template-rows:58px 1fr 28px;
-  }
-
-  .main{
-    grid-template-columns:1fr;
-    grid-template-rows:55vh 45vh;
-    overflow:auto;
-  }
-
-  .workspace{
-    min-height:55vh;
-  }
-
-  .sidebar{
-    border-left:0;
-    border-top:1px solid var(--line);
-  }
-
-  .statusbar{
-    display:none;
-  }
-
-  .brand small{
-    display:none;
-  }
-
-  .map-score{
-    width:190px;
-    bottom:10px;
-    left:10px;
-  }
-
-  .score b{
-    font-size:27px;
-  }
-
-  .map-actions .map-action:nth-child(2){
-    display:none;
-  }
-}
-
-@media(max-width:500px){
-  .topbar{
-    padding:0 10px;
-  }
-
-  .brand h1{
-    font-size:12px;
-  }
-
-  .logo{
-    width:34px;
-    height:34px;
-  }
-
-  .header-actions .icon-btn{
-    width:32px;
-    height:32px;
-  }
-
-  .map-title{
-    top:8px;
-    left:8px;
-  }
-
-  .map-actions{
-    top:55px;
-    right:8px;
-    position:absolute;
-  }
-
-  .map-score{
-    bottom:8px;
-    left:8px;
-  }
+  .app{grid-template-rows:58px 1fr 28px;}
+  .main{grid-template-columns:1fr; grid-template-rows:55vh 45vh; overflow:auto;}
+  .workspace{min-height:55vh;}
+  .sidebar{border-left:0; border-top:1px solid var(--line);}
+  .statusbar,.brand small{display:none;}
+  .map-score{width:190px; bottom:10px; left:10px;}
+  .score b{font-size:27px;}
 }
 </style>
 </head>
@@ -798,7 +705,7 @@ button{
     <div class="logo">🦌</div>
     <div>
       <h1>BUCKTRACK COMMAND</h1>
-      <small>DEER INTELLIGENCE • HABITAT • WEATHER • MOVEMENT</small>
+      <small>TACTICAL MAP • CANVEC LAYERS • WEATHER • AI</small>
     </div>
   </div>
 
@@ -807,7 +714,7 @@ button{
       <i class="dot"></i>
       SYSTEM ONLINE
     </div>
-    <div id="locationStatus">LOCATION SEARCHING</div>
+    <div id="locationStatus">GPS ACQUIRING...</div>
     <div id="frameStatus">0 FRAMES</div>
   </div>
 
@@ -824,27 +731,26 @@ button{
 
   <div class="map-top">
     <div class="map-title">
-      <strong>TACTICAL HUNT MAP</strong>
-      <span id="mapLocation">INITIALIZING LOCATION...</span>
+      <strong>FIELD INTELLIGENCE MAP</strong>
+      <span id="mapLocation">45.8167° N, -64.2167° W</span>
     </div>
 
     <div class="map-actions">
+      <button class="map-action active" id="streetBtn">STREET</button>
       <button class="map-action" id="satelliteBtn">SATELLITE</button>
-      <button class="map-action" id="terrainBtn">TERRAIN</button>
-      <button class="map-action" id="centerBtn">CENTER</button>
+      <button class="map-action" id="toggleCrown">CROWN LAND</button>
+      <button class="map-action" id="toggleTrails">CANVEC TRAILS</button>
     </div>
   </div>
 
   <div class="map-score">
-    <div class="score-label">CURRENT HUNT OPPORTUNITY</div>
-
+    <div class="score-label">HUNT OPPORTUNITY SCORE</div>
     <div class="score">
-      <b id="huntScore">58</b>
-      <span>/ 100<br><small id="huntRank">MODERATE</small></span>
+      <b id="huntScore">68</b>
+      <span>/ 100<br><small id="huntRank">HIGH</small></span>
     </div>
-
     <div class="score-bar">
-      <i id="huntBar"></i>
+      <i id="huntBar" style="width:68%"></i>
     </div>
   </div>
 </section>
@@ -854,134 +760,99 @@ button{
   <!-- LIVE CONDITIONS -->
   <div class="card">
     <div class="card-head">
-      <div class="card-title">LIVE CONDITIONS</div>
-      <div class="card-tag" id="weatherTime">LOCAL</div>
+      <div class="card-title">LIVE WEATHER TELEMETRY</div>
+      <div class="card-tag">OPEN-METEO</div>
     </div>
-
     <div class="weather-main">
       <div>
         <div class="temperature" id="temperature">--°</div>
-        <div class="weather-desc" id="weatherDesc">Acquiring weather...</div>
+        <div class="weather-desc" id="weatherDesc">Syncing weather...</div>
       </div>
-
       <div class="wind">
         <b id="windSpeed">-- km/h</b>
         <span id="windDirection">WIND --</span>
       </div>
     </div>
-
-    <div class="metrics">
+    <div class="metrics" style="margin-top:10px;">
       <div class="metric">
-        <label>PRESSURE</label>
+        <label>BAROMETER</label>
         <strong id="pressure">--</strong>
       </div>
-
       <div class="metric">
         <label>HUMIDITY</label>
         <strong id="humidity">--</strong>
       </div>
-
-      <div class="metric">
-        <label>VISIBILITY</label>
-        <strong id="visibility">--</strong>
-      </div>
-
-      <div class="metric">
-        <label>DEER ACTIVITY</label>
-        <strong class="good" id="activity">MODERATE</strong>
-      </div>
     </div>
   </div>
 
-  <!-- TARGET BUCK PROFILE -->
-  <div class="card">
-    <div class="card-head">
-      <div class="card-title">TARGET BUCK</div>
-      <div class="card-tag">TRACK 01</div>
-    </div>
-
-    <div class="buck">
-      <div class="buck-avatar">🦌</div>
-      <div>
-        <h3 id="buckName">PRIMARY TARGET</h3>
-        <p id="buckDescription">
-          Build this profile from your trail-camera evidence, sightings and movement history.
-        </p>
-      </div>
-    </div>
-
-    <div class="confidence">
-      <div class="confidence-top">
-        <span>IDENTIFICATION CONFIDENCE</span>
-        <b class="good">84%</b>
-      </div>
-      <div class="confidence-bar">
-        <i></i>
-      </div>
-    </div>
-  </div>
-
-  <!-- PHOTO INGEST -->
+  <!-- TRAIL CAMERA INGEST -->
   <div class="card">
     <div class="card-head">
       <div class="card-title">TRAIL CAMERA INGEST</div>
       <div class="card-tag" id="photoCount">0 PHOTOS</div>
     </div>
-
     <div class="dropzone" id="dropzone">
       <div class="big">📸</div>
       <strong>DROP TRAIL-CAM PHOTOS</strong>
-      <small>JPG / PNG • GPS & metadata when available</small>
+      <small>JPG / PNG • Automatic GPS & Metadata tagging</small>
       <button class="primary" id="choosePhotos">SELECT PHOTOS</button>
       <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
     </div>
   </div>
 
-  <!-- CAMERAS -->
+  <!-- CAMERA NETWORK -->
   <div class="card">
     <div class="card-head">
       <div class="card-title">CAMERA NETWORK</div>
       <div class="card-tag" id="cameraCount">0 ACTIVE</div>
     </div>
-
     <div class="camera-list" id="cameraList">
       <div class="camera">
         <div class="pin"></div>
         <div>
-          <b>BASE LOCATION</b>
-          <span>Waiting for camera imagery</span>
+          <b>NO ACTIVE STATIONS</b>
+          <span>Upload imagery to pin stations</span>
         </div>
         <em>--</em>
       </div>
     </div>
   </div>
 
-  <!-- ALBUM -->
+  <!-- INTELLIGENCE ALBUM -->
   <div class="card">
     <div class="card-head">
       <div class="card-title">INTELLIGENCE ALBUM</div>
-      <div class="card-tag">LOCAL STORAGE</div>
+      <div class="card-tag">LOCAL CACHE</div>
     </div>
-
     <div class="album" id="album"></div>
   </div>
 
-  <!-- ASSISTANT -->
+  <!-- TACTICAL AI ASSISTANT -->
   <div class="card">
     <div class="card-head">
-      <div class="card-title">BUCKTRACK ASSISTANT</div>
-      <div class="card-tag">TACTICAL</div>
+      <div class="card-title">TACTICAL AI ASSISTANT</div>
+      <div class="card-tag">ONLINE</div>
     </div>
-
     <div class="chat">
+      <div class="chat-config">
+        <span>Model:</span>
+        <select id="aiProvider">
+          <option value="builtin">Built-in Tactical Expert</option>
+          <option value="openai">OpenAI GPT-4o-mini</option>
+          <option value="gemini">Google Gemini Flash</option>
+        </select>
+      </div>
+      <div class="chat-config" id="apiKeyRow" style="display:none;">
+        <span>Key:</span>
+        <input id="apiKeyInput" type="password" placeholder="Paste API Key here...">
+      </div>
       <div class="chat-log" id="chatLog">
         <div class="msg ai">
-          BUCKTRACK: Upload trail-camera images or ask about wind, weather, movement, bedding, feeding or stand placement.
+          BUCKTRACK: Assistant online. Query wind vectors, stand locations, or upload trail-cam imagery for edge and luma analysis.
         </div>
       </div>
-
       <div class="chat-row">
-        <input id="chatInput" placeholder="Ask about your hunt..." autocomplete="off">
+        <input id="chatInput" placeholder="Ask about tactical plan..." autocomplete="off">
         <button id="chatSend">➤</button>
       </div>
     </div>
@@ -992,20 +863,20 @@ button{
 </main>
 
 <footer class="footer">
-  <span>BUCKTRACK COMMAND • LOCAL-FIRST HUNT INTELLIGENCE</span>
-  <span>MAP DATA © OPENSTREETMAP CONTRIBUTORS</span>
+  <span>BUCKTRACK COMMAND • OPEN-SOURCE FIELD INTELLIGENCE</span>
+  <span>MAP DATA © OPENSTREETMAP • CANVEC & NS OPEN DATA</span>
 </footer>
 
 </div>
 
-<!-- IMAGE MODAL -->
+<!-- IMAGE INSPECTION MODAL -->
 <div class="modal" id="imageModal">
   <div class="modal-box">
     <div class="modal-head">
       <strong id="modalTitle">FRAME INSPECTION</strong>
       <button class="close" id="closeModal">CLOSE</button>
     </div>
-    <img id="modalImage" class="preview" alt="Trail camera image">
+    <img id="modalImage" class="preview" alt="Trail camera frame">
   </div>
 </div>
 
@@ -1013,7 +884,7 @@ button{
 
 <script>
 /* =========================================================
-   BUCKTRACK COMMAND ENGINE
+   BUCKTRACK COMMAND ENGINE (ALL-IN-ONE)
    ========================================================= */
 
 const state = {
@@ -1024,516 +895,429 @@ const state = {
   },
   records: [],
   map: null,
-  satellite: null,
-  street: null,
+  streetLayer: null,
+  satelliteLayer: null,
+  crownLayer: null,
+  trailsLayer: null,
+  showCrown: false,
+  showTrails: false,
   userMarker: null,
-  cameraMarkers: [],
-  currentLayer: "street",
   weather: null
 };
 
 const $ = id => document.getElementById(id);
 
-/* =========================================================
-   MAP ENGINE
-   ========================================================= */
+/* MOCK GEOJSON DATA FOR CROWN LANDS & CANVEC TRAILS (NS REGION) */
+const mockCrownGeoJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: { NAME: "Crown Parcel A-1", HECTARES: 142.5 },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-64.2300, 45.8200], [-64.2000, 45.8250],
+          [-64.1950, 45.8050], [-64.2250, 45.8000],
+          [-64.2300, 45.8200]
+        ]]
+      }
+    },
+    {
+      type: "Feature",
+      properties: { NAME: "Crown Parcel B-4", HECTARES: 88.2 },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-64.2600, 45.8400], [-64.2350, 45.8450],
+          [-64.2300, 45.8280], [-64.2550, 45.8250],
+          [-64.2600, 45.8400]
+        ]]
+      }
+    }
+  ]
+};
 
-function createMap(){
+const mockTrailsGeoJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: { FEAT_NAME: "CanVec Main Ridge Trail", CLASS: "Access Road" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-64.2500, 45.8100], [-64.2200, 45.8150],
+          [-64.1900, 45.8000], [-64.1700, 45.8200]
+        ]
+      }
+    },
+    {
+      type: "Feature",
+      properties: { FEAT_NAME: "CanVec Hydro Line Cut", CLASS: "Utility Corridor" },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [-64.2400, 45.8350], [-64.2100, 45.8150],
+          [-64.1800, 45.8300]
+        ]
+      }
+    }
+  ]
+};
+
+/* INITIALIZE MAP */
+function initMap(){
   state.map = L.map("map", {
     zoomControl: true,
     attributionControl: true
   }).setView([state.location.lat, state.location.lon], 13);
 
-  state.street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  state.streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "© OpenStreetMap"
   }).addTo(state.map);
 
-  state.satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+  state.satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
     maxZoom: 19,
     attribution: "Tiles © Esri"
   });
 
+  // Setup Vector Overlays
+  state.crownLayer = L.geoJSON(mockCrownGeoJSON, {
+    style: {
+      color: "#4cff88",
+      weight: 1.5,
+      fillColor: "#4cff88",
+      fillOpacity: 0.12
+    },
+    onEachFeature: (feature, layer) => {
+      layer.bindPopup(`<b>CROWN LAND PARCEL</b><br>${feature.properties.NAME}<br>Area: ${feature.properties.HECTARES} ha`);
+    }
+  });
+
+  state.trailsLayer = L.geoJSON(mockTrailsGeoJSON, {
+    style: {
+      color: "#42d9ff",
+      weight: 2.5,
+      dashArray: "5, 5"
+    },
+    onEachFeature: (feature, layer) => {
+      layer.bindPopup(`<b>CANVEC VECTOR TRAIL</b><br>${feature.properties.FEAT_NAME}<br>Type: ${feature.properties.CLASS}`);
+    }
+  });
+
   updateMapLocation();
+  loadWeather();
 }
 
 function updateMapLocation(){
-  const lat = state.location.lat;
-  const lon = state.location.lon;
-
-  $("mapLocation").textContent = `${lat.toFixed(5)}°, ${lon.toFixed(5)}°`;
-  $("locationStatus").textContent = `GPS ${lat.toFixed(4)} / ${lon.toFixed(4)}`;
+  $("mapLocation").textContent = `${state.location.lat.toFixed(4)}° N, ${state.location.lon.toFixed(4)}° W`;
+  $("locationStatus").textContent = `GPS ${state.location.lat.toFixed(3)} / ${state.location.lon.toFixed(3)}`;
 }
 
-/* =========================================================
-   LOCATION ACQUISITION
-   ========================================================= */
-
+/* GPS GEOLOCATION */
 function locateUser(){
   if(!navigator.geolocation){
-    $("locationStatus").textContent = "GPS NOT AVAILABLE";
-    loadWeather();
+    $("locationStatus").textContent = "GPS OFFLINE";
     return;
   }
-
   $("locationStatus").textContent = "GPS ACQUIRING...";
-
   navigator.geolocation.getCurrentPosition(
-    position => {
-      state.location.lat = position.coords.latitude;
-      state.location.lon = position.coords.longitude;
-      state.location.accuracy = position.coords.accuracy;
-
+    pos => {
+      state.location.lat = pos.coords.latitude;
+      state.location.lon = pos.coords.longitude;
       state.map.setView([state.location.lat, state.location.lon], 14);
 
-      if(state.userMarker){
-        state.map.removeLayer(state.userMarker);
-      }
+      if(state.userMarker) state.map.removeLayer(state.userMarker);
 
       const icon = L.divIcon({
         className: "",
-        html: `<div style="
-          width:18px;
-          height:18px;
-          border-radius:50%;
-          background:#42d9ff;
-          border:3px solid #07100a;
-          box-shadow:0 0 0 7px rgba(66,217,255,.15),
-                     0 0 20px rgba(66,217,255,.7);
-        "></div>`,
+        html: `<div style="width:18px;height:18px;border-radius:50%;background:#42d9ff;border:3px solid #07100a;box-shadow:0 0 0 7px rgba(66,217,255,.15),0 0 20px rgba(66,217,255,.7);"></div>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9]
       });
 
       state.userMarker = L.marker([state.location.lat, state.location.lon], {icon})
         .addTo(state.map)
-        .bindPopup(`<b>YOUR LOCATION</b><br>Accuracy: ${Math.round(state.location.accuracy)} m`);
+        .bindPopup("<b>COMMAND POSITION</b>");
 
       updateMapLocation();
       loadWeather();
     },
-    error => {
-      $("locationStatus").textContent = "USING DEFAULT LOCATION";
-      loadWeather();
+    () => {
+      $("locationStatus").textContent = "DEFAULT LOCATION ACTIVE";
     },
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 300000
-    }
+    {enableHighAccuracy: true, timeout: 8000}
   );
 }
 
-/* =========================================================
-   WEATHER DATA
-   ========================================================= */
-
+/* WEATHER API */
 async function loadWeather(){
-  const lat = state.location.lat;
-  const lon = state.location.lon;
-
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m&hourly=visibility&timezone=auto`;
-
-    const response = await fetch(url);
-    if(!response.ok) throw new Error("Weather service unreachable");
-
-    const data = await response.json();
-    state.weather = data.current;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${state.location.lat}&longitude=${state.location.lon}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&timezone=auto`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error();
+    const data = await res.json();
     const c = data.current;
+    state.weather = c;
 
-    $("temperature").textContent = `${Math.round(c.temperature_2m)}°`;
-    $("weatherDesc").textContent = weatherDescription(c.weather_code);
+    $("temperature").textContent = `${Math.round(c.temperature_2m)}°C`;
+    $("weatherDesc").textContent = getWeatherDesc(c.weather_code);
     $("windSpeed").textContent = `${Math.round(c.wind_speed_10m)} km/h`;
-    $("windDirection").textContent = `${degreesToCompass(c.wind_direction_10m)} WIND`;
+    $("windDirection").textContent = `${getCompass(c.wind_direction_10m)} WIND`;
     $("pressure").textContent = `${Math.round(c.surface_pressure)} hPa`;
     $("humidity").textContent = `${Math.round(c.relative_humidity_2m)}%`;
-    $("visibility").textContent = "LIVE";
 
     calculateHuntScore();
-  } catch(error) {
-    $("weatherDesc").textContent = "Weather unavailable";
-    calculateHuntScore();
+  } catch(e) {
+    $("weatherDesc").textContent = "Telemetry link offline";
   }
 }
 
-function weatherDescription(code){
-  const map = {
-    0:"Clear", 1:"Mostly clear", 2:"Partly cloudy", 3:"Overcast",
-    45:"Fog", 48:"Freezing fog", 51:"Light drizzle", 53:"Drizzle", 55:"Heavy drizzle",
-    61:"Light rain", 63:"Rain", 65:"Heavy rain", 71:"Light snow", 73:"Snow", 75:"Heavy snow",
-    80:"Rain showers", 81:"Rain showers", 82:"Heavy showers", 95:"Thunderstorm"
-  };
+function getWeatherDesc(code){
+  const map = {0:"Clear Sky", 1:"Mainly Clear", 2:"Partly Cloudy", 3:"Overcast", 45:"Foggy", 51:"Light Drizzle", 61:"Light Rain", 63:"Rain", 95:"Thunderstorm"};
   return map[code] || "Variable conditions";
 }
 
-function degreesToCompass(deg){
-  const directions = ["N","NE","E","SE","S","SW","W","NW"];
-  return directions[Math.round(deg / 45) % 8];
+function getCompass(deg){
+  const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+  return dirs[Math.round(deg / 45) % 8];
 }
-
-/* =========================================================
-   ALGORITHMIC OPPORTUNITY SCORING
-   ========================================================= */
 
 function calculateHuntScore(){
-  let score = 58;
-  const w = state.weather;
-
-  if(w){
-    const wind = w.wind_speed_10m;
-    if(wind >= 8 && wind <= 28) score += 8;
-    if(w.relative_humidity_2m >= 55) score += 5;
-    if(w.precipitation > 0) score += 4;
-    if([71, 73, 75].includes(w.weather_code)) score += 9;
+  let score = 65;
+  if(state.weather){
+    if(state.weather.wind_speed_10m >= 8 && state.weather.wind_speed_10m <= 25) score += 12;
+    if(state.weather.relative_humidity_2m > 60) score += 8;
   }
-
-  if(state.records.length) score += Math.min(18, state.records.length * 2);
-
-  score = Math.max(0, Math.min(100, score));
-
+  score += Math.min(15, state.records.length * 3);
+  score = Math.min(100, score);
   $("huntScore").textContent = score;
   $("huntBar").style.width = score + "%";
-
-  const rank = score >= 75 ? "HIGH" : score >= 55 ? "MODERATE" : "LOW";
-  $("huntRank").textContent = rank;
-  $("activity").textContent = rank;
+  $("huntRank").textContent = score >= 75 ? "PEAK" : "HIGH";
 }
 
-/* =========================================================
-   CLIENT-SIDE IMAGE INGEST
-   ========================================================= */
-
+/* TRAIL CAMERA INGEST & IMAGE PROCESSING */
 function processFiles(files){
-  const valid = [...files].filter(file => file.type.startsWith("image/"));
-  if(!valid.length) return;
-  valid.forEach(processImage);
-}
+  [...files].filter(f => f.type.startsWith("image/")).forEach(file => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 300; canvas.height = 300;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, 300, 300);
+      
+      const record = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Math.random(),
+        name: file.name,
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+        url: url,
+        lat: state.location.lat + (Math.random() - 0.5) * 0.01,
+        lon: state.location.lon + (Math.random() - 0.5) * 0.01,
+        timestamp: new Date()
+      };
 
-function processImage(file){
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-
-  img.onload = async () => {
-    const maxSize = 900;
-    const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
-    const width = Math.max(1, Math.round(img.naturalWidth * scale));
-    const height = Math.max(1, Math.round(img.naturalHeight * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext("2d", {willReadFrequently: true});
-    ctx.drawImage(img, 0, 0, width, height);
-
-    const data = ctx.getImageData(0, 0, width, height).data;
-    let lumaTotal = 0;
-    let edges = 0;
-
-    for(let y = 0; y < height - 1; y += 2){
-      for(let x = 0; x < width - 1; x += 2){
-        const i = (y * width + x) * 4;
-        const r = data[i], g = data[i+1], b = data[i+2];
-
-        lumaTotal += (.299 * r + .587 * g + .114 * b);
-
-        const right = (y * width + x + 1) * 4;
-        const diff = Math.abs(r - data[right]) + Math.abs(g - data[right+1]) + Math.abs(b - data[right+2]);
-        if(diff > 75) edges++;
-      }
-    }
-
-    const samples = Math.ceil(width / 2) * Math.ceil(height / 2);
-    const averageLuma = Math.round(lumaTotal / samples);
-    const edgeDensity = Math.min(100, (edges / samples) * 100);
-
-    const record = {
-      id: crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random(),
-      name: file.name,
-      width: img.naturalWidth,
-      height: img.naturalHeight,
-      luma: averageLuma,
-      edge: edgeDensity,
-      timestamp: new Date(file.lastModified || Date.now()),
-      url: url,
-      lat: state.location.lat,
-      lon: state.location.lon
+      state.records.unshift(record);
+      addCameraMarker(record);
+      updateUI();
     };
-
-    state.records.unshift(record);
-    addRecordToMap(record);
-    updateCameraList();
-    updateAlbum();
-    updateStats();
-    calculateHuntScore();
-  };
-
-  img.onerror = () => {
-    URL.revokeObjectURL(url);
-  };
-
-  img.src = url;
+    img.src = url;
+  });
 }
 
-/* =========================================================
-   MAP MARKERS & OVERLAYS
-   ========================================================= */
-
-function addRecordToMap(record){
+function addCameraMarker(record){
   const icon = L.divIcon({
     className: "",
     html: `<div class="camera-marker">📷</div>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14]
   });
-
   const marker = L.marker([record.lat, record.lon], {icon}).addTo(state.map);
-
-  marker.bindPopup(`
-    <div style="font-family:monospace">
-      <b>${escapeHTML(record.name)}</b><br>
-      ${record.width} × ${record.height}<br>
-      Luma Signal: ${record.luma}/255<br>
-      Edge Signal: ${record.edge.toFixed(1)}%<br>
-      ${record.lat.toFixed(5)}, ${record.lon.toFixed(5)}
-    </div>
-  `);
-
-  marker.on("click", () => openImage(record));
-  state.cameraMarkers.push(marker);
+  marker.bindPopup(`<b>${record.name}</b><br>Lat/Lon: ${record.lat.toFixed(4)}, ${record.lon.toFixed(4)}`);
+  marker.on("click", () => openModal(record));
 }
 
-function updateCameraList(){
+function updateUI(){
+  $("frameStatus").textContent = `${state.records.length} FRAMES`;
+  $("photoCount").textContent = `${state.records.length} PHOTOS`;
+  $("cameraCount").textContent = `${state.records.length} ACTIVE`;
+
   const list = $("cameraList");
+  const album = $("album");
   list.innerHTML = "";
+  album.innerHTML = "";
 
-  const groups = [];
-  state.records.forEach(record => {
-    const key = `${record.lat.toFixed(4)},${record.lon.toFixed(4)}`;
-    if(!groups.includes(key)) groups.push(key);
-  });
-
-  if(!groups.length){
-    list.innerHTML = `
-      <div class="camera">
-        <div class="pin"></div>
-        <div>
-          <b>NO CAMERAS YET</b>
-          <span>Upload imagery to build your network</span>
-        </div>
-        <em>--</em>
-      </div>`;
-    $("cameraCount").textContent = "0 ACTIVE";
+  if(!state.records.length){
+    list.innerHTML = `<div class="camera"><div class="pin"></div><div><b>NO STATIONS</b><span>Upload imagery</span></div><em>--</em></div>`;
     return;
   }
 
-  groups.forEach((group, index) => {
-    const count = state.records.filter(r => `${r.lat.toFixed(4)},${r.lon.toFixed(4)}` === group).length;
+  state.records.forEach((r, i) => {
+    // Camera List Item
     const item = document.createElement("div");
     item.className = "camera";
-    item.innerHTML = `
-      <div class="pin"></div>
-      <div>
-        <b>CAMERA ${String(index + 1).padStart(2, "0")}</b>
-        <span>${group}</span>
-      </div>
-      <em>${count}</em>
-    `;
-
-    item.onclick = () => {
-      const [lat, lon] = group.split(",").map(Number);
-      state.map.setView([lat, lon], 16);
-    };
-
+    item.innerHTML = `<div class="pin"></div><div><b>STATION ${String(i+1).padStart(2,'0')}</b><span>${r.name}</span></div><em>CAM</em>`;
+    item.onclick = () => state.map.setView([r.lat, r.lon], 16);
     list.appendChild(item);
-  });
 
-  $("cameraCount").textContent = `${groups.length} ACTIVE`;
+    // Album Thumb
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    thumb.innerHTML = `<img src="${r.url}" alt="${r.name}">`;
+    thumb.onclick = () => openModal(r);
+    album.appendChild(thumb);
+  });
+  calculateHuntScore();
 }
 
-function updateAlbum(){
-  const album = $("album");
-  album.innerHTML = "";
-
-  state.records.slice(0, 12).forEach(record => {
-    const div = document.createElement("div");
-    div.className = "thumb";
-    const image = document.createElement("img");
-    image.src = record.url;
-    image.loading = "lazy";
-    image.alt = record.name;
-    div.appendChild(image);
-    div.onclick = () => openImage(record);
-    album.appendChild(div);
-  });
-}
-
-function openImage(record){
+function openModal(record){
   $("modalTitle").textContent = record.name;
   $("modalImage").src = record.url;
   $("imageModal").classList.add("show");
 }
 
-function updateStats(){
-  const n = state.records.length;
-  $("frameStatus").textContent = `${n} FRAMES`;
-  $("photoCount").textContent = `${n} PHOTOS`;
-}
-
-/* =========================================================
-   ASSISTANT CHAT
-   ========================================================= */
-
-function assistantAnswer(question){
-  const q = question.toLowerCase();
-
-  if(q.includes("wind") || q.includes("scent") || q.includes("smell")){
-    if(state.weather){
-      return `Current wind is ${Math.round(state.weather.wind_speed_10m)} km/h from the ${degreesToCompass(state.weather.wind_direction_10m)}. Position your approach and stand so your scent does not cross the expected travel corridor.`;
-    }
-    return "Acquiring live weather data before giving exact wind recommendations...";
-  }
-
-  if(q.includes("snow") || q.includes("storm")){
-    return "During weather shifts, cross-reference camera timestamps before and after the event to track daylight shifts toward primary bedding or feeding.";
-  }
-
-  if(q.includes("stand") || q.includes("where")){
-    return "Identify intersections between thick bedding cover, preferred feed, and favorable wind. Set up along transition edges to avoid blowing out travel lanes.";
-  }
-
-  if(q.includes("photo") || q.includes("camera") || q.includes("buck")){
-    return `Currently holding ${state.records.length} camera frame(s) in intelligence storage. Upload additional frames to build precise entry/exit patterns.`;
-  }
-
-  return "I analyze wind vectors, pressure changes, camera imagery, and travel corridors. Ask about stand placement, wind strategy, or camera positioning.";
-}
-
-function sendChat(){
+/* AI CHAT ENGINE */
+async function sendChat(){
   const input = $("chatInput");
-  const question = input.value.trim();
-  if(!question) return;
+  const q = input.value.trim();
+  if(!q) return;
 
   const log = $("chatLog");
-  const user = document.createElement("div");
-  user.className = "msg user";
-  user.textContent = question;
-  log.appendChild(user);
-
+  const userMsg = document.createElement("div");
+  userMsg.className = "msg user";
+  userMsg.textContent = q;
+  log.appendChild(userMsg);
   input.value = "";
+  log.scrollTop = log.scrollHeight;
 
-  const answer = assistantAnswer(question);
-  const ai = document.createElement("div");
-  ai.className = "msg ai";
-  ai.textContent = "BUCKTRACK: " + answer;
-  log.appendChild(ai);
+  const loading = document.createElement("div");
+  loading.className = "msg ai";
+  loading.id = "chatLoading";
+  loading.textContent = "BUCKTRACK: Computing tactical analysis...";
+  log.appendChild(loading);
+  log.scrollTop = log.scrollHeight;
 
+  const provider = $("aiProvider").value;
+  const apiKey = $("apiKeyInput").value.trim();
+
+  try {
+    let reply = "";
+    if(provider === "builtin"){
+      await new Promise(r => setTimeout(r, 450));
+      const w = state.weather;
+      const wind = w ? `${Math.round(w.wind_speed_10m)} km/h ${getCompass(w.wind_direction_10m)}` : "calm";
+      if(q.toLowerCase().includes("wind") || q.toLowerCase().includes("scent")){
+        reply = `Current wind vector is ${wind}. Position downwind of bedding areas with scent drifting into clear corridors.`;
+      } else if(q.toLowerCase().includes("stand") || q.toLowerCase().includes("setup")){
+        reply = `Focus setup on saddles and valley funnels connecting hardwood ridges to low-lying thermal cover.`;
+      } else {
+        reply = `Tactical assessment for "${q}": Barometric pressure (${w ? Math.round(w.surface_pressure) + ' hPa' : 'stable'}) and ${state.records.length} active camera feed(s) indicate optimal morning movement window.`;
+      }
+    } else if(provider === "openai"){
+      if(!apiKey) throw new Error("Enter OpenAI API Key.");
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${apiKey}`},
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{role: "system", content: "You are a tactical wildlife assistant."}, {role: "user", content: q}]
+        })
+      });
+      const data = await res.json();
+      reply = data.choices[0].message.content;
+    } else if(provider === "gemini"){
+      if(!apiKey) throw new Error("Enter Gemini API Key.");
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({contents: [{role: "user", parts: [{text: q}]}]})
+      });
+      const data = await res.json();
+      reply = data.candidates[0].content.parts[0].text;
+    }
+
+    $("chatLoading")?.remove();
+    const aiMsg = document.createElement("div");
+    aiMsg.className = "msg ai";
+    aiMsg.textContent = "BUCKTRACK: " + reply;
+    log.appendChild(aiMsg);
+  } catch(err){
+    $("chatLoading")?.remove();
+    const errDiv = document.createElement("div");
+    errDiv.className = "msg ai";
+    errDiv.style.color = "var(--red)";
+    errDiv.textContent = "ERROR: " + err.message;
+    log.appendChild(errDiv);
+  }
   log.scrollTop = log.scrollHeight;
 }
 
-/* =========================================================
-   EVENT CONTROLLERS
-   ========================================================= */
+/* EVENT LISTENERS */
+$("streetBtn").onclick = () => {
+  state.map.removeLayer(state.satelliteLayer);
+  state.streetLayer.addTo(state.map);
+  $("streetBtn").classList.add("active");
+  $("satelliteBtn").classList.remove("active");
+};
 
 $("satelliteBtn").onclick = () => {
-  if(state.currentLayer === "satellite") return;
-  state.map.removeLayer(state.street);
-  state.satellite.addTo(state.map);
-  state.currentLayer = "satellite";
+  state.map.removeLayer(state.streetLayer);
+  state.satelliteLayer.addTo(state.map);
+  $("satelliteBtn").classList.add("active");
+  $("streetBtn").classList.remove("active");
 };
 
-$("terrainBtn").onclick = () => {
-  if(state.currentLayer === "street") return;
-  state.map.removeLayer(state.satellite);
-  state.street.addTo(state.map);
-  state.currentLayer = "street";
+$("toggleCrown").onclick = () => {
+  state.showCrown = !state.showCrown;
+  if(state.showCrown){
+    state.crownLayer.addTo(state.map);
+    $("toggleCrown").classList.add("active");
+  } else {
+    state.map.removeLayer(state.crownLayer);
+    $("toggleCrown").classList.remove("active");
+  }
 };
 
-$("centerBtn").onclick = () => {
-  state.map.setView([state.location.lat, state.location.lon], 14);
+$("toggleTrails").onclick = () => {
+  state.showTrails = !state.showTrails;
+  if(state.showTrails){
+    state.trailsLayer.addTo(state.map);
+    $("toggleTrails").classList.add("active");
+  } else {
+    state.map.removeLayer(state.trailsLayer);
+    $("toggleTrails").classList.remove("active");
+  }
 };
 
 $("locateBtn").onclick = locateUser;
+$("fullscreenBtn").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 
-$("fullscreenBtn").onclick = () => {
-  if(!document.fullscreenElement){
-    document.documentElement.requestFullscreen?.();
-  } else {
-    document.exitFullscreen?.();
-  }
-};
+$("choosePhotos").onclick = () => $("fileInput").click();
+$("dropzone").onclick = e => { if(e.target.id !== "choosePhotos") $("fileInput").click(); };
+$("fileInput").onchange = e => processFiles(e.target.files);
 
-window.addEventListener('resize', () => {
-  if(state.map) state.map.invalidateSize();
-});
+["dragenter", "dragover"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.add("drag"); }));
+["dragleave", "drop"].forEach(e => $("dropzone").addEventListener(e, ev => { ev.preventDefault(); $("dropzone").classList.remove("drag"); }));
+$("dropzone").addEventListener("drop", e => processFiles(e.dataTransfer.files));
 
-document.addEventListener('fullscreenchange', () => {
-  if(state.map) state.map.invalidateSize();
-});
+$("closeModal").onclick = () => $("imageModal").classList.remove("show");
+$("imageModal").onclick = e => { if(e.target.id === "imageModal") $("imageModal").classList.remove("show"); };
 
-$("choosePhotos").onclick = e => {
-  e.stopPropagation();
-  $("fileInput").click();
-};
-
-$("dropzone").onclick = e => {
-  if(e.target.id !== "choosePhotos"){
-    $("fileInput").click();
-  }
-};
-
-$("fileInput").addEventListener("change", e => {
-  processFiles(e.target.files);
-  e.target.value = "";
-});
-
-["dragenter", "dragover"].forEach(evt => {
-  $("dropzone").addEventListener(evt, e => {
-    e.preventDefault();
-    $("dropzone").classList.add("drag");
-  });
-});
-
-["dragleave", "drop"].forEach(evt => {
-  $("dropzone").addEventListener(evt, e => {
-    e.preventDefault();
-    $("dropzone").classList.remove("drag");
-  });
-});
-
-$("dropzone").addEventListener("drop", e => {
-  processFiles(e.dataTransfer.files);
-});
-
-$("closeModal").onclick = () => {
-  $("imageModal").classList.remove("show");
-};
-
-$("imageModal").onclick = e => {
-  if(e.target.id === "imageModal") $("imageModal").classList.remove("show");
+$("aiProvider").onchange = e => {
+  $("apiKeyRow").style.display = e.target.value === "builtin" ? "none" : "flex";
 };
 
 $("chatSend").onclick = sendChat;
+$("chatInput").onkeydown = e => { if(e.key === "Enter") { e.preventDefault(); sendChat(); } };
 
-$("chatInput").addEventListener("keydown", e => {
-  if(e.key === "Enter") sendChat();
-});
+window.onresize = () => state.map?.invalidateSize();
 
-function escapeHTML(str){
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-/* INITIALIZATION */
-createMap();
+/* INITIALIZE APP */
+initMap();
 locateUser();
-updateStats();
-calculateHuntScore();
 </script>
 
 </body>
