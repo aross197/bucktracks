@@ -13,9 +13,9 @@
 <style>
 :root{
   --bg:#030705;
-  --panel:rgba(6, 14, 9, 0.82);
+  --panel:rgba(6, 14, 9, 0.88);
   --panel-solid:#060e09;
-  --panel-hover:rgba(10, 24, 15, 0.9);
+  --panel-hover:rgba(10, 24, 15, 0.95);
   --border:rgba(30, 68, 43, 0.4);
   --border-bright:rgba(76, 255, 136, 0.5);
   --green:#4cff88;
@@ -53,7 +53,8 @@ button{cursor:pointer;}
 .app{
   height:100vh;
   display:grid;
-  grid-template-rows:64px 1fr 32px;
+  grid-template-rows:56px 1fr 28px;
+  overflow:hidden;
 }
 
 /* TOPBAR */
@@ -63,69 +64,70 @@ button{cursor:pointer;}
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:0 20px;
+  padding:0 16px;
   backdrop-filter:blur(16px);
   z-index:1000;
 }
 
-.brand{display:flex;align-items:center;gap:12px;}
+.brand{display:flex;align-items:center;gap:10px;}
 .brand-icon{
-  width:36px;height:36px;border-radius:10px;
+  width:32px;height:32px;border-radius:8px;
   background:linear-gradient(135deg, rgba(76,255,136,0.2), rgba(76,255,136,0.05));
   border:1px solid var(--border-bright);
-  display:grid;place-items:center;font-size:18px;
-  box-shadow:0 0 15px var(--green-glow);
+  display:grid;place-items:center;font-size:16px;
+  box-shadow:0 0 12px var(--green-glow);
 }
-.brand h1{font-family:var(--font-mono);font-size:13px;letter-spacing:1.5px;color:var(--text);font-weight:700;}
-.brand span{color:var(--green);font-size:10px;display:block;}
+.brand h1{font-family:var(--font-mono);font-size:12px;letter-spacing:1px;color:var(--text);font-weight:700;}
+.brand span{color:var(--green);font-size:9px;display:block;}
 
-.header-actions{display:flex;gap:8px;}
+.header-actions{display:flex;gap:6px;}
 .icon-btn{
   border:1px solid var(--border);
   background:var(--panel-solid);
   color:var(--text);
-  width:36px;height:36px;
-  border-radius:10px;
+  width:32px;height:32px;
+  border-radius:8px;
   display:grid;place-items:center;
   transition:all .2s ease;
 }
-.icon-btn:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 12px var(--green-glow);}
+.icon-btn:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 10px var(--green-glow);}
 
 /* MAIN GRID */
 .main{
   min-height:0;
   display:grid;
-  grid-template-columns:1fr 440px;
+  grid-template-columns:1fr 420px;
+  overflow:hidden;
 }
 
-.workspace{position:relative;background:#020503;}
+.workspace{position:relative;background:#020503;height:100%;min-height:0;}
 #map{width:100%;height:100%;}
 
 /* MAP HUD OVERLAYS */
 .map-hud-top{
-  position:absolute;top:16px;left:16px;right:16px;z-index:500;
-  display:flex;justify-content:space-between;pointer-events:none;
+  position:absolute;top:12px;left:12px;right:12px;z-index:500;
+  display:flex;justify-content:space-between;pointer-events:none;gap:10px;
 }
 .map-badge{
   pointer-events:auto;
   background:var(--panel);
   border:1px solid var(--border);
-  border-radius:12px;
-  padding:10px 14px;
+  border-radius:10px;
+  padding:8px 12px;
   backdrop-filter:blur(14px);
   box-shadow:var(--shadow);
 }
-.map-badge strong{display:block;font:700 10px var(--font-mono);color:var(--green);letter-spacing:1px;}
+.map-badge strong{display:block;font:700 9px var(--font-mono);color:var(--green);letter-spacing:1px;}
 .map-badge span{display:block;font:9px var(--font-mono);color:var(--muted);margin-top:2px;}
 
-.map-controls{display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;}
+.map-controls{display:flex;gap:5px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;}
 .control-pill{
   background:var(--panel);
   color:var(--text);
   border:1px solid var(--border);
-  border-radius:10px;
-  padding:8px 12px;
-  font:600 10px var(--font-mono);
+  border-radius:8px;
+  padding:6px 10px;
+  font:600 9px var(--font-mono);
   backdrop-filter:blur(14px);
   transition:all .2s;
 }
@@ -133,189 +135,245 @@ button{cursor:pointer;}
   color:var(--green);
   border-color:var(--green);
   background:rgba(12,38,22,0.9);
-  box-shadow:0 0 15px var(--green-glow);
+  box-shadow:0 0 12px var(--green-glow);
 }
 
-/* SIDEBAR */
+/* SIDEBAR - STRICT NO SCROLL BLEED */
 .sidebar{
+  height:100%;
   min-height:0;
-  overflow-y:auto;
-  background:var(--panel);
-  border-left:1px solid var(--border);
-  padding:16px;
   display:flex;
   flex-direction:column;
-  gap:16px;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  padding:12px;
+  gap:12px;
   backdrop-filter:blur(20px);
+  overflow:hidden;
 }
-.sidebar::-webkit-scrollbar{width:4px;}
-.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
-/* FEED & TABS */
+.sidebar-scroll-area{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding-right:2px;
+}
+.sidebar-scroll-area::-webkit-scrollbar{width:4px;}
+.sidebar-scroll-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* SECTION & TABS */
 .section-header{
   display:flex;justify-content:space-between;align-items:center;
-  font:700 11px var(--font-mono);color:var(--green);letter-spacing:1.2px;
+  font:700 10px var(--font-mono);color:var(--green);letter-spacing:1px;
 }
-.filter-row{display:flex;gap:6px;margin-top:8px;}
+.filter-row{display:flex;gap:6px;margin-top:6px;}
 .tab-chip{
   flex:1;border:1px solid var(--border);background:var(--panel-solid);
-  color:var(--muted);padding:8px;border-radius:8px;
-  font:700 10px var(--font-mono);letter-spacing:.8px;text-align:center;
+  color:var(--muted);padding:6px;border-radius:6px;
+  font:700 9px var(--font-mono);letter-spacing:.5px;text-align:center;
   transition:all .2s;
 }
 .tab-chip.active{
   background:var(--green);color:#030705;border-color:var(--green);
-  box-shadow:0 0 15px var(--green-glow);
+  box-shadow:0 0 12px var(--green-glow);
 }
 
 /* CAPTURE FEED LIST */
-.capture-feed{display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 240px);overflow-y:auto;padding-right:2px;}
+.capture-feed{display:flex;flex-direction:column;gap:10px;}
 .capture-card{
   background:linear-gradient(145deg, rgba(8,20,12,0.95), rgba(4,10,6,0.95));
   border:1px solid var(--border);
-  border-radius:14px;
+  border-radius:12px;
   overflow:hidden;
   box-shadow:var(--shadow);
   transition:border-color .2s, transform .2s;
 }
-.capture-card:hover{border-color:var(--border-bright);transform:translateY(-2px);}
+.capture-card:hover{border-color:var(--border-bright);transform:translateY(-1px);}
 
-.capture-media{position:relative;width:100%;aspect-ratio:16/10;background:#010302;cursor:pointer;}
+.capture-media{position:relative;width:100%;aspect-ratio:16/9;background:#010302;cursor:pointer;}
 .capture-media img{width:100%;height:100%;object-fit:cover;display:block;}
 
 .cam-pill{
-  position:absolute;top:10px;left:10px;
+  position:absolute;top:8px;left:8px;
   background:rgba(3,7,5,0.85);border:1px solid var(--green);
-  color:var(--green);font:700 9px var(--font-mono);padding:4px 8px;border-radius:6px;letter-spacing:1px;
+  color:var(--green);font:700 8px var(--font-mono);padding:3px 6px;border-radius:4px;letter-spacing:1px;
 }
 .rack-pill{
-  position:absolute;bottom:10px;right:10px;
-  background:var(--amber);color:#030705;font:700 9px var(--font-mono);
-  padding:4px 8px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.5);
+  position:absolute;bottom:8px;right:8px;
+  background:var(--amber);color:#030705;font:700 8px var(--font-mono);
+  padding:3px 6px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.5);
 }
 .media-overlay-bar{
   position:absolute;bottom:0;left:0;right:0;
   background:linear-gradient(180deg, transparent, rgba(2,5,3,0.9));
-  padding:14px 12px 8px;display:flex;justify-content:space-between;align-items:center;
-  font:9px var(--font-mono);color:#a8d5be;
+  padding:12px 10px 6px;display:flex;justify-content:space-between;align-items:center;
+  font:8px var(--font-mono);color:#a8d5be;
 }
 
-.capture-body{padding:14px;}
-.capture-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
-.capture-title{font:700 12px var(--font-mono);color:var(--text);letter-spacing:.5px;line-height:1.3;}
-.capture-time{font:9px var(--font-mono);color:var(--muted);text-align:right;}
+.capture-body{padding:10px;}
+.capture-title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px;}
+.capture-title{font:700 11px var(--font-mono);color:var(--text);letter-spacing:.3px;line-height:1.2;}
+.capture-time{font:8px var(--font-mono);color:var(--muted);text-align:right;}
 
-.capture-meta{display:flex;flex-direction:column;gap:4px;font:10px var(--font-mono);color:var(--muted);margin-bottom:12px;}
+.capture-meta{display:flex;flex-direction:column;gap:3px;font:9px var(--font-mono);color:var(--muted);margin-bottom:8px;}
 .capture-meta span{color:var(--text);}
 
 .capture-footer{
   display:flex;justify-content:space-between;align-items:center;
-  border-top:1px solid var(--border);padding-top:10px;font:9px var(--font-mono);
+  border-top:1px solid var(--border);padding-top:8px;font:8px var(--font-mono);
 }
 .tag-badge{color:var(--green);font-weight:700;}
+
+/* HARVEST DISPATCH BUTTON */
+.harvest-btn{
+  background:linear-gradient(180deg, rgba(255,82,100,0.2), rgba(255,82,100,0.05));
+  border:1px solid var(--red);
+  color:#ff99a4;
+  padding:5px 8px;
+  border-radius:6px;
+  font:700 8px var(--font-mono);
+  letter-spacing:.5px;
+  transition:all .2s;
+}
+.harvest-btn:hover{
+  background:var(--red);
+  color:#030705;
+  box-shadow:0 0 12px rgba(255,82,100,0.4);
+}
 
 /* CARDS GENERAL */
 .hud-card{
   background:linear-gradient(145deg, rgba(8,18,11,0.9), rgba(4,10,6,0.9));
-  border:1px solid var(--border);border-radius:14px;padding:14px;
+  border:1px solid var(--border);border-radius:12px;padding:10px;
 }
-.hud-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.hud-card-title{font:700 10px var(--font-mono);letter-spacing:1.2px;color:var(--green);}
+.hud-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.hud-card-title{font:700 9px var(--font-mono);letter-spacing:1px;color:var(--green);}
+
+/* WEATHER WIDGET */
+.weather-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font:9px var(--font-mono);}
+.weather-box{background:#020503;border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;}
+.weather-box strong{display:block;color:var(--green);font-size:11px;margin-top:2px;}
+.weather-box span{color:var(--muted);font-size:8px;}
 
 /* DROPZONE */
 .dropzone{
   border:1px dashed var(--border-bright);
   background:rgba(76,255,136,0.02);
-  border-radius:10px;padding:16px;text-align:center;cursor:pointer;
+  border-radius:8px;padding:10px;text-align:center;cursor:pointer;
   transition:all .2s;
 }
 .dropzone:hover,.dropzone.drag{background:rgba(76,255,136,0.08);border-color:var(--green);}
-.dropzone strong{display:block;font:700 10px var(--font-mono);color:var(--text);margin-top:6px;}
-.dropzone small{display:block;color:var(--muted);font-size:9px;margin-top:2px;}
+.dropzone strong{display:block;font:700 9px var(--font-mono);color:var(--text);margin-top:4px;}
+.dropzone small{display:block;color:var(--muted);font-size:8px;margin-top:2px;}
 
 .action-btn{
-  margin-top:10px;width:100%;border:1px solid var(--border-bright);
+  margin-top:8px;width:100%;border:1px solid var(--border-bright);
   background:linear-gradient(180deg, rgba(18,61,33,0.9), rgba(11,43,23,0.9));
-  color:var(--green);padding:10px;border-radius:8px;font:700 10px var(--font-mono);
-  box-shadow:0 4px 15px rgba(0,0,0,0.3);transition:all .2s;
+  color:var(--green);padding:8px;border-radius:6px;font:700 9px var(--font-mono);
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:all .2s;
 }
-.action-btn:hover{background:rgba(20,80,35,0.9);box-shadow:0 0 15px var(--green-glow);}
+.action-btn:hover{background:rgba(20,80,35,0.9);box-shadow:0 0 12px var(--green-glow);}
 
-/* ADVANCED AI CHAT INTERFACE */
-.chat-container{display:flex;flex-direction:column;gap:8px;}
+/* AI CHAT INTERFACE */
+.chat-container{display:flex;flex-direction:column;gap:6px;}
 .chat-log{
-  height:150px;overflow-y:auto;background:#020503;
-  border:1px solid var(--border);border-radius:10px;padding:10px;
-  font-size:11px;line-height:1.5;display:flex;flex-direction:column;gap:8px;
+  height:110px;overflow-y:auto;background:#020503;
+  border:1px solid var(--border);border-radius:8px;padding:8px;
+  font-size:10px;line-height:1.4;display:flex;flex-direction:column;gap:6px;
 }
-.chat-msg{word-break:break-word;padding:8px 10px;border-radius:8px;max-width:90%;}
+.chat-msg{word-break:break-word;padding:6px 8px;border-radius:6px;max-width:90%;}
 .chat-msg.ai{background:rgba(16,36,22,0.8);color:#b6e8cd;border:1px solid var(--border);align-self:flex-start;}
 .chat-msg.user{background:rgba(25,50,35,0.8);color:var(--text);border:1px solid var(--border-bright);align-self:flex-end;}
 
 .chat-settings{
-  display:flex;gap:6px;align-items:center;background:#040a06;
-  border:1px solid var(--border);padding:6px 10px;border-radius:8px;font:9px var(--font-mono);color:var(--muted);
+  display:flex;gap:5px;align-items:center;background:#040a06;
+  border:1px solid var(--border);padding:5px 8px;border-radius:6px;font:8px var(--font-mono);color:var(--muted);
 }
 .chat-settings select,.chat-settings input{
   background:#020402;color:var(--text);border:1px solid var(--border);
-  border-radius:6px;padding:4px 8px;font:9px var(--font-mono);outline:none;
+  border-radius:4px;padding:3px 6px;font:8px var(--font-mono);outline:none;
 }
 .chat-settings input{flex:1;}
 
-.chat-input-row{display:flex;gap:6px;}
+.chat-input-row{display:flex;gap:5px;}
 .chat-input-row input{
   flex:1;background:#040a06;border:1px solid var(--border);color:var(--text);
-  border-radius:8px;padding:10px;outline:none;font-size:11px;
+  border-radius:6px;padding:8px;outline:none;font-size:10px;
 }
 .chat-input-row input:focus{border-color:var(--green);}
 .chat-input-row button{
-  width:40px;border:1px solid var(--border-bright);background:rgba(18,61,33,0.9);
-  color:var(--green);border-radius:8px;font-weight:bold;
+  width:36px;border:1px solid var(--border-bright);background:rgba(18,61,33,0.9);
+  color:var(--green);border-radius:6px;font-weight:bold;
 }
 
 /* FOOTER */
 .footer{
   background:#020503;border-top:1px solid var(--border);
   display:flex;justify-content:space-between;align-items:center;
-  padding:0 20px;color:var(--muted);font:8px var(--font-mono);
+  padding:0 16px;color:var(--muted);font:8px var(--font-mono);
 }
 
-/* LEAFLET & CUSTOM MARKERS */
+/* LEAFLET & MARKERS */
 .leaflet-control-zoom a{background:#060e09!important;color:var(--text)!important;border-color:var(--border)!important;}
 .leaflet-control-attribution{background:rgba(3,7,5,0.9)!important;color:var(--muted)!important;}
 
 .tactical-pin{
-  width:32px;height:32px;border-radius:50%;
+  width:28px;height:28px;border-radius:50%;
   border:2px solid #030705;background:var(--green);color:#030705;
-  display:grid;place-items:center;font-size:14px;
-  box-shadow:0 0 0 4px var(--green-glow), 0 0 20px var(--green);
+  display:grid;place-items:center;font-size:12px;
+  box-shadow:0 0 0 3px var(--green-glow), 0 0 15px var(--green);
   animation:pulsePin 2s infinite;
 }
+.operator-pin{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid #030705;background:var(--cyan);color:#030705;
+  display:grid;place-items:center;font-size:14px;
+  box-shadow:0 0 0 4px rgba(66,217,255,0.3), 0 0 20px var(--cyan);
+  animation:pulseOperator 1.5s infinite;
+}
 @keyframes pulsePin {
-  0% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0.4), 0 0 10px var(--green); }
-  70% { box-shadow: 0 0 0 10px rgba(76, 255, 136, 0), 0 0 25px var(--green); }
-  100% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0), 0 0 10px var(--green); }
+  0% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0.4), 0 0 8px var(--green); }
+  70% { box-shadow: 0 0 0 8px rgba(76, 255, 136, 0), 0 0 20px var(--green); }
+  100% { box-shadow: 0 0 0 0 rgba(76, 255, 136, 0), 0 0 8px var(--green); }
+}
+@keyframes pulseOperator {
+  0% { box-shadow: 0 0 0 0 rgba(66, 217, 255, 0.5), 0 0 10px var(--cyan); }
+  70% { box-shadow: 0 0 0 12px rgba(66, 217, 255, 0), 0 0 25px var(--cyan); }
+  100% { box-shadow: 0 0 0 0 rgba(66, 217, 255, 0), 0 0 10px var(--cyan); }
 }
 
-/* MODAL */
+/* MODALS */
 .modal{
-  position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.8);
-  backdrop-filter:blur(10px);display:none;place-items:center;padding:20px;
+  position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(8px);display:none;place-items:center;padding:16px;
 }
 .modal.show{display:grid;}
 .modal-box{
-  width:min(900px,100%);max-height:90vh;overflow:auto;background:var(--panel-solid);
-  border:1px solid var(--border-bright);border-radius:16px;box-shadow:var(--shadow);padding:16px;
+  width:min(500px,100%);background:var(--panel-solid);
+  border:1px solid var(--border-bright);border-radius:14px;box-shadow:var(--shadow);padding:16px;
 }
-.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.modal-head strong{font:11px var(--font-mono);color:var(--green);}
-.close-btn{border:1px solid var(--border);background:#030705;color:var(--text);border-radius:8px;padding:6px 10px;font:9px var(--font-mono);}
-.modal-preview{width:100%;max-height:75vh;object-fit:contain;background:#000;border-radius:10px;}
+.modal-box.wide{width:min(800px,100%);max-height:85vh;overflow:auto;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.modal-head strong{font:10px var(--font-mono);color:var(--green);letter-spacing:1px;}
+.close-btn{border:1px solid var(--border);background:#030705;color:var(--text);border-radius:6px;padding:5px 8px;font:8px var(--font-mono);}
+.modal-preview{width:100%;max-height:65vh;object-fit:contain;background:#000;border-radius:8px;}
+
+.form-group{margin-bottom:10px;font:9px var(--font-mono);}
+.form-group label{display:block;color:var(--muted);margin-bottom:4px;}
+.form-group select,.form-group textarea{
+  width:100%;background:#020503;color:var(--text);border:1px solid var(--border);
+  border-radius:6px;padding:8px;font:9px var(--font-mono);outline:none;
+}
+.form-group textarea{height:80px;resize:none;}
+.form-group select:focus,.form-group textarea:focus{border-color:var(--green);}
 
 /* RESPONSIVE */
 @media(max-width:960px){
-  .app{grid-template-rows:60px 1fr 28px;}
-  .main{grid-template-columns:1fr;grid-template-rows:50vh 50vh;}
+  .app{grid-template-rows:50px 1fr 24px;}
+  .main{grid-template-columns:1fr;grid-template-rows:45vh 55vh;}
 }
 </style>
 </head>
@@ -333,7 +391,8 @@ button{cursor:pointer;}
       </div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="locateBtn" title="Recenter GPS">⌖</button>
+      <button class="icon-btn active" id="toggleLiveGps" title="Toggle Live GPS Tracking">🧭</button>
+      <button class="icon-btn" id="locateBtn" title="Recenter Map">⌖</button>
       <button class="icon-btn" id="fullscreenBtn" title="Toggle Fullscreen">⛶</button>
     </div>
   </header>
@@ -346,24 +405,26 @@ button{cursor:pointer;}
       <div id="map"></div>
       <div class="map-hud-top">
         <div class="map-badge">
-          <strong>SECTOR TELEMETRY</strong>
-          <span id="mapCoords">45.8167° N, -64.2167° W</span>
+          <strong>OPERATOR GPS TELEMETRY</strong>
+          <span id="mapCoords">Acquiring satellite lock...</span>
         </div>
         <div class="map-controls">
           <button class="control-pill active" id="streetBtn">STREET</button>
-          <button class="control-pill" id="satelliteBtn">ESRI SATELLITE</button>
+          <button class="control-pill" id="satelliteBtn">SATELLITE</button>
           <button class="control-pill" id="toggleCrown">CROWN LAND</button>
-          <button class="control-pill" id="toggleTrails">CANVEC TRAILS</button>
+          <button class="control-pill" id="toggleTrails">ATV TRAILS</button>
         </div>
       </div>
     </section>
 
     <!-- SIDEBAR COMMAND PANEL -->
     <aside class="sidebar">
+      
+      <!-- FIXED HEADER CONTROLS -->
       <div>
         <div class="section-header">
           <span>CAPTURE FEED // DETECTIONS</span>
-          <span id="feedCount" style="color:var(--muted);font-size:9px;">1 CAPTURE</span>
+          <span id="feedCount" style="color:var(--muted);font-size:8px;">1 CAPTURE</span>
         </div>
         <div class="filter-row">
           <button class="tab-chip active" id="filterAll" onclick="setFilter('all')">ALL FEEDS</button>
@@ -371,77 +432,77 @@ button{cursor:pointer;}
         </div>
       </div>
 
-      <!-- CAPTURE FEED LIST -->
-      <div class="capture-feed" id="captureFeedContainer">
-        <div class="capture-card" data-isbuck="true">
-          <div class="capture-media" onclick="openModal('https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=1200&q=80', 'DET-7837')">
-            <div class="cam-pill">CAM-01</div>
-            <img src="https://images.unsplash.com/photo-1484406566174-9da000fda645?auto=format&fit=crop&w=700&q=80" alt="Buck Capture">
-            <div class="rack-pill">Rack Score ~ 155"</div>
-            <div class="media-overlay-bar">
-              <span>🌙 4°C / 39°F</span>
-              <span>11/16/2025 18:46:21</span>
-            </div>
-          </div>
-          <div class="capture-body">
-            <div class="capture-title-row">
-              <div class="capture-title">WHITETAIL BUCK (MAINFRAME 10)</div>
-              <div class="capture-time">Today @<br>02:45 AM</div>
-            </div>
-            <div class="capture-meta">
-              <div>Confidence: <span>93.2%</span></div>
-              <div>Temp: <span>4°C / 39°F</span></div>
-              <div>Notes: <i>Archived capture – 11/16/2025 06:46 PM.</i></div>
-            </div>
-            <div class="capture-footer">
-              <span style="color:var(--muted);">ID: DET-7837</span>
-              <span class="tag-badge">AI CLASSIFIED</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- SCROLLABLE MODULES CONTAINER -->
+      <div class="sidebar-scroll-area">
 
-      <!-- INGEST CARD -->
-      <div class="hud-card">
-        <div class="hud-card-head">
-          <div class="hud-card-title">INGEST NEW TRAIL-CAM FRAME</div>
-        </div>
-        <div class="dropzone" id="dropzone">
-          <div style="font-size:24px;">📸</div>
-          <strong>DROP IMAGES TO AUTO-ANALYZE</strong>
-          <small>JPG / PNG / WEBP • Instant telemetry parser</small>
-          <button class="action-btn" id="choosePhotos">BROWSE FILES</button>
-          <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        </div>
-      </div>
+        <!-- CAPTURE FEED LIST -->
+        <div class="capture-feed" id="captureFeedContainer"></div>
 
-      <!-- ADVANCED AI CHAT ASSISTANT -->
-      <div class="hud-card">
-        <div class="hud-card-head">
-          <div class="hud-card-title">TACTICAL AI ASSISTANT</div>
-          <span style="color:var(--green);font-size:9px;font-family:var(--font-mono);">● ONLINE</span>
-        </div>
-        <div class="chat-container">
-          <div class="chat-settings">
-            <span>Model:</span>
-            <select id="aiProvider">
-              <option value="builtin">Area51 Neural Expert</option>
-              <option value="openai">OpenAI GPT-4o-mini</option>
-              <option value="gemini">Google Gemini Flash</option>
-            </select>
+        <!-- WEATHER & WIND VECTOR HUD CARD -->
+        <div class="hud-card">
+          <div class="hud-card-head">
+            <div class="hud-card-title">METEOROLOGICAL VECTOR</div>
+            <span style="color:var(--cyan);font-size:8px;font-family:var(--font-mono);">LIVE FEED</span>
           </div>
-          <div class="chat-settings" id="apiKeyRow" style="display:none;">
-            <span>Key:</span>
-            <input id="apiKeyInput" type="password" placeholder="Enter API Key...">
-          </div>
-          <div class="chat-log" id="chatLog">
-            <div class="chat-msg ai">AREA51 OS: Neural intelligence online. Query wind vectors, stand movement patterns, or trigger timestamps.</div>
-          </div>
-          <div class="chat-input-row">
-            <input id="chatInput" placeholder="Ask tactical query..." autocomplete="off">
-            <button id="chatSend">➤</button>
+          <div class="weather-grid">
+            <div class="weather-box">
+              <span>WIND VECTOR</span>
+              <strong id="wxWind">NW 14 km/h</strong>
+            </div>
+            <div class="weather-box">
+              <span>BAROMETER</span>
+              <strong id="wxBaro">1018 hPa</strong>
+            </div>
+            <div class="weather-box">
+              <span>TEMP / HUMID</span>
+              <strong id="wxTemp">4°C / 78%</strong>
+            </div>
           </div>
         </div>
+
+        <!-- INGEST CARD -->
+        <div class="hud-card">
+          <div class="hud-card-head">
+            <div class="hud-card-title">INGEST NEW TRAIL-CAM FRAME</div>
+          </div>
+          <div class="dropzone" id="dropzone">
+            <div style="font-size:20px;">📸</div>
+            <strong>DROP IMAGES TO AUTO-ANALYZE</strong>
+            <small>JPG / PNG / WEBP • Instant telemetry parser</small>
+            <button class="action-btn" id="choosePhotos">BROWSE FILES</button>
+            <input id="fileInput" type="file" accept="image/*" multiple hidden>
+          </div>
+        </div>
+
+        <!-- ADVANCED AI CHAT ASSISTANT -->
+        <div class="hud-card">
+          <div class="hud-card-head">
+            <div class="hud-card-title">TACTICAL AI ASSISTANT</div>
+            <span style="color:var(--green);font-size:8px;font-family:var(--font-mono);">● ONLINE</span>
+          </div>
+          <div class="chat-container">
+            <div class="chat-settings">
+              <span>Model:</span>
+              <select id="aiProvider">
+                <option value="builtin">Area51 Neural Expert</option>
+                <option value="openai">OpenAI GPT-4o-mini</option>
+                <option value="gemini">Google Gemini Flash</option>
+              </select>
+            </div>
+            <div class="chat-settings" id="apiKeyRow" style="display:none;">
+              <span>Key:</span>
+              <input id="apiKeyInput" type="password" placeholder="Enter API Key...">
+            </div>
+            <div class="chat-log" id="chatLog">
+              <div class="chat-msg ai">AREA51 OS: Neural intelligence online. Query wind vectors, stand movement patterns, or trigger timestamps.</div>
+            </div>
+            <div class="chat-input-row">
+              <input id="chatInput" placeholder="Ask tactical query..." autocomplete="off">
+              <button id="chatSend">➤</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </aside>
@@ -457,12 +518,40 @@ button{cursor:pointer;}
 
 <!-- INSPECTION MODAL -->
 <div class="modal" id="imageModal">
-  <div class="modal-box">
+  <div class="modal-box wide">
     <div class="modal-head">
-      <strong id="modalTitle">FRAME INSPECTION // DET-7837</strong>
+      <strong id="modalTitle">FRAME INSPECTION</strong>
       <button class="close-btn" id="closeModal">CLOSE</button>
     </div>
     <img id="modalImage" class="modal-preview" src="" alt="Zoom preview">
+  </div>
+</div>
+
+<!-- HARVEST EMAIL DISPATCH MODAL -->
+<div class="modal" id="harvestModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <strong>HARVEST DISPATCH // PLATFORM NOTIFICATION</strong>
+      <button class="close-btn" id="closeHarvestModal">CLOSE</button>
+    </div>
+    <div class="form-group">
+      <label>TARGET REFERENCE</label>
+      <input id="harvestTargetId" type="text" readonly style="background:#020503;color:var(--green);border:1px solid var(--border);padding:8px;border-radius:6px;width:100%;font:9px var(--font-mono);">
+    </div>
+    <div class="form-group">
+      <label>SELECT PLATFORM RECIPIENT</label>
+      <select id="recipientSelect">
+        <option value="command.node@area51.org">Command Node Alpha (Admin)</option>
+        <option value="bob.fieldops@area51.org">Bob (Field Operative & Fabrication)</option>
+        <option value="miranda.support@area51.org">Miranda (Home Base Dispatch)</option>
+        <option value="son.scout@area51.org">Junior Scout Unit</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>TRANSMISSION MEMORANDUM</label>
+      <textarea id="harvestMemo">Harvest confirmed! Target secured in sector. Telemetry coordinates verified and logged successfully.</textarea>
+    </div>
+    <button class="action-btn" id="sendHarvestEmail">TRANSMIT DISPATCH VIA PLATFORM</button>
   </div>
 </div>
 
@@ -493,7 +582,12 @@ const state = {
   crownLayer: null,
   trailsLayer: null,
   showCrown: false,
-  showTrails: false
+  showTrails: false,
+  markers: {},
+  liveGpsActive: true,
+  watchId: null,
+  operatorMarker: null,
+  accuracyCircle: null
 };
 
 const $ = id => document.getElementById(id);
@@ -534,19 +628,72 @@ function initMap(){
 
   renderFeed();
   addPin(state.records[0]);
+  startLiveGps();
 }
 
 function addPin(rec){
   const pinIcon = L.divIcon({
     className: "",
     html: `<div class="tactical-pin">🦌</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
   });
-  L.marker([rec.lat, rec.lon], {icon: pinIcon})
+  const marker = L.marker([rec.lat, rec.lon], {icon: pinIcon})
     .addTo(state.map)
     .bindPopup(`<b>${rec.name}</b><br>ID: ${rec.id}<br>Telemetry: ${rec.lat}, ${rec.lon}`)
     .on('click', () => state.map.setView([rec.lat, rec.lon], 15));
+  
+  state.markers[rec.id] = marker;
+}
+
+function startLiveGps(){
+  if(!navigator.geolocation){
+    $("mapCoords").textContent = "Geolocation not supported by device";
+    return;
+  }
+
+  state.watchId = navigator.geolocation.watchPosition(
+    pos => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      state.lat = latitude;
+      state.lon = longitude;
+
+      $("mapCoords").textContent = `${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° W (Acc: ±${Math.round(accuracy)}m)`;
+
+      const operatorIcon = L.divIcon({
+        className: "",
+        html: `<div class="operator-pin">📍</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      if(state.operatorMarker){
+        state.operatorMarker.setLatLng([latitude, longitude]);
+        state.accuracyCircle.setLatLng([latitude, longitude]);
+        state.accuracyCircle.setRadius(accuracy);
+      } else {
+        state.operatorMarker = L.marker([latitude, longitude], {icon: operatorIcon})
+          .addTo(state.map)
+          .bindPopup(`<b>OPERATOR POSITION (YOU)</b><br>Lat/Lon: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}<br>Accuracy: ±${Math.round(accuracy)}m`);
+        
+        state.accuracyCircle = L.circle([latitude, longitude], {
+          radius: accuracy,
+          color: "#42d9ff",
+          weight: 1,
+          fillColor: "#42d9ff",
+          fillOpacity: 0.1
+        }).addTo(state.map);
+
+        if(state.liveGpsActive){
+          state.map.setView([latitude, longitude], 15);
+        }
+      }
+    },
+    err => {
+      $("mapCoords").textContent = "GPS Lock Failed: " + err.message;
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+  );
 }
 
 function setFilter(mode){
@@ -564,7 +711,7 @@ function renderFeed(){
   $("feedCount").textContent = `${filtered.length} CAPTURE${filtered.length === 1 ? '' : 'S'}`;
 
   if(!filtered.length){
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font:10px var(--font-mono);">NO CAPTURES FOUND IN CURRENT FILTER</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font:9px var(--font-mono);">NO CAPTURES FOUND IN CURRENT FILTER</div>`;
     return;
   }
 
@@ -572,7 +719,7 @@ function renderFeed(){
     const card = document.createElement("div");
     card.className = "capture-card";
     card.innerHTML = `
-      <div class="capture-media" onclick="openModal('${r.url}', '${r.id}')">
+      <div class="capture-media" data-url="${r.url}" data-id="${r.id}">
         <div class="cam-pill">${r.cam}</div>
         <img src="${r.url}" alt="${r.name}">
         ${r.score ? `<div class="rack-pill">Rack Score ~ ${r.score}</div>` : ''}
@@ -593,11 +740,21 @@ function renderFeed(){
         </div>
         <div class="capture-footer">
           <span style="color:var(--muted);">ID: ${r.id}</span>
-          <span class="tag-badge">AI CLASSIFIED</span>
+          ${r.isBuck ? `<button class="harvest-btn" data-harvestid="${r.id}">🎯 HARVEST DISPATCH</button>` : `<span class="tag-badge">AI CLASSIFIED</span>`}
         </div>
       </div>
     `;
     container.appendChild(card);
+  });
+
+  container.querySelectorAll('.capture-media').forEach(el => {
+    el.onclick = () => openModal(el.dataset.url, el.dataset.id);
+  });
+  container.querySelectorAll('.harvest-btn').forEach(el => {
+    el.onclick = (e) => {
+      e.stopPropagation();
+      openHarvestModal(el.dataset.harvestid);
+    };
   });
 }
 
@@ -636,6 +793,11 @@ function openModal(url, id){
   $("imageModal").classList.add("show");
 }
 
+function openHarvestModal(id){
+  $("harvestTargetId").value = id;
+  $("harvestModal").classList.add("show");
+}
+
 /* AI CHAT */
 async function sendChat(){
   const input = $("chatInput");
@@ -663,11 +825,11 @@ async function sendChat(){
   try {
     let reply = "";
     if(provider === "builtin"){
-      await new Promise(r => setTimeout(r, 500));
-      reply = `Neural assessment for "${q}": Nocturnal movement patterns suggest steady feeding routes along the western ridge tree line.`;
+      await new Promise(r => setTimeout(r, 400));
+      reply = `Neural assessment for "${q}": Operator coordinates [${state.lat.toFixed(4)}, ${state.lon.toFixed(4)}] correlate with active western ridge corridors under NW winds.`;
     } else {
       if(!apiKey) throw new Error("API Key required for external provider.");
-      reply = `Connected to ${provider.toUpperCase()}: Target trajectory confirms active buck indexing in sector.`;
+      reply = `Connected to ${provider.toUpperCase()}: Operator telemetry synced with active target grids.`;
     }
 
     $("tempLoad")?.remove();
@@ -686,7 +848,7 @@ async function sendChat(){
   log.scrollTop = log.scrollHeight;
 }
 
-/* LISTENERS */
+/* BUTTON BINDINGS */
 $("streetBtn").onclick = () => {
   state.map.removeLayer(state.satelliteLayer);
   state.streetLayer.addTo(state.map);
@@ -713,13 +875,20 @@ $("toggleTrails").onclick = () => {
   else { state.map.removeLayer(state.trailsLayer); $("toggleTrails").classList.remove("active"); }
 };
 
+$("toggleLiveGps").onclick = () => {
+  state.liveGpsActive = !state.liveGpsActive;
+  $("toggleLiveGps").classList.toggle("active", state.liveGpsActive);
+  if(state.liveGpsActive && state.operatorMarker){
+    state.map.setView(state.operatorMarker.getLatLng(), 15);
+  }
+};
+
 $("locateBtn").onclick = () => {
-  if(navigator.geolocation){
+  if(state.operatorMarker){
+    state.map.setView(state.operatorMarker.getLatLng(), 16);
+  } else if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos => {
-      state.lat = pos.coords.latitude;
-      state.lon = pos.coords.longitude;
-      state.map.setView([state.lat, state.lon], 14);
-      $("mapCoords").textContent = `${state.lat.toFixed(4)}° N, ${state.lon.toFixed(4)}° W`;
+      state.map.setView([pos.coords.latitude, pos.coords.longitude], 16);
     });
   }
 };
@@ -736,6 +905,18 @@ $("dropzone").addEventListener("drop", e => processFiles(e.dataTransfer.files));
 
 $("closeModal").onclick = () => $("imageModal").classList.remove("show");
 $("imageModal").onclick = e => { if(e.target.id === "imageModal") $("imageModal").classList.remove("show"); };
+
+$("closeHarvestModal").onclick = () => $("harvestModal").classList.remove("show");
+$("harvestModal").onclick = e => { if(e.target.id === "harvestModal") $("harvestModal").classList.remove("show"); };
+
+$("sendHarvestEmail").onclick = () => {
+  const targetId = $("harvestTargetId").value;
+  const recipient = $("recipientSelect").value;
+  const memo = $("harvestMemo").value;
+
+  alert(`SUCCESS: Harvest dispatch for [${targetId}] successfully transmitted via platform mail to <${recipient}>.\n\nMemorandum: "${memo}"`);
+  $("harvestModal").classList.remove("show");
+};
 
 $("aiProvider").onchange = e => { $("apiKeyRow").style.display = e.target.value === "builtin" ? "none" : "flex"; };
 $("chatSend").onclick = sendChat;
