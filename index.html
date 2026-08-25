@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BUCKTRACK AI - Tactical Intelligence Console</title>
-  
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  
+  <title>BUCKTRACK AI - 3D Tactical Intelligence Console</title>
+
+  <!-- CesiumJS CSS -->
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,6 +50,7 @@
       background: var(--bg-card);
       border-bottom: 1px solid var(--border-tactical);
       gap: 1rem;
+      z-index: 10;
     }
 
     .brand {
@@ -143,49 +144,29 @@
       min-height: 450px;
     }
 
-    #map {
+    #cesiumContainer {
       width: 100%;
       height: 100%;
       background: #080c14;
     }
 
-    /* Leaflet Control Dark Override */
-    .leaflet-control-layers {
+    /* Cesium Controls Dark Theme Overrides */
+    .cesium-viewer-bottom,
+    .cesium-viewer-animationContainer,
+    .cesium-viewer-timelineContainer {
+      display: none !important;
+    }
+
+    .cesium-button {
       background: var(--bg-card) !important;
-      color: var(--text-main) !important;
       border: 1px solid var(--border-tactical) !important;
-      font-family: var(--font-mono) !important;
-      font-size: 0.75rem !important;
-      border-radius: 6px !important;
-    }
-    .leaflet-control-layers-toggle {
-      filter: invert(1);
+      color: var(--text-main) !important;
+      fill: var(--text-main) !important;
+      border-radius: 4px !important;
     }
 
-    /* Custom Leaflet Markers */
-    .stand-marker-icon {
-      background: var(--accent-green);
-      border: 2px solid var(--bg-primary);
-      border-radius: 50%;
-      box-shadow: 0 0 10px var(--accent-green);
-    }
-
-    .cam-marker-icon {
-      background: #3b82f6;
-      border: 2px solid var(--bg-primary);
-      border-radius: 3px;
-      box-shadow: 0 0 8px #3b82f6;
-    }
-
-    /* Scent Cone Pulse */
-    .leaflet-overlay-pane path {
-      animation: scentGlow 3s infinite ease-in-out;
-    }
-
-    @keyframes scentGlow {
-      0% { fill-opacity: 0.15; stroke-opacity: 0.4; }
-      50% { fill-opacity: 0.35; stroke-opacity: 0.8; }
-      100% { fill-opacity: 0.15; stroke-opacity: 0.4; }
+    .cesium-button:hover {
+      background: var(--border-tactical) !important;
     }
 
     /* Sidebar Drawer */
@@ -197,6 +178,7 @@
       flex-direction: column;
       gap: 1rem;
       overflow-y: auto;
+      z-index: 10;
     }
 
     .panel-box {
@@ -360,7 +342,7 @@
   <!-- Header -->
   <header>
     <div class="brand">
-      <h1>BUCKTRACK AI</h1>
+      <h1>BUCKTRACK AI (3D CESIUM)</h1>
       <div class="status-pill">
         <div class="status-dot"></div>
         <span id="sys-status">ONLINE</span>
@@ -386,7 +368,7 @@
   <!-- Main Console -->
   <main>
     <div class="map-wrapper">
-      <div id="map"></div>
+      <div id="cesiumContainer"></div>
     </div>
 
     <aside class="sidebar">
@@ -396,7 +378,7 @@
         <div class="chat-box">
           <div class="chat-messages" id="chat-messages">
             <div class="chat-msg">
-              <span class="author">SYS:</span> Comms channel active. Broadcast operational messages below.
+              <span class="author">SYS:</span> 3D Cesium globe initialized. Comms active.
             </div>
           </div>
           <div class="chat-inputs">
@@ -447,8 +429,8 @@
     </aside>
   </main>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- CesiumJS Engine -->
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
 
   <!-- Firebase App & Realtime Database SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -456,7 +438,6 @@
 
   <script>
     // --- Firebase Configuration ---
-    // Note: Replace below keys with your project credentials from console.firebase.google.com
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -475,17 +456,14 @@
           firebase.initializeApp(firebaseConfig);
           dbRef = firebase.database().ref("team_comms");
 
-          // Listen for incoming messages in real-time
           dbRef.limitToLast(25).on("child_added", (snapshot) => {
             const msg = snapshot.val();
             renderChatMessage(msg.user, msg.text, msg.timestamp);
           });
         } else {
-          // Demo Mode fallback when keys are not yet pasted
           setupDemoChat();
         }
       } catch (err) {
-        console.warn("Firebase Init fallback to local demo mode:", err);
         setupDemoChat();
       }
     }
@@ -512,14 +490,12 @@
       if (!text) return;
 
       if (dbRef) {
-        // Broadcast to shared Firebase database
         dbRef.push({
           user: user,
           text: text,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
       } else {
-        // Local echo mode
         renderChatMessage(user, text);
       }
 
@@ -527,8 +503,7 @@
     }
 
     function setupDemoChat() {
-      // Local broadcast fallback when external keys aren't added
-      renderChatMessage("SYS", "Operating in local comms mode. Connect Firebase keys for cross-device sync.");
+      renderChatMessage("SYS", "Local comms active. Add Firebase keys for multi-device sync.");
     }
 
     function escapeHtml(str) {
@@ -537,13 +512,13 @@
       });
     }
 
-    // --- Weather Fetcher ---
+    // --- Live Weather Fetcher ---
     async function getLiveWeather(lat, lon) {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m,wind_direction_10m&temperature_unit=fahrenheit&wind_speed_unit=mph`;
       
       try {
         const res = await fetch(url);
-        if (!res.ok) throw new Error("API Network error");
+        if (!res.ok) throw new Error("API error");
         const data = await res.json();
         const current = data.current;
 
@@ -563,27 +538,131 @@
       return directions[Math.round(angle / 22.5) % 16];
     }
 
-    // --- Downwind Scent Cone Math ---
-    function createScentCone(origin, windFromDeg, windSpeedMph = 8, spreadAngle = 40) {
-      const [lat, lng] = origin;
-      const downwindHeading = (windFromDeg + 180) % 360; 
-      const coneLengthMeters = Math.min(Math.max(windSpeedMph * 35, 150), 500); 
+    // --- Cesium Engine Controller ---
+    const springhillLat = 45.8167;
+    const springhillLon = -64.2167;
+    let viewer, scentConeEntity;
 
-      const halfAngle = spreadAngle / 2;
-      const leftBearing = (downwindHeading - halfAngle + 360) % 360;
-      const rightBearing = (downwindHeading + halfAngle) % 360;
+    async function initCesium() {
+      // 1. Initialize Viewer with World Terrain Enabled
+      viewer = new Cesium.Viewer('cesiumContainer', {
+        terrainProvider: await Cesium.createWorldTerrainAsync({
+          requestWaterMask: true,
+          requestVertexNormals: true
+        }),
+        imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        }),
+        baseLayerPicker: false,
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false,
+        navigationHelpButton: false,
+        fullscreenButton: false,
+        timeline: false,
+        animation: false
+      });
 
-      const leftPoint = destinationPoint(lat, lng, coneLengthMeters, leftBearing);
-      const rightPoint = destinationPoint(lat, lng, coneLengthMeters, rightBearing);
-      const centerPoint = destinationPoint(lat, lng, coneLengthMeters, downwindHeading);
+      // 2. Set Initial 3D Camera Perspective (Tilted Pitch for Terrain Visibility)
+      viewer.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(springhillLon, springhillLat - 0.025, 1800),
+        orientation: {
+          heading: Cesium.Math.toRadians(0.0),
+          pitch: Cesium.Math.toRadians(-35.0), // Pitch down to reveal terrain contour
+          roll: 0.0
+        }
+      });
 
-      return L.polygon([[lat, lng], leftPoint, centerPoint, rightPoint], {
-        color: '#ff3838',
-        weight: 2,
-        dashArray: '4, 4',
-        fillColor: '#ff3838',
-        fillOpacity: 0.25,
-        interactive: false
+      // 3. Hardwood Ridge Stand Marker
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(springhillLon, springhillLat),
+        point: {
+          pixelSize: 12,
+          color: Cesium.Color.fromCssColorString('#00ff66'),
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        },
+        label: {
+          text: 'Hardwood Ridge Stand',
+          font: '12px JetBrains Mono',
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          outlineWidth: 2,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -12),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        }
+      });
+
+      // 4. Trail Cam Marker
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(-64.2120, 45.8210),
+        point: {
+          pixelSize: 10,
+          color: Cesium.Color.fromCssColorString('#3b82f6'),
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        },
+        label: {
+          text: 'Ridge Cam 01',
+          font: '11px JetBrains Mono',
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          outlineWidth: 2,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -10),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        }
+      });
+
+      // Initialize Comms & Telemetry
+      initFirebaseChat();
+      setupDropzone();
+      setupChatEvents();
+      refreshTelemetry();
+    }
+
+    async function refreshTelemetry() {
+      const weather = await getLiveWeather(springhillLat, springhillLon);
+
+      document.getElementById('weather-temp').textContent = `${weather.temp}°F`;
+      document.getElementById('weather-wind').textContent = `${weather.windSpeed} MPH ${weather.windCardinal}`;
+
+      const downwindDeg = (weather.windDirDeg + 180) % 360;
+      document.getElementById('intel-heading').textContent = `${getCardinalDirection(downwindDeg)} (${downwindDeg}°)`;
+
+      // Update 3D Scent Cone Geometry on Terrain
+      update3DScentCone(springhillLat, springhillLon, weather.windDirDeg, weather.windSpeed);
+    }
+
+    function update3DScentCone(lat, lon, windFromDeg, windSpeedMph) {
+      if (scentConeEntity) {
+        viewer.entities.remove(scentConeEntity);
+      }
+
+      const downwindHeading = (windFromDeg + 180) % 360;
+      const coneLengthMeters = Math.min(Math.max(windSpeedMph * 35, 150), 500);
+      const spreadAngle = 40;
+
+      const leftBearing = (downwindHeading - (spreadAngle / 2) + 360) % 360;
+      const rightBearing = (downwindHeading + (spreadAngle / 2)) % 360;
+
+      const originPt = [lon, lat];
+      const leftPt = destinationPoint(lat, lon, coneLengthMeters, leftBearing);
+      const centerPt = destinationPoint(lat, lon, coneLengthMeters, downwindHeading);
+      const rightPt = destinationPoint(lat, lon, coneLengthMeters, rightBearing);
+
+      scentConeEntity = viewer.entities.add({
+        polygon: {
+          hierarchy: Cesium.Cartesian3.fromDegreesArray([
+            originPt[0], originPt[1],
+            leftPt[1], leftPt[0],
+            centerPt[1], centerPt[0],
+            rightPt[1], rightPt[0]
+          ]),
+          material: Cesium.Color.fromCssColorString('#ff3838').withAlpha(0.35),
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        }
       });
     }
 
@@ -599,78 +678,6 @@
       const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
 
       return [φ2 / rad, λ2 / rad];
-    }
-
-    // --- App Controller ---
-    const springhillCoords = [45.8167, -64.2167];
-    let map, scentConeLayer;
-
-    function initApp() {
-      // 1. Initialize Map
-      map = L.map('map', { zoomControl: true }).setView(springhillCoords, 14);
-
-      // 2. High-Grade Base Map Providers
-      const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-        attribution: 'Tiles &copy; Esri'
-      });
-
-      const esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-        attribution: 'Tiles &copy; Esri'
-      });
-
-      const darkTactical = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        attribution: '&copy; CARTO'
-      });
-
-      // Set Esri Satellite as Default
-      esriSatellite.addTo(map);
-
-      // Add Layer Selector in Top Right
-      const baseMaps = {
-        "🛰️ High-Res Satellite": esriSatellite,
-        "🏔️ Topo & Contours": esriTopo,
-        "🎯 Dark Radar": darkTactical
-      };
-
-      L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
-
-      // Stand Marker
-      const standIcon = L.divIcon({ className: 'stand-marker-icon', iconSize: [14, 14] });
-      const standMarker = L.marker(springhillCoords, { icon: standIcon }).addTo(map);
-      standMarker.bindPopup("<b>Hardwood Ridge Stand</b><br>Primary Morning Ambush Point");
-
-      // Camera Marker
-      const camCoords = [45.8210, -64.2120];
-      const camIcon = L.divIcon({ className: 'cam-marker-icon', iconSize: [12, 12] });
-      L.marker(camCoords, { icon: camIcon }).addTo(map).bindPopup("<b>Ridge Trail Cam 01</b><br>Last Capture: 04:42 AM");
-
-      // Fetch Telemetry & Render Scent Cone
-      refreshTelemetry();
-
-      // Setup Chat & Dropzone
-      initFirebaseChat();
-      setupDropzone();
-      setupChatEvents();
-    }
-
-    async function refreshTelemetry() {
-      const weather = await getLiveWeather(springhillCoords[0], springhillCoords[1]);
-
-      document.getElementById('weather-temp').textContent = `${weather.temp}°F`;
-      document.getElementById('weather-wind').textContent = `${weather.windSpeed} MPH ${weather.windCardinal}`;
-
-      const downwindDeg = (weather.windDirDeg + 180) % 360;
-      document.getElementById('intel-heading').textContent = `${getCardinalDirection(downwindDeg)} (${downwindDeg}°)`;
-
-      if (scentConeLayer && map.hasLayer(scentConeLayer)) {
-        map.removeLayer(scentConeLayer);
-      }
-      
-      scentConeLayer = createScentCone(springhillCoords, weather.windDirDeg, weather.windSpeed);
-      scentConeLayer.addTo(map);
     }
 
     function setupChatEvents() {
@@ -704,8 +711,8 @@
     }
 
     window.addEventListener('load', () => {
-      initApp();
-      
+      initCesium();
+
       const recalcBtn = document.getElementById('btn-recalc');
       if (recalcBtn) {
         recalcBtn.addEventListener('click', refreshTelemetry);
