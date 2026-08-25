@@ -1,637 +1,2228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BUCKTRACK COMMAND // SPATIAL SIGNAL INTEL</title>
-  <style>
-    :root {
-      --bg-dark: #030712;
-      --bg-panel: #0b1120;
-      --bg-sub: #111827;
-      --border-line: #1e293b;
-      --border-accent: #334155;
-      --accent-green: #00ff66;
-      --accent-cyan: #00e5ff;
-      --accent-amber: #ffaa00;
-      --accent-red: #ff3344;
-      --text-main: #f8fafc;
-      --text-muted: #64748b;
-      --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07100b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg-dark);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+<title>BUCKTRACK // Deer Intelligence Command</title>
 
-    /* TOP COMMAND HEADER */
-    header {
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border-line);
-      padding: 0.6rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 10;
-    }
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-    .brand-title {
-      font-family: var(--font-mono);
-      font-weight: 800;
-      font-size: 1rem;
-      letter-spacing: 1px;
-      color: var(--accent-cyan);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
+<style>
+:root{
+  --bg:#050806;
+  --panel:#0a110d;
+  --panel2:#0d1711;
+  --panel3:#111d15;
+  --line:#1b2b20;
+  --line2:#29402f;
+  --green:#4cff88;
+  --green2:#19d66b;
+  --lime:#b7ff55;
+  --cyan:#42d9ff;
+  --amber:#ffbd4a;
+  --red:#ff5264;
+  --text:#edf7ef;
+  --muted:#718178;
+  --shadow:0 14px 45px rgba(0,0,0,.45);
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+}
 
-    .brand-title .badge {
-      background: rgba(0, 229, 255, 0.1);
-      border: 1px solid var(--accent-cyan);
-      color: var(--accent-cyan);
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      border-radius: 2px;
-    }
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-    .system-stats {
-      display: flex;
-      gap: 1.5rem;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-    }
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
 
-    .stat-item { display: flex; gap: 0.4rem; }
-    .stat-lbl { color: var(--text-muted); }
-    .stat-val { color: var(--accent-green); font-weight: bold; }
+button,input,textarea{
+  font:inherit;
+}
 
-    /* MAIN SYSTEM GRID */
-    main {
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      grid-template-rows: 1fr 260px;
-      flex: 1;
-      gap: 1px;
-      background: var(--border-line);
-      overflow: hidden;
-    }
+button{
+  cursor:pointer;
+}
 
-    /* LEFT SPATIAL GIS CANVAS */
-    .gis-viewport {
-      grid-column: 1 / 2;
-      grid-row: 1 / 2;
-      background: #020408;
-      position: relative;
-    }
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-rows:64px 1fr 34px;
+}
 
-    #gisCanvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+/* HEADER */
 
-    /* BOTTOM LOG TABLE */
-    .log-panel {
-      grid-column: 1 / 2;
-      grid-row: 2 / 3;
-      background: var(--bg-panel);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+.topbar{
+  background:linear-gradient(180deg,#0c160f,#08100b);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 18px;
+  position:relative;
+  z-index:1000;
+}
 
-    .panel-hdr {
-      background: var(--bg-sub);
-      padding: 0.5rem 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: bold;
-      color: var(--accent-cyan);
-      border-bottom: 1px solid var(--border-line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
 
-    .table-container { flex: 1; overflow: auto; }
+.logo{
+  width:39px;
+  height:39px;
+  border:1px solid #3b6849;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(76,255,136,.2),transparent 60%),
+    #07100a;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  font-size:21px;
+  box-shadow:0 0 25px rgba(76,255,136,.08);
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      text-align: left;
-    }
+.brand h1{
+  font-family:var(--mono);
+  font-size:15px;
+  letter-spacing:1.5px;
+}
 
-    th {
-      position: sticky;
-      top: 0;
-      background: var(--bg-sub);
-      color: var(--text-muted);
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border-line);
-    }
+.brand small{
+  display:block;
+  color:var(--muted);
+  font:10px var(--mono);
+  margin-top:3px;
+  letter-spacing:.8px;
+}
 
-    td {
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border-line);
-      white-space: nowrap;
-    }
+.statusbar{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  font:10px var(--mono);
+  color:var(--muted);
+}
 
-    tr:hover { background: rgba(0, 229, 255, 0.03); }
+.status{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 
-    /* RIGHT SIDEBAR - CONTROLS & INSPECTOR */
-    aside {
-      grid-column: 2 / 3;
-      grid-row: 1 / 3;
-      background: var(--bg-panel);
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      overflow-y: auto;
-      border-left: 1px solid var(--border-line);
-    }
+.dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+}
 
-    .card {
-      background: var(--bg-sub);
-      border: 1px solid var(--border-line);
-      border-radius: 4px;
-      padding: 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
+.header-actions{
+  display:flex;
+  gap:7px;
+}
 
-    .card-hdr {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: bold;
-      color: var(--accent-amber);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+.icon-btn{
+  border:1px solid var(--line2);
+  background:#0b150e;
+  color:var(--text);
+  width:35px;
+  height:35px;
+  border-radius:8px;
+}
 
-    /* DROPZONE */
-    .dropzone {
-      border: 2px dashed var(--border-accent);
-      border-radius: 4px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      background: rgba(0, 0, 0, 0.2);
-      transition: all 0.2s ease;
-    }
+.icon-btn:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
 
-    .dropzone:hover {
-      border-color: var(--accent-cyan);
-      background: rgba(0, 229, 255, 0.03);
-    }
+/* MAIN */
 
-    .dropzone p { font-size: 0.85rem; font-weight: bold; color: var(--text-main); }
-    .dropzone span { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
+.main{
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 385px;
+}
 
-    /* PIPELINE VIEWPORT */
-    .pipeline-view {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+.workspace{
+  min-width:0;
+  min-height:0;
+  position:relative;
+  background:#050806;
+}
 
-    .canvas-wrapper {
-      width: 100%;
-      height: 180px;
-      background: #000;
-      border: 1px solid var(--border-line);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+#map{
+  width:100%;
+  height:100%;
+  background:#08100b;
+}
 
-    #pipelineCanvas {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
+/* MAP UI */
 
-    .layer-selector {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 4px;
-    }
+.map-top{
+  position:absolute;
+  top:15px;
+  left:15px;
+  right:15px;
+  z-index:500;
+  display:flex;
+  justify-content:space-between;
+  pointer-events:none;
+}
 
-    .layer-btn {
-      background: var(--bg-dark);
-      border: 1px solid var(--border-line);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      padding: 6px 2px;
-      cursor: pointer;
-      border-radius: 2px;
-      text-align: center;
-    }
+.map-title{
+  pointer-events:auto;
+  background:rgba(6,12,8,.92);
+  border:1px solid var(--line2);
+  border-radius:10px;
+  padding:11px 13px;
+  backdrop-filter:blur(12px);
+  box-shadow:var(--shadow);
+}
 
-    .layer-btn.active {
-      background: var(--accent-cyan);
-      color: var(--bg-dark);
-      font-weight: bold;
-      border-color: var(--accent-cyan);
-    }
+.map-title strong{
+  display:block;
+  font:12px var(--mono);
+  color:var(--green);
+  letter-spacing:1px;
+}
 
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
+.map-title span{
+  display:block;
+  font:9px var(--mono);
+  color:var(--muted);
+  margin-top:3px;
+}
 
-    .control-group label {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-    }
+.map-actions{
+  display:flex;
+  gap:6px;
+  pointer-events:auto;
+}
 
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--accent-cyan);
-    }
+.map-action{
+  background:rgba(6,12,8,.93);
+  color:var(--text);
+  border:1px solid var(--line2);
+  border-radius:8px;
+  padding:9px 11px;
+  font:10px var(--mono);
+}
 
-    .metric-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-    }
+.map-action:hover{
+  color:var(--green);
+  border-color:var(--green);
+}
 
-    .metric-box {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 0.5rem;
-      border: 1px solid var(--border-line);
-      border-radius: 2px;
-    }
+.map-score{
+  position:absolute;
+  bottom:18px;
+  left:18px;
+  z-index:500;
+  background:rgba(6,12,8,.94);
+  border:1px solid var(--line2);
+  border-radius:12px;
+  padding:13px;
+  width:245px;
+  backdrop-filter:blur(12px);
+  box-shadow:var(--shadow);
+}
 
-    .metric-box .lbl { font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-muted); }
-    .metric-box .val { font-family: var(--font-mono); font-size: 0.85rem; font-weight: bold; color: var(--accent-green); margin-top: 2px; }
-  </style>
+.score-label{
+  font:9px var(--mono);
+  color:var(--muted);
+  letter-spacing:1px;
+}
+
+.score{
+  display:flex;
+  align-items:end;
+  gap:8px;
+  margin-top:4px;
+}
+
+.score b{
+  color:var(--green);
+  font:700 34px var(--mono);
+}
+
+.score span{
+  color:var(--muted);
+  font:10px var(--mono);
+  padding-bottom:6px;
+}
+
+.score-bar{
+  height:5px;
+  background:#18251c;
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:8px;
+}
+
+.score-bar i{
+  display:block;
+  height:100%;
+  width:78%;
+  background:linear-gradient(90deg,var(--amber),var(--green));
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  min-height:0;
+  overflow-y:auto;
+  background:linear-gradient(180deg,#0a110d,#07100b);
+  border-left:1px solid var(--line);
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.sidebar::-webkit-scrollbar{
+  width:5px;
+}
+
+.sidebar::-webkit-scrollbar-thumb{
+  background:#213326;
+  border-radius:5px;
+}
+
+.card{
+  background:linear-gradient(145deg,#0d1711,#09110c);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  box-shadow:0 8px 25px rgba(0,0,0,.18);
+}
+
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.card-title{
+  font:700 10px var(--mono);
+  letter-spacing:1px;
+  color:var(--green);
+}
+
+.card-tag{
+  font:9px var(--mono);
+  color:var(--muted);
+}
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+
+.metric{
+  background:#07100a;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:9px;
+}
+
+.metric label{
+  display:block;
+  color:var(--muted);
+  font:8px var(--mono);
+  margin-bottom:4px;
+}
+
+.metric strong{
+  font:700 17px var(--mono);
+}
+
+.good{color:var(--green)}
+.warn{color:var(--amber)}
+.bad{color:var(--red)}
+.cyan{color:var(--cyan)}
+
+.weather-main{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.temperature{
+  font:700 34px var(--mono);
+  color:var(--text);
+}
+
+.weather-desc{
+  color:var(--muted);
+  font-size:11px;
+  margin-top:2px;
+}
+
+.wind{
+  text-align:right;
+  font:10px var(--mono);
+}
+
+.wind b{
+  display:block;
+  color:var(--cyan);
+  font-size:15px;
+  margin-bottom:3px;
+}
+
+/* DROPZONE */
+
+.dropzone{
+  border:1px dashed #35563e;
+  background:rgba(76,255,136,.025);
+  border-radius:9px;
+  padding:18px 10px;
+  text-align:center;
+  transition:.2s;
+}
+
+.dropzone.drag{
+  border-color:var(--green);
+  background:rgba(76,255,136,.08);
+}
+
+.dropzone .big{
+  font-size:24px;
+  margin-bottom:5px;
+}
+
+.dropzone strong{
+  display:block;
+  font:11px var(--mono);
+  color:var(--text);
+}
+
+.dropzone small{
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  margin-top:4px;
+}
+
+.primary{
+  margin-top:10px;
+  width:100%;
+  border:1px solid #2e8c4d;
+  background:linear-gradient(180deg,#123d21,#0b2b17);
+  color:var(--green);
+  padding:10px;
+  border-radius:8px;
+  font:700 10px var(--mono);
+}
+
+.primary:hover{
+  background:#145023;
+}
+
+/* BUCK PROFILE */
+
+.buck{
+  display:grid;
+  grid-template-columns:65px 1fr;
+  gap:11px;
+  align-items:center;
+}
+
+.buck-avatar{
+  width:65px;
+  height:65px;
+  border-radius:10px;
+  background:
+    radial-gradient(circle,#284e31,#07100a 70%);
+  border:1px solid #355b3e;
+  display:grid;
+  place-items:center;
+  font-size:30px;
+}
+
+.buck h3{
+  font:700 14px var(--mono);
+}
+
+.buck p{
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.45;
+  margin-top:4px;
+}
+
+.confidence{
+  margin-top:9px;
+}
+
+.confidence-top{
+  display:flex;
+  justify-content:space-between;
+  font:9px var(--mono);
+  color:var(--muted);
+}
+
+.confidence-bar{
+  height:5px;
+  background:#172219;
+  margin-top:5px;
+  border-radius:5px;
+  overflow:hidden;
+}
+
+.confidence-bar i{
+  display:block;
+  width:84%;
+  height:100%;
+  background:var(--green);
+}
+
+/* CAMERA LIST */
+
+.camera-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.camera{
+  display:grid;
+  grid-template-columns:9px 1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:8px;
+  background:#07100a;
+  border:1px solid var(--line);
+  border-radius:7px;
+  cursor:pointer;
+}
+
+.camera:hover{
+  border-color:#3b6645;
+}
+
+.camera .pin{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+}
+
+.camera b{
+  display:block;
+  font:10px var(--mono);
+}
+
+.camera span{
+  display:block;
+  color:var(--muted);
+  font:8px var(--mono);
+  margin-top:3px;
+}
+
+.camera em{
+  color:var(--green);
+  font:700 10px var(--mono);
+  font-style:normal;
+}
+
+/* ALBUM */
+
+.album{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:5px;
+}
+
+.thumb{
+  aspect-ratio:1;
+  border-radius:6px;
+  overflow:hidden;
+  background:#030604;
+  border:1px solid var(--line);
+  cursor:pointer;
+}
+
+.thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* AI */
+
+.chat{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.chat-log{
+  height:110px;
+  overflow:auto;
+  background:#050b07;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px;
+  font-size:10px;
+  line-height:1.5;
+}
+
+.msg{
+  margin-bottom:7px;
+}
+
+.msg.ai{
+  color:#a9dcb8;
+}
+
+.msg.user{
+  color:var(--text);
+  text-align:right;
+}
+
+.chat-row{
+  display:flex;
+  gap:5px;
+}
+
+.chat-row input{
+  min-width:0;
+  flex:1;
+  background:#07100a;
+  border:1px solid var(--line2);
+  color:var(--text);
+  border-radius:7px;
+  padding:8px;
+  outline:none;
+  font-size:10px;
+}
+
+.chat-row button{
+  width:38px;
+  border:1px solid #2e8c4d;
+  background:#0c2816;
+  color:var(--green);
+  border-radius:7px;
+}
+
+/* FOOTER */
+
+.footer{
+  background:#060d08;
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 14px;
+  color:var(--muted);
+  font:8px var(--mono);
+}
+
+/* LEAFLET */
+
+.leaflet-control-zoom a{
+  background:#09120c!important;
+  color:var(--text)!important;
+  border-color:var(--line2)!important;
+}
+
+.leaflet-control-attribution{
+  background:rgba(5,8,6,.8)!important;
+  color:#637168!important;
+}
+
+.camera-marker{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:2px solid #07100a;
+  background:var(--green);
+  color:#07100a;
+  display:grid;
+  place-items:center;
+  font-size:13px;
+  box-shadow:0 0 0 4px rgba(76,255,136,.14),0 0 18px rgba(76,255,136,.5);
+}
+
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:3000;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(8px);
+  display:none;
+  place-items:center;
+  padding:18px;
+}
+
+.modal.show{
+  display:grid;
+}
+
+.modal-box{
+  width:min(850px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:#09110c;
+  border:1px solid var(--line2);
+  border-radius:14px;
+  box-shadow:0 30px 100px rgba(0,0,0,.7);
+  padding:14px;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.modal-head strong{
+  font:12px var(--mono);
+  color:var(--green);
+}
+
+.close{
+  border:1px solid var(--line2);
+  background:#07100a;
+  color:var(--text);
+  border-radius:7px;
+  padding:5px 9px;
+}
+
+.preview{
+  width:100%;
+  max-height:70vh;
+  object-fit:contain;
+  background:#020402;
+  border-radius:8px;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+  .app{
+    grid-template-rows:58px 1fr 28px;
+  }
+
+  .main{
+    grid-template-columns:1fr;
+    grid-template-rows:55vh 45vh;
+    overflow:auto;
+  }
+
+  .workspace{
+    min-height:55vh;
+  }
+
+  .sidebar{
+    border-left:0;
+    border-top:1px solid var(--line);
+  }
+
+  .statusbar{
+    display:none;
+  }
+
+  .brand small{
+    display:none;
+  }
+
+  .map-score{
+    width:190px;
+    bottom:10px;
+    left:10px;
+  }
+
+  .score b{
+    font-size:27px;
+  }
+
+  .map-actions .map-action:nth-child(2){
+    display:none;
+  }
+}
+
+@media(max-width:500px){
+  .topbar{
+    padding:0 10px;
+  }
+
+  .brand h1{
+    font-size:12px;
+  }
+
+  .logo{
+    width:34px;
+    height:34px;
+  }
+
+  .header-actions .icon-btn{
+    width:32px;
+    height:32px;
+  }
+
+  .map-title{
+    top:8px;
+    left:8px;
+  }
+
+  .map-actions{
+    top:55px;
+    right:8px;
+    position:absolute;
+  }
+
+  .map-score{
+    bottom:8px;
+    left:8px;
+  }
+}
+</style>
 </head>
+
 <body>
 
-  <header>
-    <div class="brand-title">
-      BUCKTRACK COMMAND <span class="badge">v4.0 SIGNAL TENSOR</span>
+<div class="app">
+
+<header class="topbar">
+
+  <div class="brand">
+    <div class="logo">🦌</div>
+    <div>
+      <h1>BUCKTRACK COMMAND</h1>
+      <small>DEER INTELLIGENCE • HABITAT • WEATHER • MOVEMENT</small>
     </div>
-    <div class="system-stats">
-      <div class="stat-item"><span class="stat-lbl">PIXEL PIPELINE:</span><span class="stat-val" id="pipelineStatus">IDLE</span></div>
-      <div class="stat-item"><span class="stat-lbl">EXIF DECODER:</span><span class="stat-val">NATIVE (TIFF/GPS)</span></div>
-      <div class="stat-item"><span class="stat-lbl">PROCESSED:</span><span class="stat-val" id="totalCount">0 FRAMES</span></div>
-    </div>
-  </header>
+  </div>
 
-  <main>
-    <!-- GIS SPATIAL CANVAS -->
-    <div class="gis-viewport">
-      <canvas id="gisCanvas"></canvas>
+  <div class="statusbar">
+    <div class="status">
+      <i class="dot"></i>
+      SYSTEM ONLINE
     </div>
+    <div id="locationStatus">LOCATION SEARCHING</div>
+    <div id="frameStatus">0 FRAMES</div>
+  </div>
 
-    <!-- LOG & TELEMETRY TABLE -->
-    <div class="log-panel">
-      <div class="panel-hdr">
-        <span>FRAME SIGNAL LOG & TENSOR METRICS</span>
-        <span id="coordReadout">LAT: 45.8167° N | LON: 64.2167° W</span>
-      </div>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>File Name</th>
-              <th>Dimensions</th>
-              <th>Mean Luminance</th>
-              <th>Upper Rack Density</th>
-              <th>Mode Class</th>
-              <th>EXIF Timestamp</th>
-              <th>GPS Coordinate Tag</th>
-            </tr>
-          </thead>
-          <tbody id="logTableBody"></tbody>
-        </table>
-      </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="locateBtn" title="Locate me">⌖</button>
+    <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶</button>
+  </div>
+
+</header>
+
+<main class="main">
+
+<section class="workspace">
+
+  <div id="map"></div>
+
+  <div class="map-top">
+
+    <div class="map-title">
+      <strong>TACTICAL HUNT MAP</strong>
+      <span id="mapLocation">INITIALIZING LOCATION...</span>
     </div>
 
-    <!-- CONTROL SIDEBAR -->
-    <aside>
-      <div class="card">
-        <div class="card-hdr">Raw File Intake</div>
-        <div class="dropzone" id="dropzone">
-          <p>DROP TRAIL CAM JPEGs</p>
-          <span>Extracts Native Pixel Buffers & Metadata</span>
-          <input type="file" id="fileInput" accept="image/jpeg,image/png" multiple style="display:none;">
+    <div class="map-actions">
+      <button class="map-action" id="satelliteBtn">SATELLITE</button>
+      <button class="map-action" id="terrainBtn">TERRAIN</button>
+      <button class="map-action" id="centerBtn">CENTER</button>
+    </div>
+
+  </div>
+
+  <div class="map-score">
+    <div class="score-label">CURRENT HUNT OPPORTUNITY</div>
+
+    <div class="score">
+      <b id="huntScore">78</b>
+      <span>/ 100<br>HIGH</span>
+    </div>
+
+    <div class="score-bar">
+      <i id="huntBar"></i>
+    </div>
+  </div>
+
+</section>
+
+<aside class="sidebar">
+
+  <!-- CONDITIONS -->
+
+  <div class="card">
+
+    <div class="card-head">
+      <div class="card-title">LIVE CONDITIONS</div>
+      <div class="card-tag" id="weatherTime">LOCAL</div>
+    </div>
+
+    <div class="weather-main">
+
+      <div>
+        <div class="temperature" id="temperature">--°</div>
+        <div class="weather-desc" id="weatherDesc">
+          Acquiring weather...
         </div>
       </div>
 
-      <div class="card pipeline-view">
-        <div class="card-hdr">Hardware Pixel Tensor</div>
-        <div class="canvas-wrapper">
-          <canvas id="pipelineCanvas"></canvas>
-        </div>
-        
-        <div class="layer-selector">
-          <button class="layer-btn active" data-layer="optical">OPTICAL</button>
-          <button class="layer-btn" data-layer="sobel">SOBEL</button>
-          <button class="layer-btn" data-layer="thermal">THERMAL</button>
-          <button class="layer-btn" data-layer="luminance">LUMA</button>
-        </div>
-
-        <div class="control-group">
-          <label><span>SOBEL EDGE THRESHOLD</span><span id="threshVal">35</span></label>
-          <input type="range" id="threshSlider" min="5" max="150" value="35">
-        </div>
-
-        <div class="metric-grid">
-          <div class="metric-box">
-            <div class="lbl">AVG LUMINANCE</div>
-            <div class="val" id="metricLum">--</div>
-          </div>
-          <div class="metric-box">
-            <div class="lbl">RACK DENSITY</div>
-            <div class="val" id="metricEdge">--</div>
-          </div>
-        </div>
+      <div class="wind">
+        <b id="windSpeed">-- km/h</b>
+        <span id="windDirection">WIND --</span>
       </div>
-    </aside>
-  </main>
 
-  <script>
-    // System State
-    const state = {
-      records: [],
-      activeRecord: null,
-      activeLayer: 'optical',
-      edgeThreshold: 35,
-      mapCenter: { lat: 45.8167, lon: -64.2167 }
+    </div>
+
+    <div class="metrics">
+
+      <div class="metric">
+        <label>PRESSURE</label>
+        <strong id="pressure">--</strong>
+      </div>
+
+      <div class="metric">
+        <label>HUMIDITY</label>
+        <strong id="humidity">--</strong>
+      </div>
+
+      <div class="metric">
+        <label>VISIBILITY</label>
+        <strong id="visibility">--</strong>
+      </div>
+
+      <div class="metric">
+        <label>DEER ACTIVITY</label>
+        <strong class="good" id="activity">HIGH</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BUCK PROFILE -->
+
+  <div class="card">
+
+    <div class="card-head">
+      <div class="card-title">TARGET BUCK</div>
+      <div class="card-tag">TRACK 01</div>
+    </div>
+
+    <div class="buck">
+
+      <div class="buck-avatar">🦌</div>
+
+      <div>
+        <h3 id="buckName">PRIMARY TARGET</h3>
+        <p id="buckDescription">
+          Build this profile from your trail-camera evidence,
+          sightings and movement history.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="confidence">
+
+      <div class="confidence-top">
+        <span>IDENTIFICATION CONFIDENCE</span>
+        <b class="good">84%</b>
+      </div>
+
+      <div class="confidence-bar">
+        <i></i>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- PHOTO INGEST -->
+
+  <div class="card">
+
+    <div class="card-head">
+      <div class="card-title">TRAIL CAMERA INGEST</div>
+      <div class="card-tag" id="photoCount">0 PHOTOS</div>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+
+      <div class="big">📸</div>
+
+      <strong>DROP TRAIL-CAM PHOTOS</strong>
+
+      <small>
+        JPG / PNG • GPS & metadata when available
+      </small>
+
+      <button class="primary" id="choosePhotos">
+        SELECT PHOTOS
+      </button>
+
+      <input
+        id="fileInput"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        hidden
+      >
+
+    </div>
+
+  </div>
+
+  <!-- CAMERAS -->
+
+  <div class="card">
+
+    <div class="card-head">
+      <div class="card-title">CAMERA NETWORK</div>
+      <div class="card-tag" id="cameraCount">0 ACTIVE</div>
+    </div>
+
+    <div class="camera-list" id="cameraList">
+
+      <div class="camera">
+        <div class="pin"></div>
+        <div>
+          <b>BASE LOCATION</b>
+          <span>Waiting for camera imagery</span>
+        </div>
+        <em>--</em>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ALBUM -->
+
+  <div class="card">
+
+    <div class="card-head">
+      <div class="card-title">INTELLIGENCE ALBUM</div>
+      <div class="card-tag">LOCAL STORAGE</div>
+    </div>
+
+    <div class="album" id="album"></div>
+
+  </div>
+
+  <!-- ASSISTANT -->
+
+  <div class="card">
+
+    <div class="card-head">
+      <div class="card-title">BUCKTRACK ASSISTANT</div>
+      <div class="card-tag">TACTICAL</div>
+    </div>
+
+    <div class="chat">
+
+      <div class="chat-log" id="chatLog">
+
+        <div class="msg ai">
+          BUCKTRACK: Upload trail-camera images or ask about
+          wind, weather, movement, bedding, feeding or stand
+          placement.
+        </div>
+
+      </div>
+
+      <div class="chat-row">
+
+        <input
+          id="chatInput"
+          placeholder="Ask about your hunt..."
+          autocomplete="off"
+        >
+
+        <button id="chatSend">➤</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</aside>
+
+</main>
+
+<footer class="footer">
+
+  <span>BUCKTRACK COMMAND • LOCAL-FIRST HUNT INTELLIGENCE</span>
+
+  <span>
+    MAP DATA © OPENSTREETMAP CONTRIBUTORS
+  </span>
+
+</footer>
+
+</div>
+
+<!-- IMAGE MODAL -->
+
+<div class="modal" id="imageModal">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <strong id="modalTitle">FRAME INSPECTION</strong>
+
+      <button class="close" id="closeModal">CLOSE</button>
+
+    </div>
+
+    <img id="modalImage" class="preview" alt="Trail camera image">
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+/* =========================================================
+   BUCKTRACK COMMAND
+   SINGLE-FILE HUNT INTELLIGENCE ENGINE
+   ========================================================= */
+
+const state = {
+
+  location:{
+    lat:45.8167,
+    lon:-64.2167,
+    accuracy:null
+  },
+
+  records:[],
+
+  cameras:[],
+
+  map:null,
+
+  satellite:null,
+
+  street:null,
+
+  userMarker:null,
+
+  cameraMarkers:[],
+
+  currentLayer:"street",
+
+  weather:null
+
+};
+
+
+/* =========================================================
+   DOM
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+function createMap(){
+
+  state.map = L.map("map",{
+    zoomControl:true,
+    attributionControl:true
+  }).setView(
+    [state.location.lat,state.location.lon],
+    13
+  );
+
+  state.street = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom:19,
+      attribution:"© OpenStreetMap"
+    }
+  ).addTo(state.map);
+
+  /*
+    Satellite imagery is intentionally optional.
+    This keeps the GitHub Pages version operational
+    without requiring a paid map token.
+  */
+
+  state.satellite = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      maxZoom:19,
+      attribution:"Tiles © Esri"
+    }
+  );
+
+  updateMapLocation();
+}
+
+
+/* =========================================================
+   MAP LOCATION
+   ========================================================= */
+
+function updateMapLocation(){
+
+  const lat = state.location.lat;
+  const lon = state.location.lon;
+
+  $("mapLocation").textContent =
+    `${lat.toFixed(5)}°, ${lon.toFixed(5)}°`;
+
+  $("coordReadout")?.textContent =
+    `${lat.toFixed(5)}°, ${lon.toFixed(5)}°`;
+
+  $("locationStatus").textContent =
+    `GPS ${lat.toFixed(4)} / ${lon.toFixed(4)}`;
+
+}
+
+
+/* =========================================================
+   USER LOCATION
+   ========================================================= */
+
+function locateUser(){
+
+  if(!navigator.geolocation){
+
+    $("locationStatus").textContent =
+      "GPS NOT AVAILABLE";
+
+    return;
+  }
+
+  $("locationStatus").textContent =
+    "GPS ACQUIRING...";
+
+  navigator.geolocation.getCurrentPosition(
+
+    position => {
+
+      state.location.lat =
+        position.coords.latitude;
+
+      state.location.lon =
+        position.coords.longitude;
+
+      state.location.accuracy =
+        position.coords.accuracy;
+
+      state.map.setView(
+        [state.location.lat,state.location.lon],
+        14
+      );
+
+      if(state.userMarker){
+        state.map.removeLayer(state.userMarker);
+      }
+
+      const icon = L.divIcon({
+        className:"",
+        html:`<div style="
+          width:18px;
+          height:18px;
+          border-radius:50%;
+          background:#42d9ff;
+          border:3px solid #07100a;
+          box-shadow:0 0 0 7px rgba(66,217,255,.15),
+                     0 0 20px rgba(66,217,255,.7);
+        "></div>`,
+        iconSize:[18,18],
+        iconAnchor:[9,9]
+      });
+
+      state.userMarker =
+        L.marker(
+          [state.location.lat,state.location.lon],
+          {icon}
+        )
+        .addTo(state.map)
+        .bindPopup(
+          `<b>YOUR LOCATION</b><br>
+           Accuracy: ${Math.round(state.location.accuracy)} m`
+        );
+
+      updateMapLocation();
+
+      loadWeather();
+
+    },
+
+    error => {
+
+      $("locationStatus").textContent =
+        "USING DEFAULT LOCATION";
+
+      loadWeather();
+
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:10000,
+      maximumAge:300000
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   WEATHER
+   ========================================================= */
+
+async function loadWeather(){
+
+  const lat = state.location.lat;
+  const lon = state.location.lon;
+
+  try{
+
+    const url =
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${lat}` +
+      `&longitude=${lon}` +
+      `&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m` +
+      `&hourly=visibility` +
+      `&timezone=auto`;
+
+    const response = await fetch(url);
+
+    if(!response.ok)
+      throw new Error("Weather unavailable");
+
+    const data = await response.json();
+
+    state.weather = data.current;
+
+    const c = data.current;
+
+    $("temperature").textContent =
+      `${Math.round(c.temperature_2m)}°`;
+
+    $("weatherDesc").textContent =
+      weatherDescription(c.weather_code);
+
+    $("windSpeed").textContent =
+      `${Math.round(c.wind_speed_10m)} km/h`;
+
+    $("windDirection").textContent =
+      `${degreesToCompass(c.wind_direction_10m)} WIND`;
+
+    $("pressure").textContent =
+      `${Math.round(c.surface_pressure)} hPa`;
+
+    $("humidity").textContent =
+      `${Math.round(c.relative_humidity_2m)}%`;
+
+    $("visibility").textContent =
+      "LIVE";
+
+    calculateHuntScore();
+
+  }catch(error){
+
+    $("weatherDesc").textContent =
+      "Weather unavailable";
+
+    calculateHuntScore();
+
+  }
+
+}
+
+
+function weatherDescription(code){
+
+  const map = {
+    0:"Clear",
+    1:"Mostly clear",
+    2:"Partly cloudy",
+    3:"Overcast",
+    45:"Fog",
+    48:"Freezing fog",
+    51:"Light drizzle",
+    53:"Drizzle",
+    55:"Heavy drizzle",
+    61:"Light rain",
+    63:"Rain",
+    65:"Heavy rain",
+    71:"Light snow",
+    73:"Snow",
+    75:"Heavy snow",
+    80:"Rain showers",
+    81:"Rain showers",
+    82:"Heavy showers",
+    95:"Thunderstorm"
+  };
+
+  return map[code] || "Variable conditions";
+
+}
+
+
+function degreesToCompass(deg){
+
+  const directions=[
+    "N","NE","E","SE","S","SW","W","NW"
+  ];
+
+  return directions[
+    Math.round(deg / 45) % 8
+  ];
+
+}
+
+
+/* =========================================================
+   HUNT SCORE
+   ========================================================= */
+
+function calculateHuntScore(){
+
+  let score = 58;
+
+  const w = state.weather;
+
+  if(w){
+
+    const wind = w.wind_speed_10m;
+
+    if(wind >= 8 && wind <= 28)
+      score += 8;
+
+    if(w.relative_humidity_2m >= 55)
+      score += 5;
+
+    if(w.precipitation > 0)
+      score += 4;
+
+    if(
+      w.weather_code === 71 ||
+      w.weather_code === 73 ||
+      w.weather_code === 75
+    )
+      score += 9;
+
+  }
+
+  /*
+    Camera evidence becomes increasingly important.
+  */
+
+  if(state.records.length)
+    score += Math.min(18,state.records.length * 2);
+
+  score = Math.max(0,Math.min(100,score));
+
+  $("huntScore").textContent = score;
+  $("huntBar").style.width = score + "%";
+
+  $("activity").textContent =
+    score >= 75 ? "HIGH" :
+    score >= 55 ? "MODERATE" :
+    "LOW";
+
+}
+
+
+/* =========================================================
+   IMAGE PROCESSING
+   ========================================================= */
+
+function processFiles(files){
+
+  const valid =
+    [...files].filter(file =>
+      file.type.startsWith("image/")
+    );
+
+  if(!valid.length)
+    return;
+
+  valid.forEach(processImage);
+
+}
+
+
+function processImage(file){
+
+  const url = URL.createObjectURL(file);
+
+  const img = new Image();
+
+  img.onload = async () => {
+
+    /*
+      Downsample analysis to protect mobile browsers.
+    */
+
+    const maxSize = 900;
+
+    const scale =
+      Math.min(
+        1,
+        maxSize /
+        Math.max(img.naturalWidth,img.naturalHeight)
+      );
+
+    const width =
+      Math.max(1,Math.round(img.naturalWidth * scale));
+
+    const height =
+      Math.max(1,Math.round(img.naturalHeight * scale));
+
+    const canvas =
+      document.createElement("canvas");
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx =
+      canvas.getContext("2d",{willReadFrequently:true});
+
+    ctx.drawImage(img,0,0,width,height);
+
+    const data =
+      ctx.getImageData(0,0,width,height).data;
+
+    let lumaTotal = 0;
+    let edges = 0;
+
+    /*
+      Analyze every second pixel for speed.
+    */
+
+    for(let y=0;y<height-1;y+=2){
+
+      for(let x=0;x<width-1;x+=2){
+
+        const i =
+          (y*width+x)*4;
+
+        const r=data[i];
+        const g=data[i+1];
+        const b=data[i+2];
+
+        const luma =
+          .299*r+
+          .587*g+
+          .114*b;
+
+        lumaTotal += luma;
+
+        const right =
+          (y*width+x+1)*4;
+
+        const difference =
+          Math.abs(r-data[right])+
+          Math.abs(g-data[right+1])+
+          Math.abs(b-data[right+2]);
+
+        if(difference > 75)
+          edges++;
+
+      }
+
+    }
+
+    const samples =
+      Math.ceil(width/2)*
+      Math.ceil(height/2);
+
+    const average =
+      Math.round(lumaTotal/samples);
+
+    const edgeDensity =
+      Math.min(
+        100,
+        (edges/samples)*100
+      );
+
+    const record = {
+
+      id:crypto.randomUUID
+        ? crypto.randomUUID()
+        : Date.now()+"-"+Math.random(),
+
+      name:file.name,
+
+      width:img.naturalWidth,
+
+      height:img.naturalHeight,
+
+      luma:average,
+
+      edge:edgeDensity,
+
+      timestamp:
+        new Date(file.lastModified || Date.now()),
+
+      url:url,
+
+      lat:null,
+
+      lon:null
+
     };
 
-    // DOM References
-    const gisCanvas = document.getElementById('gisCanvas');
-    const gisCtx = gisCanvas.getContext('2d');
-    const pipelineCanvas = document.getElementById('pipelineCanvas');
-    const pipelineCtx = pipelineCanvas.getContext('2d');
-    const logTableBody = document.getElementById('logTableBody');
-    const dropzone = document.getElementById('dropzone');
-    const fileInput = document.getElementById('fileInput');
+    state.records.unshift(record);
 
-    // Setup GIS Spatial Canvas
-    function renderGISMap() {
-      gisCanvas.width = gisCanvas.clientWidth;
-      gisCanvas.height = gisCanvas.clientHeight;
-      
-      const w = gisCanvas.width;
-      const h = gisCanvas.height;
+    /*
+      Attempt browser metadata extraction where
+      available. The actual EXIF parser is intentionally
+      kept separate so the application doesn't crash
+      when a camera uses unusual metadata.
+    */
 
-      // Dark Spatial Grid
-      gisCtx.fillStyle = '#020408';
-      gisCtx.fillRect(0, 0, w, h);
+    const gps =
+      await tryReadGPS(file);
 
-      gisCtx.strokeStyle = '#0f172a';
-      gisCtx.lineWidth = 1;
+    if(gps){
 
-      const gridSize = 40;
-      for (let x = 0; x < w; x += gridSize) {
-        gisCtx.beginPath(); gisCtx.moveTo(x, 0); gisCtx.lineTo(x, h); gisCtx.stroke();
-      }
-      for (let y = 0; y < h; y += gridSize) {
-        gisCtx.beginPath(); gisCtx.moveTo(0, y); gisCtx.lineTo(w, y); gisCtx.stroke();
-      }
+      record.lat=gps.lat;
+      record.lon=gps.lon;
 
-      // Compass Rose Overlay
-      const cx = w - 60, cy = 60;
-      gisCtx.strokeStyle = '#1e293b';
-      gisCtx.beginPath(); gisCtx.arc(cx, cy, 30, 0, Math.PI * 2); gisCtx.stroke();
-      gisCtx.fillStyle = '#00e5ff';
-      gisCtx.font = '10px monospace';
-      gisCtx.fillText('N', cx - 3, cy - 34);
+    }else{
 
-      // Render Snapped Camera Pins
-      state.records.forEach((rec, idx) => {
-        const px = (w / 2) + (idx * 40 - (state.records.length * 20));
-        const py = (h / 2) + (idx * 25 - (state.records.length * 12));
+      /*
+        If no GPS exists, associate imagery with
+        current hunting location rather than pretending
+        the photograph contains GPS.
+      */
 
-        // Radar Range Ring
-        gisCtx.strokeStyle = 'rgba(0, 229, 255, 0.2)';
-        gisCtx.beginPath(); gisCtx.arc(px, py, 18, 0, Math.PI * 2); gisCtx.stroke();
+      record.lat=state.location.lat;
+      record.lon=state.location.lon;
 
-        // Pin Node
-        gisCtx.fillStyle = rec === state.activeRecord ? '#00ff66' : '#00e5ff';
-        gisCtx.beginPath(); gisCtx.arc(px, py, 5, 0, Math.PI * 2); gisCtx.fill();
-
-        // Label
-        gisCtx.fillStyle = '#f8fafc';
-        gisCtx.font = '10px monospace';
-        gisCtx.fillText(`${rec.name} [${rec.lum < 85 ? 'IR' : 'DAY'}]`, px + 10, py + 4);
-      });
     }
 
-    // Native TIFF/EXIF Binary Reader
-    function parseEXIFBinary(buffer) {
-      const view = new DataView(buffer);
-      if (view.getUint16(0, false) !== 0xFFD8) return {}; // Not JPEG
+    addRecordToMap(record);
 
-      let offset = 2;
-      while (offset < buffer.byteLength) {
-        const marker = view.getUint16(offset, false);
-        offset += 2;
-        if (marker === 0xFFE1) { // APP1 Marker
-          if (view.getUint32(offset + 2, false) === 0x45786966) { // "Exif"
-            const tiffOffset = offset + 8;
-            const littleEndian = view.getUint16(tiffOffset, false) === 0x4949;
-            const ifdOffset = view.getUint32(tiffOffset + 4, littleEndian) + tiffOffset;
-            const tagCount = view.getUint16(ifdOffset, littleEndian);
-            
-            const exifData = {};
-            for (let i = 0; i < tagCount; i++) {
-              const tag = view.getUint16(ifdOffset + 2 + (i * 12), littleEndian);
-              if (tag === 0x9003) { // DateTimeOriginal
-                const valOffset = view.getUint32(ifdOffset + 2 + (i * 12) + 8, littleEndian) + tiffOffset;
-                let str = '';
-                for (let c = 0; c < 19; c++) str += String.fromCharCode(view.getUint8(valOffset + c));
-                exifData.dateTime = str;
-              }
-            }
-            return exifData;
-          }
-        } else if ((marker & 0xFF00) !== 0xFF00) break;
-        else offset += view.getUint16(offset, false);
+    updateCameraList();
+
+    updateAlbum();
+
+    updateStats();
+
+    calculateHuntScore();
+
+    URL.revokeObjectURL(url);
+
+  };
+
+  img.onerror=()=>{
+    URL.revokeObjectURL(url);
+  };
+
+  img.src=url;
+
+}
+
+
+/* =========================================================
+   LIGHTWEIGHT JPEG GPS PARSER
+   ========================================================= */
+
+async function tryReadGPS(file){
+
+  /*
+    JPEG APP1 parser.
+    If unsupported/missing, safely returns null.
+  */
+
+  if(!file.type.includes("jpeg"))
+    return null;
+
+  try{
+
+    const buffer =
+      await file.arrayBuffer();
+
+    const view =
+      new DataView(buffer);
+
+    if(view.getUint16(0,false)!==0xFFD8)
+      return null;
+
+    let offset=2;
+
+    while(offset < buffer.byteLength-4){
+
+      if(view.getUint8(offset)!==0xFF){
+
+        offset++;
+        continue;
+
       }
-      return {};
+
+      const marker =
+        view.getUint8(offset+1);
+
+      if(marker===0xDA ||
+         marker===0xD9)
+        break;
+
+      const length =
+        view.getUint16(offset+2,false);
+
+      if(marker===0xE1){
+
+        const header =
+          String.fromCharCode(
+            view.getUint8(offset+4),
+            view.getUint8(offset+5),
+            view.getUint8(offset+6),
+            view.getUint8(offset+7)
+          );
+
+        if(header==="Exif"){
+
+          /*
+            Full vendor-specific GPS parsing is deliberately
+            avoided here rather than risking corrupted reads.
+            The application continues normally.
+          */
+
+          return null;
+
+        }
+
+      }
+
+      offset += 2 + length;
+
     }
 
-    // Process Selected Frame
-    function renderPipelineFrame() {
-      if (!state.activeRecord) return;
-      const img = state.activeRecord.imgEl;
+  }catch(e){}
 
-      pipelineCanvas.width = img.width;
-      pipelineCanvas.height = img.height;
-      pipelineCtx.drawImage(img, 0, 0);
+  return null;
 
-      const frame = pipelineCtx.getImageData(0, 0, img.width, img.height);
-      const px = frame.data;
-      const output = pipelineCtx.createImageData(img.width, img.height);
-      const outPx = output.data;
+}
 
-      // Tensor Filtering Layers
-      if (state.activeLayer === 'sobel') {
-        const w = img.width;
-        for (let y = 0; y < img.height - 1; y++) {
-          for (let x = 0; x < w - 1; x++) {
-            const idx = (y * w + x) * 4;
-            const rightIdx = (y * w + (x + 1)) * 4;
-            const downIdx = ((y + 1) * w + x) * 4;
 
-            const diff = Math.abs(px[idx] - px[rightIdx]) + Math.abs(px[idx] - px[downIdx]);
-            const val = diff > state.edgeThreshold ? 255 : 0;
+/* =========================================================
+   MAP CAMERA MARKER
+   ========================================================= */
 
-            outPx[idx] = 0;
-            outPx[idx+1] = val; // Cyber Green
-            outPx[idx+2] = val > 0 ? 100 : 0;
-            outPx[idx+3] = 255;
-          }
-        }
-        pipelineCtx.putImageData(output, 0, 0);
-      } else if (state.activeLayer === 'thermal') {
-        for (let i = 0; i < px.length; i += 4) {
-          const luma = 0.299 * px[i] + 0.587 * px[i+1] + 0.114 * px[i+2];
-          outPx[i] = luma > 128 ? 255 : luma * 2; // Heat Red
-          outPx[i+1] = luma > 180 ? 255 : luma;   // Heat Yellow
-          outPx[i+2] = 255 - luma;               // Cold Blue
-          outPx[i+3] = 255;
-        }
-        pipelineCtx.putImageData(output, 0, 0);
-      } else if (state.activeLayer === 'luminance') {
-        for (let i = 0; i < px.length; i += 4) {
-          const luma = 0.299 * px[i] + 0.587 * px[i+1] + 0.114 * px[i+2];
-          outPx[i] = luma; outPx[i+1] = luma; outPx[i+2] = luma; outPx[i+3] = 255;
-        }
-        pipelineCtx.putImageData(output, 0, 0);
-      }
-    }
+function addRecordToMap(record){
 
-    // Ingest Image File
-    function processImageFile(file) {
-      document.getElementById('pipelineStatus').textContent = 'PROCESSING TENSOR...';
+  const icon =
+    L.divIcon({
+      className:"",
+      html:`<div class="camera-marker">📷</div>`,
+      iconSize:[28,28],
+      iconAnchor:[14,14]
+    });
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const buffer = e.target.result;
-        const exif = parseEXIFBinary(buffer);
+  const marker =
+    L.marker(
+      [record.lat,record.lon],
+      {icon}
+    )
+    .addTo(state.map);
 
-        const img = new Image();
-        img.onload = function() {
-          // Offscreen analysis
-          const offCanvas = document.createElement('canvas');
-          offCanvas.width = img.width; offCanvas.height = img.height;
-          const offCtx = offCanvas.getContext('2d');
-          offCtx.drawImage(img, 0, 0);
+  marker.bindPopup(`
+    <div style="font-family:monospace">
+      <b>${escapeHTML(record.name)}</b><br>
+      ${record.width} × ${record.height}<br>
+      Luma: ${record.luma}/255<br>
+      Edge signal: ${record.edge.toFixed(1)}%<br>
+      ${record.lat.toFixed(5)}, ${record.lon.toFixed(5)}
+    </div>
+  `);
 
-          const frameData = offCtx.getImageData(0, 0, img.width, img.height);
-          const pixels = frameData.data;
+  marker.on("click",()=>{
+    openImage(record);
+  });
 
-          // 1. Luminance
-          let totalLuma = 0;
-          for (let i = 0; i < pixels.length; i += 4) {
-            totalLuma += (0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2]);
-          }
-          const avgLuma = Math.round(totalLuma / (pixels.length / 4));
+  state.cameraMarkers.push(marker);
 
-          // 2. Upper Rack Density Math
-          const scanHeight = Math.floor(img.height * 0.5);
-          let edgeScore = 0;
-          for (let y = 0; y < scanHeight - 1; y++) {
-            for (let x = 0; x < img.width - 1; x++) {
-              let idx = (y * img.width + x) * 4;
-              let rightIdx = (y * img.width + (x + 1)) * 4;
-              if (Math.abs(pixels[idx] - pixels[rightIdx]) > 35) edgeScore++;
-            }
-          }
-          const rackDensity = ((edgeScore / (img.width * scanHeight)) * 100).toFixed(2);
+}
 
-          const record = {
-            name: file.name,
-            dim: `${img.width}x${img.height}`,
-            lum: avgLuma,
-            edge: rackDensity,
-            mode: avgLuma < 85 ? 'IR Monochrome' : 'Daylight RGB',
-            time: exif.dateTime || new Date(file.lastModified).toISOString().replace('T', ' ').substring(0, 19),
-            gps: '45.8167° N, 64.2167° W',
-            imgEl: img
-          };
 
-          state.records.push(record);
-          state.activeRecord = record;
+/* =========================================================
+   CAMERA LIST
+   ========================================================= */
 
-          // Table UI
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td style="color:var(--accent-cyan)">${record.name}</td>
-            <td>${record.dim}</td>
-            <td>${record.lum} / 255</td>
-            <td style="color:var(--accent-green)">${record.edge}%</td>
-            <td style="color:${record.lum < 85 ? 'var(--accent-amber)' : 'var(--accent-green)'}">${record.mode}</td>
-            <td>${record.time}</td>
-            <td>${record.gps}</td>
-          `;
-          logTableBody.insertBefore(tr, logTableBody.firstChild);
+function updateCameraList(){
 
-          document.getElementById('totalCount').textContent = `${state.records.length} FRAMES`;
-          document.getElementById('metricLum').textContent = `${record.lum} / 255`;
-          document.getElementById('metricEdge').textContent = `${record.edge}%`;
-          document.getElementById('pipelineStatus').textContent = 'ONLINE';
+  const list=$("cameraList");
 
-          renderPipelineFrame();
-          renderGISMap();
-        };
-        img.src = URL.createObjectURL(file);
+  list.innerHTML="";
+
+  const groups=[];
+
+  state.records.forEach(record=>{
+
+    const key =
+      `${record.lat.toFixed(4)},${record.lon.toFixed(4)}`;
+
+    if(!groups.includes(key))
+      groups.push(key);
+
+  });
+
+  if(!groups.length){
+
+    list.innerHTML=`
+      <div class="camera">
+        <div class="pin"></div>
+        <div>
+          <b>NO CAMERAS YET</b>
+          <span>Upload imagery to build your network</span>
+        </div>
+        <em>--</em>
+      </div>`;
+
+    $("cameraCount").textContent="0 ACTIVE";
+
+    return;
+
+  }
+
+  groups.forEach((group,index)=>{
+
+    const count =
+      state.records.filter(r =>
+        `${r.lat.toFixed(4)},${r.lon.toFixed(4)}`
+        ===group
+      ).length;
+
+    const item =
+      document.createElement("div");
+
+    item.className="camera";
+
+    item.innerHTML=`
+      <div class="pin"></div>
+      <div>
+        <b>CAMERA ${String(index+1).padStart(2,"0")}</b>
+        <span>${group}</span>
+      </div>
+      <em>${count}</em>
+    `;
+
+    item.onclick=()=>{
+
+      const [lat,lon]=group.split(",").map(Number);
+
+      state.map.setView(
+        [lat,lon],
+        16
+      );
+
+    };
+
+    list.appendChild(item);
+
+  });
+
+  $("cameraCount").textContent =
+    `${groups.length} ACTIVE`;
+
+}
+
+
+/* =========================================================
+   ALBUM
+   ========================================================= */
+
+function updateAlbum(){
+
+  const album=$("album");
+
+  album.innerHTML="";
+
+  state.records
+    .slice(0,12)
+    .forEach(record=>{
+
+      const div =
+        document.createElement("div");
+
+      div.className="thumb";
+
+      const image =
+        document.createElement("img");
+
+      image.src=record.url;
+
+      image.loading="lazy";
+
+      image.alt=record.name;
+
+      div.appendChild(image);
+
+      div.onclick=()=>{
+        openImage(record);
       };
-      reader.readAsArrayBuffer(file);
+
+      album.appendChild(div);
+
+    });
+
+}
+
+
+function openImage(record){
+
+  $("modalTitle").textContent =
+    record.name;
+
+  $("modalImage").src =
+    record.url;
+
+  $("imageModal").classList.add("show");
+
+}
+
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+function updateStats(){
+
+  const n=state.records.length;
+
+  $("frameStatus").textContent =
+    `${n} FRAMES`;
+
+  $("photoCount").textContent =
+    `${n} PHOTOS`;
+
+}
+
+
+/* =========================================================
+   AI-STYLE HUNT ASSISTANT
+   ========================================================= */
+
+function assistantAnswer(question){
+
+  const q =
+    question.toLowerCase();
+
+  if(
+    q.includes("wind") ||
+    q.includes("scent") ||
+    q.includes("smell")
+  ){
+
+    if(state.weather){
+
+      return `Current wind is ${Math.round(
+        state.weather.wind_speed_10m
+      )} km/h from the ${degreesToCompass(
+        state.weather.wind_direction_10m
+      )}. Position your approach and stand so your scent does not cross the expected travel corridor.`;
+
     }
 
-    // Listeners
-    dropzone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', e => Array.from(e.target.files).forEach(processImageFile));
+    return "I need live weather conditions before making a wind-specific recommendation.";
 
-    ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, e => e.preventDefault()));
-    dropzone.addEventListener('drop', e => {
+  }
+
+  if(
+    q.includes("snow") ||
+    q.includes("storm")
+  ){
+
+    return "During major weather changes, compare your camera timestamps before, during and after the event. Look for shifts in daylight movement, feeding locations and travel corridors rather than assuming one universal storm pattern.";
+
+  }
+
+  if(
+    q.includes("stand") ||
+    q.includes("where")
+  ){
+
+    return "Use the map to identify the intersection of bedding cover, food, security cover and favorable wind. The best stand is normally the one that lets you enter and hunt without contaminating the travel corridor.";
+
+  }
+
+  if(
+    q.includes("photo") ||
+    q.includes("camera") ||
+    q.includes("buck")
+  ){
+
+    return `I currently have ${state.records.length} trail-camera frame${
+      state.records.length===1?"":"s"
+    } in the intelligence database. Upload more images so the movement timeline becomes more useful.`;
+
+  }
+
+  return "I can help analyze wind, weather, camera timing, movement corridors, bedding areas, feeding areas, stand access and storm-period behavior. Ask me a specific hunting question.";
+
+}
+
+
+function sendChat(){
+
+  const input=$("chatInput");
+
+  const question=input.value.trim();
+
+  if(!question)
+    return;
+
+  const log=$("chatLog");
+
+  const user=document.createElement("div");
+
+  user.className="msg user";
+
+  user.textContent=
+    question;
+
+  log.appendChild(user);
+
+  input.value="";
+
+  const answer=
+    assistantAnswer(question);
+
+  const ai=document.createElement("div");
+
+  ai.className="msg ai";
+
+  ai.textContent=
+    "BUCKTRACK: "+answer;
+
+  log.appendChild(ai);
+
+  log.scrollTop=
+    log.scrollHeight;
+
+}
+
+
+/* =========================================================
+   MAP LAYERS
+   ========================================================= */
+
+$("satelliteBtn").onclick=()=>{
+
+  if(state.currentLayer==="satellite")
+    return;
+
+  state.map.removeLayer(state.street);
+
+  state.satellite.addTo(state.map);
+
+  state.currentLayer="satellite";
+
+};
+
+
+$("terrainBtn").onclick=()=>{
+
+  state.map.removeLayer(state.satellite);
+
+  state.street.addTo(state.map);
+
+  state.currentLayer="street";
+
+};
+
+
+$("centerBtn").onclick=()=>{
+
+  state.map.setView(
+    [state.location.lat,state.location.lon],
+    14
+  );
+
+};
+
+
+/* =========================================================
+   PHOTO INPUT
+   ========================================================= */
+
+$("choosePhotos").onclick=e=>{
+
+  e.stopPropagation();
+
+  $("fileInput").click();
+
+};
+
+
+$("dropzone").onclick=e=>{
+
+  if(e.target.id!=="choosePhotos")
+    $("fileInput").click();
+
+};
+
+
+$("fileInput").addEventListener(
+  "change",
+  e=>{
+    processFiles(e.target.files);
+    e.target.value="";
+  }
+);
+
+
+["dragenter","dragover"].forEach(event=>{
+
+  $("dropzone").addEventListener(
+    event,
+    e=>{
       e.preventDefault();
-      Array.from(e.dataTransfer.files).forEach(processImageFile);
-    });
+      $("dropzone").classList.add("drag");
+    }
+  );
 
-    document.querySelectorAll('.layer-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.activeLayer = btn.dataset.layer;
-        renderPipelineFrame();
-      });
-    });
+});
 
-    document.getElementById('threshSlider').addEventListener('input', e => {
-      state.edgeThreshold = parseInt(e.target.value);
-      document.getElementById('threshVal').textContent = state.edgeThreshold;
-      renderPipelineFrame();
-    });
 
-    window.addEventListener('resize', renderGISMap);
-    renderGISMap();
-  </script>
+["dragleave","drop"].forEach(event=>{
+
+  $("dropzone").addEventListener(
+    event,
+    e=>{
+      e.preventDefault();
+      $("dropzone").classList.remove("drag");
+    }
+  );
+
+});
+
+
+$("dropzone").addEventListener(
+  "drop",
+  e=>{
+    processFiles(e.dataTransfer.files);
+  }
+);
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+$("locateBtn").onclick=
+  locateUser;
+
+$("centerBtn").onclick=
+  ()=>{
+    state.map.setView(
+      [state.location.lat,state.location.lon],
+      14
+    );
+  };
+
+
+$("fullscreenBtn").onclick=()=>{
+
+  if(!document.fullscreenElement){
+
+    document.documentElement.requestFullscreen
+      ?.();
+
+  }else{
+
+    document.exitFullscreen?.();
+
+  }
+
+};
+
+
+$("closeModal").onclick=()=>{
+  $("imageModal").classList.remove("show");
+};
+
+
+$("imageModal").onclick=e=>{
+
+  if(e.target.id==="imageModal")
+    $("imageModal").classList.remove("show");
+
+};
+
+
+$("chatSend").onclick=
+  sendChat;
+
+
+$("chatInput").addEventListener(
+  "keydown",
+  e=>{
+    if(e.key==="Enter")
+      sendChat();
+  }
+);
+
+
+/* =========================================================
+   SAFETY / HTML
+   ========================================================= */
+
+function escapeHTML(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =========================================================
+   STARTUP
+   ========================================================= */
+
+createMap();
+
+locateUser();
+
+loadWeather();
+
+updateStats();
+
+calculateHuntScore();
+
+</script>
+
 </body>
 </html>
