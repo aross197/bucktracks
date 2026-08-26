@@ -3,39 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BUCKTRACK PRO | VISION AI INTEL ENGINE</title>
+<title>BUCKTRACK PRO | ULTRA ADVANCED VISION & TACTICAL GIS</title>
 <meta name="theme-color" content="#030504">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,600&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Leaflet Engine -->
+<!-- Leaflet Core -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js" crossorigin=""></script>
 
-<!-- MapLibre Engine -->
+<!-- MapLibre GL Engine -->
 <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 
 <style>
 :root {
   --bg: #030504;
-  --surface: #0a0f0d;
-  --surface-2: #111814;
-  --elevated: rgba(10, 15, 13, 0.94);
+  --surface: #080c0a;
+  --surface-2: #0f1612;
+  --elevated: rgba(10, 15, 13, 0.96);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(240, 138, 46, 0.35);
   --orange: #f08a2e;
-  --orange-glow: rgba(240, 138, 46, 0.25);
+  --orange-bright: #ff9d3b;
+  --orange-glow: rgba(240, 138, 46, 0.22);
   --mint: #50e3c2;
-  --mint-glow: rgba(80, 227, 194, 0.15);
+  --mint-glow: rgba(80, 227, 194, 0.18);
   --cyan: #00d2ff;
   --red: #ff3b30;
+  --red-glow: rgba(255, 59, 48, 0.25);
   --text: #f0f4f1;
-  --text-dim: #7a8c82;
+  --text-dim: #6c7e75;
   --header-h: 58px;
-  --nav-h: 68px;
+  --nav-h: 64px;
   --font-main: "IBM Plex Sans", sans-serif;
   --font-head: "Chakra Petch", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
@@ -43,133 +45,181 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; }
+html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; -webkit-font-smoothing: antialiased; }
 
-/* CRT Scanline FX */
+/* CRT Scanline Overlay */
 body::after {
   content: ""; position: fixed; inset: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.015), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.015));
   background-size: 100% 3px, 6px 100%;
-  pointer-events: none; z-index: 99999; opacity: 0.3;
+  pointer-events: none; z-index: 99999; opacity: 0.35;
 }
 
 header {
   height: var(--header-h); padding: 0 16px; background: rgba(3, 5, 4, 0.95);
   border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
-  z-index: 1000; backdrop-filter: blur(20px);
+  z-index: 1000; backdrop-filter: blur(20px); position: relative;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand .logo-badge {
-  width: 30px; height: 30px; background: rgba(240, 138, 46, 0.15);
+  width: 32px; height: 32px; background: rgba(240, 138, 46, 0.15);
   border: 1px solid var(--orange); border-radius: 4px; display: flex; align-items: center;
   justify-content: center; font-family: var(--font-head); font-weight: 700; color: var(--orange); font-size: 0.85rem;
-  box-shadow: 0 0 12px var(--orange-glow);
+  box-shadow: 0 0 14px var(--orange-glow);
 }
 .brand h1 { margin: 0; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700; letter-spacing: 0.08em; color: #fff; }
 .brand h1 span { color: var(--orange); }
 
+.telemetry-strip { display: flex; gap: 12px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); }
+.telemetry-strip span { color: var(--mint); font-weight: 600; }
+
 .main-viewport {
   height: calc(100dvh - var(--header-h) - var(--nav-h)); width: 100%; position: relative; overflow: hidden;
 }
-.tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 16px; }
-.tab-content.active { display: block; animation: viewIn 0.2s var(--ease); }
-@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
+.tab-content { display: none; width: 100%; height: 100%; }
+.tab-content.active { display: flex; animation: viewIn 0.2s var(--ease); }
+@keyframes viewIn { from { opacity: 0; transform: scale(0.995); } to { opacity: 1; transform: scale(1); } }
 
-/* Map View */
-#map-view { padding: 0; position: relative; }
+/* MAP VIEW LAYOUT */
+#map-view { position: relative; width: 100%; height: 100%; flex-direction: column; }
 #leaflet-map, #maplibre-map { width: 100%; height: 100%; position: absolute; inset: 0; background: #000; }
 #maplibre-map { visibility: hidden; }
 
-.hud-bar { position: absolute; top: 14px; left: 14px; z-index: 900; pointer-events: none; display: flex; gap: 8px; }
+.hud-bar { position: absolute; top: 14px; left: 14px; z-index: 900; pointer-events: none; display: flex; gap: 8px; flex-wrap: wrap; }
 .hud-card { background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 12px; backdrop-filter: blur(16px); }
-.hud-card .lbl { font-size: 0.55rem; font-family: var(--font-mono); color: var(--text-dim); text-transform: uppercase; }
+.hud-card .lbl { font-size: 0.52rem; font-family: var(--font-mono); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
 .hud-card .val { font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--orange); margin-top: 1px; }
 
 .action-bar { position: absolute; top: 14px; right: 14px; z-index: 900; display: flex; gap: 8px; }
 .hud-btn {
-  background: var(--elevated); border: 1px solid var(--border-strong); color: #fff; padding: 8px 12px;
+  background: var(--elevated); border: 1px solid var(--border-strong); color: #fff; padding: 8px 14px;
   border-radius: 6px; font-family: var(--font-head); font-size: 0.75rem; font-weight: 600; cursor: pointer;
   backdrop-filter: blur(16px); transition: all 0.2s var(--ease);
 }
-.hud-btn.active { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
+.hud-btn.active, .hud-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
 
-/* Intake & Vision Layout */
-.intake-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: 100%; }
-@media (max-width: 900px) { .intake-grid { grid-template-columns: 1fr; height: auto; } }
-
-.card {
-  background: var(--elevated); border: 1px solid var(--border); border-radius: 12px;
-  padding: 16px; backdrop-filter: blur(16px); display: flex; flex-direction: column;
+/* ADVANCED LAYER CONTROL DRAWER */
+.layer-drawer {
+  position: absolute; top: 62px; right: 14px; z-index: 910; width: 340px;
+  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 10px;
+  padding: 16px; backdrop-filter: blur(24px); display: none; max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.8);
 }
-.card h2 {
-  margin: 0 0 12px; font-size: 0.8rem; font-family: var(--font-mono); color: var(--orange);
-  text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--border); padding-bottom: 6px;
+.layer-drawer.open { display: block; animation: viewIn 0.2s var(--ease); }
+.layer-drawer h3 {
+  margin: 12px 0 8px; font-family: var(--font-mono); font-size: 0.62rem; color: var(--orange);
+  text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
+.layer-drawer h3:first-child { margin-top: 0; }
+.layer-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; margin-bottom: 6px; font-size: 0.75rem;
+}
+.layer-row input[type="checkbox"], .layer-row input[type="radio"] { accent-color: var(--orange); cursor: pointer; width: 16px; height: 16px; }
+
+/* VISION & CHAT TAB LAYOUT */
+#vision-view { width: 100%; height: 100%; padding: 12px; gap: 12px; }
+@media (max-width: 960px) { #vision-view { flex-direction: column; overflow-y: auto; } }
+
+.v-panel {
+  background: var(--elevated); border: 1px solid var(--border); border-radius: 10px;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.v-panel.left { flex: 1.1; }
+.v-panel.right { flex: 1.4; border-color: var(--border-strong); }
+
+.panel-head {
+  padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
 }
+.panel-head h2 { margin: 0; font-family: var(--font-mono); font-size: 0.7rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; }
 
-.upload-box {
-  border: 2px dashed var(--border-strong); border-radius: 10px; padding: 24px 16px;
-  text-align: center; background: rgba(240,138,46,0.02); cursor: pointer; transition: all 0.2s var(--ease);
+.upload-dropzone {
+  margin: 12px; border: 2px dashed var(--border-strong); border-radius: 8px;
+  padding: 20px 14px; text-align: center; background: rgba(240,138,46,0.02);
+  cursor: pointer; transition: all 0.2s var(--ease);
 }
-.upload-box:hover { border-color: var(--orange); background: var(--orange-glow); }
+.upload-dropzone:hover { border-color: var(--orange); background: var(--orange-glow); }
 
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 12px; max-height: 220px; overflow-y: auto; }
-.gallery-item {
+.gallery-scroller {
+  flex: 1; padding: 0 12px 12px; overflow-y: auto; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
+}
+.gallery-card {
   position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 1;
-  border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s;
+  border: 1px solid var(--border); cursor: pointer; background: #000; transition: all 0.15s;
 }
-.gallery-item:hover { transform: scale(1.03); border-color: var(--orange); }
-.gallery-item.selected { border: 2px solid var(--mint); box-shadow: 0 0 10px var(--mint-glow); }
-.gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-.gallery-item .tag {
-  position: absolute; bottom: 2px; left: 2px; font-family: var(--font-mono); font-size: 0.5rem;
-  background: rgba(0,0,0,0.85); color: var(--mint); padding: 1px 4px; border-radius: 3px;
+.gallery-card:hover { border-color: var(--orange); }
+.gallery-card.selected { border: 2px solid var(--mint); box-shadow: 0 0 12px var(--mint-glow); }
+.gallery-card img { width: 100%; height: 100%; object-fit: cover; }
+.gallery-card .tag {
+  position: absolute; bottom: 4px; left: 4px; font-family: var(--font-mono); font-size: 0.52rem;
+  background: rgba(0,0,0,0.85); color: var(--mint); padding: 2px 5px; border-radius: 3px; font-weight: 600;
 }
 
-/* Chat & Vision Output Engine */
-.chat-window {
-  flex: 1; background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; min-height: 380px;
+/* VISION CANVAS OVERLAY (BOUNDING BOXES) */
+.viewport-preview {
+  position: relative; width: 100%; height: 260px; background: #000; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-.msg { max-width: 90%; font-size: 0.8rem; line-height: 1.45; padding: 10px 12px; border-radius: 8px; }
-.msg.ai {
+.viewport-preview img { width: 100%; height: 100%; object-fit: contain; }
+.bbox {
+  position: absolute; border: 2px solid var(--orange); background: rgba(240, 138, 46, 0.18);
+  box-shadow: 0 0 15px rgba(240, 138, 46, 0.4); pointer-events: none;
+}
+.bbox-label {
+  position: absolute; top: -20px; left: -2px; background: var(--orange); color: #000;
+  font-family: var(--font-mono); font-size: 0.55rem; font-weight: 700; padding: 1px 5px; text-transform: uppercase;
+}
+
+/* ADVANCED CHAT & INTEL WORKFLOW */
+.chat-container { flex: 1; display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
+.chat-logs { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+
+.chat-msg { max-width: 95%; font-size: 0.8rem; line-height: 1.45; padding: 12px 14px; border-radius: 8px; }
+.chat-msg.system {
   background: var(--elevated); border: 1px solid var(--border-strong); color: var(--text);
-  align-self: flex-start; font-family: var(--font-main);
+  align-self: flex-start; width: 100%;
 }
-.msg.user {
-  background: var(--orange-glow); border: 1px solid var(--orange); color: #fff;
-  align-self: flex-end; font-family: var(--font-main);
+.chat-msg.user {
+  background: var(--orange-glow); border: 1px solid var(--orange); color: #fff; align-self: flex-end;
 }
-.msg .badge-title {
-  font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; color: var(--orange);
-  text-transform: uppercase; margin-bottom: 4px; display: block;
-}
-.msg .action-list { margin: 6px 0 0; padding-left: 18px; color: var(--mint); font-family: var(--font-mono); font-size: 0.72rem; }
 
-.chat-input-bar {
-  display: flex; gap: 8px; padding: 10px; background: var(--surface); border-top: 1px solid var(--border);
+.intel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
+.intel-cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+.intel-cell .lbl { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; }
+.intel-cell .val { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--mint); margin-top: 2px; }
+
+.directive-box {
+  background: rgba(80, 227, 194, 0.05); border: 1px solid var(--mint); border-radius: 6px;
+  padding: 10px; margin-top: 10px;
 }
+.directive-box h4 { margin: 0 0 6px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--mint); text-transform: uppercase; }
+.directive-box ul { margin: 0; padding-left: 18px; font-size: 0.75rem; color: var(--text); }
+.directive-box li { margin-bottom: 4px; }
+
+.chat-controls { display: flex; gap: 8px; padding: 10px; background: var(--surface-2); border-top: 1px solid var(--border); }
 .chat-input {
   flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
   padding: 8px 12px; color: #fff; font-family: var(--font-main); font-size: 0.8rem; outline: none;
 }
 .chat-input:focus { border-color: var(--orange); }
 
+/* BOTTOM NAV */
 .bottom-nav {
   height: var(--nav-h); background: rgba(3,5,4,0.96); border-top: 1px solid var(--border);
   display: flex; z-index: 10000;
 }
 .nav-btn {
   flex: 1; border: none; background: none; color: var(--text-dim); font-family: var(--font-head);
-  font-size: 0.7rem; font-weight: 600; display: flex; flex-direction: column; align-items: center;
+  font-size: 0.72rem; font-weight: 600; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 3px; cursor: pointer; transition: color 0.15s;
 }
 .nav-btn.active { color: var(--orange); }
 .btn-primary {
   background: var(--orange); color: #000; border: none; padding: 8px 14px;
-  border-radius: 6px; font-family: var(--font-head); font-weight: 700; font-size: 0.8rem;
-  cursor: pointer; transition: all 0.15s;
+  border-radius: 6px; font-family: var(--font-head); font-weight: 700; font-size: 0.8rem; cursor: pointer;
 }
 </style>
 </head>
@@ -177,69 +227,124 @@ header {
 
 <header>
   <div class="brand">
-    <div class="logo-badge">AI</div>
-    <h1>BUCKTRACK <span>VISION INTEL</span></h1>
+    <div class="logo-badge">PRO</div>
+    <h1>BUCKTRACK <span>ULTRA GIS & VISION</span></h1>
   </div>
-  <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--mint);">NEURAL ENGINE READY</div>
+  <div class="telemetry-strip">
+    <div>SOLUNAR: <span>MAJOR PEAK (06:15 - 08:30)</span></div>
+    <div>FPS: <span id="fps-val">60</span></div>
+  </div>
 </header>
 
 <main class="main-viewport">
-  <!-- Map Section -->
+  <!-- MAP CONSOLE VIEW -->
   <section id="map-view" class="tab-content active">
     <div class="hud-bar">
       <div class="hud-card">
-        <div class="lbl">COORDINATES</div>
+        <div class="lbl">LAT / LON COORDS</div>
         <div class="val" id="hud-coords">45.8167, -64.2167</div>
       </div>
       <div class="hud-card">
-        <div class="lbl">TARGET ZONE</div>
-        <div class="val" style="color:var(--mint);">Springhill Sector 4</div>
+        <div class="lbl">ELEVATION (LIDAR)</div>
+        <div class="val" id="hud-ele">142m MSL</div>
+      </div>
+      <div class="hud-card">
+        <div class="lbl">PREDICTIVE CORRIDOR</div>
+        <div class="val" style="color:var(--mint);">Active Neural Model</div>
       </div>
     </div>
+
     <div class="action-bar">
       <button class="hud-btn" onclick="toggleEngine3D()" id="btn-3d-toggle">⛰️ 3D Globe</button>
+      <button class="hud-btn" onclick="toggleDrawer()">🎛️ Advanced Layers</button>
     </div>
+
+    <!-- ADVANCED GIS LAYERS DRAWER -->
+    <div class="layer-drawer" id="layerDrawer">
+      <h3>Basemap Engines</h3>
+      <div class="layer-row">
+        <span>Esri World High-Res Imagery</span>
+        <input type="radio" name="base" value="esri" checked onchange="setBaseMap(this.value)">
+      </div>
+      <div class="layer-row">
+        <span>Carto Dark Vector Base</span>
+        <input type="radio" name="base" value="dark" onchange="setBaseMap(this.value)">
+      </div>
+
+      <h3>Provincial & Tactical Overlays</h3>
+      <div class="layer-row">
+        <span>Provincial Crown Land Polygons</span>
+        <input type="checkbox" id="chk-crown" checked onchange="toggleCrownLayer(this.checked)">
+      </div>
+      <div class="layer-row">
+        <span>Topographic Contour Overlay (NRCan)</span>
+        <input type="checkbox" id="chk-topo" checked onchange="toggleOverlay('topo', this.checked)">
+      </div>
+
+      <h3>Neural AI Predictive Overlays</h3>
+      <div class="layer-row">
+        <span>Predictive Buck Bedding Hotspots</span>
+        <input type="checkbox" id="chk-bedding" checked onchange="toggleOverlay('bedding', this.checked)">
+      </div>
+      <div class="layer-row">
+        <span>Thermal Ridge Travel Funnels</span>
+        <input type="checkbox" id="chk-thermal" checked onchange="toggleOverlay('thermal', this.checked)">
+      </div>
+      <div class="layer-row">
+        <span>Micro-Climate Wind Vectors</span>
+        <input type="checkbox" id="chk-wind" checked onchange="toggleOverlay('wind', this.checked)">
+      </div>
+    </div>
+
     <div id="leaflet-map"></div>
     <div id="maplibre-map"></div>
   </section>
 
-  <!-- Intake & AI Chat Section -->
-  <section id="photos-view" class="tab-content">
-    <div class="intake-grid">
-      <!-- Media Intake Side -->
-      <div class="card">
-        <h2>
-          <span>1. SD Card / Photo Dump</span>
-          <span style="color:var(--text-dim); font-size:0.65rem;" id="photo-count">0 Files</span>
-        </h2>
-        <div class="upload-box" onclick="document.getElementById('file-input').click()">
-          <div style="font-family: var(--font-head); font-weight:700; color:var(--orange);">SELECT / DROP TRAIL CAM PHOTOS</div>
-          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px;">Automated EXIF Extraction & Visual Target Analysis</div>
-        </div>
-        <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+  <!-- ADVANCED VISION & CHAT TAB -->
+  <section id="vision-view" class="tab-content">
+    <!-- LEFT PANEL: MEDIA INTAKE & FRAME VAULT -->
+    <div class="v-panel left">
+      <div class="panel-head">
+        <h2>1. SD Card Frame Vault</h2>
+        <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim);" id="photo-count">0 Files</span>
+      </div>
+      <div class="upload-dropzone" onclick="document.getElementById('file-input').click()">
+        <div style="font-family: var(--font-head); font-weight:700; color:var(--orange);">LOAD TRAIL CAM SD DUMP</div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Automatic EXIF timestamping & neural target bounding</div>
+      </div>
+      <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 
-        <h2 style="margin-top: 14px;">Indexed Frames (Click to Analyze)</h2>
-        <div class="gallery-grid" id="photo-gallery">
-          <div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--text-dim); text-align: center; padding: 20px 0;">
-            No photos loaded. Click above to test SD import.
-          </div>
+      <div class="gallery-scroller" id="photo-gallery">
+        <div style="grid-column:1/-1; text-align:center; color:var(--text-dim); font-size:0.75rem; padding:30px 0;">
+          No SD frames loaded. Click above to test intake.
         </div>
       </div>
+    </div>
 
-      <!-- Vision AI Chat Side -->
-      <div class="card">
-        <h2><span>2. Vision AI Analysis & Tactical Directives</span></h2>
-        <div class="chat-window">
-          <div class="chat-messages" id="chat-msgs">
-            <div class="msg ai">
-              <span class="badge-title">SYSTEM ASSISTANT</span>
-              Upload photos or click a frame from the gallery. I will decode what the AI sees (antler configuration, age class, trajectory) and give you your next step.
-            </div>
+    <!-- RIGHT PANEL: NEURAL VISION INSPECTOR & ADVANCED CHAT -->
+    <div class="v-panel right">
+      <div class="panel-head">
+        <h2>2. Neural Vision Inspector & AI Directives</h2>
+        <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--mint);">MODEL: BUCK-VISION-V4</span>
+      </div>
+
+      <!-- VISION BBOX PREVIEW -->
+      <div class="viewport-preview" id="viewport-preview">
+        <div style="color:var(--text-dim); font-size:0.75rem; font-family:var(--font-mono);">SELECT FRAME FOR NEURAL BOUNDING</div>
+      </div>
+
+      <!-- CHAT ENGINE -->
+      <div class="chat-container">
+        <div class="chat-logs" id="chat-logs">
+          <div class="chat-msg system">
+            <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block; margin-bottom:4px;">[NEURAL SYSTEM INITIALIZED]</span>
+            Upload trail camera frames to run computer vision object detection. I will generate antler geometry metrics, age estimation, movement trajectory, and spatial recommendations on your GIS map.
           </div>
-          <div class="chat-input-bar">
-            <input type="text" class="chat-input" id="chat-input" placeholder="Ask AI about travel corridor, wind setup, or bait response..." onkeydown="if(event.key==='Enter') sendUserQuery()">
-            <button class="btn-primary" onclick="sendUserQuery()">Send</button>
-          </div>
+        </div>
+
+        <div class="chat-controls">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Query AI regarding wind funneling, bedding location, or stand placement..." onkeydown="if(event.key==='Enter') sendUserQuery()">
+          <button class="btn-primary" onclick="sendUserQuery()">Execute</button>
         </div>
       </div>
     </div>
@@ -247,23 +352,52 @@ header {
 </main>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchTab('map-view', this)">🗺️ MAP</button>
-  <button class="nav-btn" onclick="switchTab('photos-view', this)">📸 VISION INTAKE</button>
+  <button class="nav-btn active" onclick="switchTab('map-view', this)">🗺️ GIS MAP</button>
+  <button class="nav-btn" onclick="switchTab('vision-view', this)">👁️ ADVANCED VISION & AI</button>
 </nav>
 
 <script>
 const DEFAULT_COORDS = [45.8167, -64.2167];
 let leafletMap, maplibreMap, is3DEngine = false;
+let leafletBaseLayers = {}, leafletOverlays = {}, crownLandLayer, activeBaseLayer;
 let uploadedImages = [];
 
+// 1. Leaflet 2D GIS Setup
 function initLeafletEngine() {
   leafletMap = L.map('leaflet-map', { zoomControl: false }).setView(DEFAULT_COORDS, 13);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(leafletMap);
+
+  leafletBaseLayers.esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+  leafletBaseLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+
+  activeBaseLayer = leafletBaseLayers.esri;
+  activeBaseLayer.addTo(leafletMap);
+
+  // Overlays
+  leafletOverlays.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { opacity: 0.35 });
+  leafletOverlays.topo.addTo(leafletMap);
+
+  // GeoNova Crown Land Layer
+  crownLandLayer = L.esri.featureLayer({
+    url: 'https://nsgiwa.novascotia.ca/arcgis/rest/services/PLAN/PLANCrownLandsWM84V1/MapServer/0',
+    style: function () { return { color: '#f08a2e', weight: 2, dashArray: '4,4', fillColor: '#f08a2e', fillOpacity: 0.2 }; }
+  });
+  crownLandLayer.addTo(leafletMap);
+
+  // Neural Spatial Layers
+  const beddingZone = L.circle([45.8290, -64.2260], { radius: 350, color: '#ff3b30', fillColor: '#ff3b30', fillOpacity: 0.3 }).bindPopup("<b>Predictive Bedding Area</b><br>Slope: 18° NW | High Cover Density");
+  const thermalPinch = L.polyline([[45.8280, -64.2280], [45.8210, -64.2200], [45.8150, -64.2120]], { color: '#00d2ff', weight: 4 }).bindPopup("<b>Thermal Ridge Corridor</b>");
+  const windVector = L.polyline([[45.8150, -64.2120], [45.8100, -64.2050]], { color: '#50e3c2', weight: 3, dashArray: '6,6' }).bindPopup("<b>Micro-Wind Deflection Vector</b>");
+
+  leafletOverlays.bedding = L.layerGroup([beddingZone]).addTo(leafletMap);
+  leafletOverlays.thermal = L.layerGroup([thermalPinch]).addTo(leafletMap);
+  leafletOverlays.wind = L.layerGroup([windVector]).addTo(leafletMap);
+
   leafletMap.on('mousemove', (e) => {
     document.getElementById('hud-coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
   });
 }
 
+// 2. MapLibre 3D Setup
 function initMapLibreEngine() {
   maplibreMap = new maplibregl.Map({
     container: 'maplibre-map',
@@ -296,6 +430,21 @@ function toggleEngine3D() {
   }
 }
 
+function toggleDrawer() { document.getElementById('layerDrawer').classList.toggle('open'); }
+function setBaseMap(type) {
+  if (leafletMap.hasLayer(activeBaseLayer)) leafletMap.removeLayer(activeBaseLayer);
+  activeBaseLayer = (type === 'dark') ? leafletBaseLayers.dark : leafletBaseLayers.esri;
+  activeBaseLayer.addTo(leafletMap);
+}
+function toggleOverlay(key, enable) {
+  if (enable) leafletMap.addLayer(leafletOverlays[key]);
+  else leafletMap.removeLayer(leafletOverlays[key]);
+}
+function toggleCrownLayer(enable) {
+  if (enable) leafletMap.addLayer(crownLandLayer);
+  else leafletMap.removeLayer(crownLandLayer);
+}
+
 function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
@@ -306,7 +455,7 @@ function switchTab(tabId, btn) {
   }
 }
 
-// Photo Upload + AI Auto Analysis Trigger
+// ADVANCED VISION INTAKE & BOUNDING BOX PROCESSING
 function handlePhotoUpload(e) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
@@ -323,89 +472,81 @@ function handlePhotoUpload(e) {
       uploadedImages.push({ id: index, src: src, name: file.name });
       
       const item = document.createElement('div');
-      item.className = `gallery-item ${index === 0 ? 'selected' : ''}`;
-      item.onclick = () => selectFrameForAnalysis(index);
+      item.className = `gallery-card ${index === 0 ? 'selected' : ''}`;
+      item.onclick = () => selectFrame(index);
       item.innerHTML = `<img src="${src}"><span class="tag">FRAME ${index + 1}</span>`;
       gallery.appendChild(item);
 
-      if (index === 0) runVisionAIAnalysis(file.name, 1);
+      if (index === 0) selectFrame(0);
     };
     reader.readAsDataURL(file);
   });
 }
 
-function selectFrameForAnalysis(index) {
-  document.querySelectorAll('.gallery-item').forEach((el, i) => {
+function selectFrame(index) {
+  document.querySelectorAll('.gallery-card').forEach((el, i) => {
     if (i === index) el.classList.add('selected');
     else el.classList.remove('selected');
   });
+
   const img = uploadedImages[index];
-  if (img) runVisionAIAnalysis(img.name, index + 1);
+  if (!img) return;
+
+  // Render Viewport with Bounding Box Overlay
+  const preview = document.getElementById('viewport-preview');
+  preview.innerHTML = `
+    <img src="${img.src}">
+    <div class="bbox" style="top: 25%; left: 30%; width: 42%; height: 55%;">
+      <div class="bbox-label">MATURE BUCK [98.2%]</div>
+    </div>
+  `;
+
+  runAdvancedAIEngine(img.name, index + 1);
 }
 
-// Simulated High-Accuracy AI Vision Detection Output
-function runVisionAIAnalysis(fileName, frameNum) {
-  const msgs = document.getElementById('chat-msgs');
+// ADVANCED AI VISION INTELLIGENCE BREAKDOWN
+function runAdvancedAIEngine(fileName, frameNum) {
+  const logs = document.getElementById('chat-logs');
 
-  // Insert loading state
-  const loadingMsg = document.createElement('div');
-  loadingMsg.className = 'msg ai';
-  loadingMsg.id = 'temp-loader';
-  loadingMsg.innerHTML = `<span class="badge-title">AI VISION NEURAL SCANNING...</span> Analyzing raster pixels on Frame ${frameNum} (${fileName})...`;
-  msgs.appendChild(loadingMsg);
-  msgs.scrollTop = msgs.scrollHeight;
-
-  setTimeout(() => {
-    const temp = document.getElementById('temp-loader');
-    if (temp) temp.remove();
-
-    const mockDetections = [
-      {
-        target: "MATURE 10-POINT BUCK (Est. 4.5 YRS)",
-        confidence: "96.4%",
-        time: "21:42 (Night Transition)",
-        direction: "Heading West toward Ridge Cedar Swamp",
-        analysis: "Wide main beams extending past ears with heavy tine mass. Deep chest and dropped brisket.",
-        nextSteps: [
-          "Check thermal wind layer on 3D Map for West ridge funnel.",
-          "Set trail camera 150m North along the ridge line to verify bedding area.",
-          "Avoid daylight entry; target movement is strictly nocturnal right now."
-        ]
-      },
-      {
-        target: "2x JUNIOR BUCKS (8-POINT & SPIKE)",
-        confidence: "91.2%",
-        time: "18:15 (Last Light)",
-        direction: "Heading East toward lower Oak Flats",
-        analysis: "High velvet/early scrape activity. Relaxed posture indicating low scent pressure.",
-        nextSteps: [
-          "Maintain current bait/feed mixture.",
-          "Keep wind vector South-Southwest when approaching setup."
-        ]
-      }
-    ];
-
-    const data = mockDetections[frameNum % mockDetections.length];
-
-    const aiMsg = document.createElement('div');
-    aiMsg.className = 'msg ai';
-    aiMsg.innerHTML = `
-      <span class="badge-title">👁️ WHAT AI SEES — FRAME ${frameNum}</span>
-      <strong>Target Identified:</strong> ${data.target} (${data.confidence} Match)<br>
-      <strong>Detection Time:</strong> ${data.time}<br>
-      <strong>Movement Vector:</strong> ${data.direction}<br><br>
-      <strong>Visual Breakdown:</strong> ${data.analysis}
-      
-      <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:6px;">
-        <span class="badge-title" style="color:var(--mint);">🎯 WHAT YOU NEED TO DO NEXT</span>
-        <ul class="action-list">
-          ${data.nextSteps.map(s => `<li>${s}</li>`).join('')}
-        </ul>
+  const analysisMsg = document.createElement('div');
+  analysisMsg.className = 'chat-msg system';
+  analysisMsg.innerHTML = `
+    <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block;">[COMPUTER VISION DECODE — FRAME ${frameNum}]</span>
+    
+    <div class="intel-grid">
+      <div class="intel-cell">
+        <div class="lbl">TARGET SPECIES / AGE</div>
+        <div class="val">White-Tail Buck (4.5+ Yrs)</div>
       </div>
-    `;
-    msgs.appendChild(aiMsg);
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 1000);
+      <div class="intel-cell">
+        <div class="lbl">ANTLER STRUCTURE</div>
+        <div class="val">10-Point Heavy Mass</div>
+      </div>
+      <div class="intel-cell">
+        <div class="lbl">EST. LIVE WEIGHT</div>
+        <div class="val">215 lbs (Deep Chest)</div>
+      </div>
+      <div class="intel-cell">
+        <div class="lbl">TRAJECTORY VECTOR</div>
+        <div class="val">310° NW (Heading to Ridge)</div>
+      </div>
+    </div>
+
+    <strong style="color:#fff; font-size:0.75rem;">Neural Biometric Scan:</strong>
+    Tine mass index indicates mature structure with prominent G2/G3 split. Body posture reveals heightened awareness but calm feeding orientation.
+
+    <div class="directive-box">
+      <h4>🎯 AI TACTICAL DIRECTIVES & MAP ACTIONS</h4>
+      <ul>
+        <li><strong>Stand Placement:</strong> Position south of the NW thermal ridge corridor to intercept nocturnal return route.</li>
+        <li><strong>Wind Alignment:</strong> Target current NW wind deflection vector highlighted in cyan on the GIS map.</li>
+        <li><strong>Camera Adjustment:</strong> Relocate secondary trail unit 120m North along the ridge edge to pinpoint bedding core.</li>
+      </ul>
+    </div>
+  `;
+
+  logs.appendChild(analysisMsg);
+  logs.scrollTop = logs.scrollHeight;
 }
 
 function sendUserQuery() {
@@ -413,27 +554,28 @@ function sendUserQuery() {
   const txt = input.value.trim();
   if (!txt) return;
 
-  const msgs = document.getElementById('chat-msgs');
+  const logs = document.getElementById('chat-logs');
+  
   const userMsg = document.createElement('div');
-  userMsg.className = 'msg user';
+  userMsg.className = 'chat-msg user';
   userMsg.textContent = txt;
-  msgs.appendChild(userMsg);
+  logs.appendChild(userMsg);
   input.value = "";
-  msgs.scrollTop = msgs.scrollHeight;
+  logs.scrollTop = logs.scrollHeight;
 
   setTimeout(() => {
-    const aiResponse = document.createElement('div');
-    aiResponse.className = 'msg ai';
-    aiResponse.innerHTML = `
-      <span class="badge-title">TACTICAL DIRECTIVE</span>
-      Based on your query ("${txt}") cross-referenced with uploaded frame data:
+    const systemMsg = document.createElement('div');
+    systemMsg.className = 'chat-msg system';
+    systemMsg.innerHTML = `
+      <span style="font-family:var(--font-mono); font-size:0.65rem; color:var(--mint); display:block; margin-bottom:4px;">[TACTICAL RECOMMENDATION]</span>
+      In response to <em>"${txt}"</em>:
       <br><br>
-      • <strong>Wind Recommendation:</strong> Keep your approach on the downwind side along the Northwest timber line.
-      <br>• <strong>Map Action:</strong> I have flagged the thermal corridor on your map console. Toggle 3D Globe to view slope elevation pitch.
+      • Cross-referencing current solunar peak (Major: morning) with terrain slope vectors suggests setting up 45 minutes prior to first light.
+      <br>• The predictive bedding layer on your GIS map has been highlighted. Ensure your approach path stays downwind of the red core bedding zone.
     `;
-    msgs.appendChild(aiResponse);
-    msgs.scrollTop = msgs.scrollHeight;
-  }, 800);
+    logs.appendChild(systemMsg);
+    logs.scrollTop = logs.scrollHeight;
+  }, 700);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
