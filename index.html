@@ -3,553 +3,546 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BUCKTRACK APEX | ULTRA-VISION, GIS & TACTICAL VIDEO COMMS</title>
-<meta name="theme-color" content="#020403">
+<title>BUCKTRACK PRO | Apex Deer Intelligence & GIS</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Leaflet Core -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Leaflet Core & Plugins -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js" crossorigin=""></script>
-
-<!-- MapLibre GL Engine -->
-<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
-<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<!-- SunCalc for precise Solunar/Sun/Moon math -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 
 <style>
 :root {
-  --bg: #020403;
-  --surface: #070c0a;
-  --surface-2: #0e1713;
-  --elevated: rgba(8, 14, 11, 0.94);
+  --bg: #050806;
+  --surface: rgba(12, 18, 14, 0.88);
+  --surface-solid: #0d1410;
+  --surface-elevated: #131d17;
   --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(240, 138, 46, 0.35);
-  --orange: #f08a2e;
-  --orange-glow: rgba(240, 138, 46, 0.25);
+  --border-active: #f08a2e;
+  
+  --accent: #f08a2e;
+  --accent-glow: rgba(240, 138, 46, 0.2);
   --mint: #50e3c2;
-  --mint-glow: rgba(80, 227, 194, 0.2);
-  --cyan: #00d2ff;
-  --purple: #b359ff;
-  --red: #ff3b30;
+  --mint-glow: rgba(80, 227, 194, 0.15);
+  --red: #ff453a;
+  --blue: #00d2ff;
   --yellow: #ffd60a;
+  
   --text: #f0f4f1;
-  --text-dim: #73887d;
-  --header-h: 56px;
-  --nav-h: 60px;
-  --font-main: "IBM Plex Sans", sans-serif;
-  --font-head: "Chakra Petch", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --text-dim: #7a8f83;
+  
+  --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "IBM Plex Mono", Menlo, monospace;
 }
 
-*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; -webkit-font-smoothing: antialiased; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; }
 
-/* CRT/Tactical Glass Overlay Effect */
-body::after {
-  content: ""; position: fixed; inset: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.008), rgba(0, 0, 255, 0.01));
-  background-size: 100% 3px, 6px 100%;
-  pointer-events: none; z-index: 99999; opacity: 0.3;
+/* Dynamic Layout Framework */
+.app-viewport {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Minimal Top Bar */
 header {
-  height: var(--header-h); padding: 0 16px; background: rgba(2, 4, 3, 0.95);
-  border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
-  z-index: 1000; backdrop-filter: blur(20px); position: relative;
+  height: 44px;
+  background: var(--surface-solid);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  z-index: 1000;
+  flex-shrink: 0;
 }
-.brand { display: flex; align-items: center; gap: 10px; }
-.brand .logo-badge {
-  width: 34px; height: 34px; background: rgba(240, 138, 46, 0.12);
-  border: 1px solid var(--orange); border-radius: 6px; display: flex; align-items: center;
-  justify-content: center; font-family: var(--font-head); font-weight: 700; color: var(--orange); font-size: 0.85rem;
-  box-shadow: 0 0 16px var(--orange-glow);
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
 }
-.brand h1 { margin: 0; font-size: 1.05rem; font-family: var(--font-head); font-weight: 700; letter-spacing: 0.08em; color: #fff; }
-.brand h1 span { color: var(--orange); }
+.brand-badge {
+  background: var(--accent);
+  color: #000;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 0.6rem;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.solunar-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--mint);
+  background: var(--mint-glow);
+  border: 1px solid rgba(80, 227, 194, 0.3);
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-.telemetry-strip { display: flex; gap: 14px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); }
-.telemetry-strip span { color: var(--mint); font-weight: 600; }
+/* Main Workspace Split */
+.workspace {
+  flex: 1;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
 
-.main-viewport {
-  height: calc(100dvh - var(--header-h) - var(--nav-h)); width: 100%; position: relative; overflow: hidden;
+/* Map Engine Viewport */
+#map-container {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background: #020403;
 }
-.tab-content { display: none; width: 100%; height: 100%; }
-.tab-content.active { display: flex; animation: viewIn 0.2s var(--ease); }
-@keyframes viewIn { from { opacity: 0; transform: scale(0.995); } to { opacity: 1; transform: scale(1); } }
+#map { width: 100%; height: 100%; z-index: 1; }
 
-/* MAP VIEW LAYOUT */
-#map-view { position: relative; width: 100%; height: 100%; flex-direction: column; }
-#leaflet-map, #maplibre-map { width: 100%; height: 100%; position: absolute; inset: 0; background: #000; }
-#maplibre-map { visibility: hidden; }
+/* Floating Map Controls */
+.map-top-bar {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 500;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.map-chip {
+  pointer-events: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.map-chip .val { color: var(--accent); font-weight: 700; }
 
-/* TACTICAL HUD BAR OVER MAP */
-.hud-bar { position: absolute; top: 12px; left: 12px; z-index: 900; pointer-events: none; display: flex; gap: 8px; flex-wrap: wrap; }
-.hud-card {
-  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 8px;
-  padding: 6px 12px; backdrop-filter: blur(16px); box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+.map-btn-group {
+  pointer-events: auto;
+  display: flex;
+  gap: 6px;
 }
-.hud-card .lbl { font-size: 0.52rem; font-family: var(--font-mono); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
-.hud-card .val { font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--orange); margin-top: 2px; }
+.map-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  backdrop-filter: blur(16px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.map-btn:hover, .map-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--surface-elevated);
+}
 
-/* PHASE SELECTOR HUD PANEL */
-.phase-selector-bar {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 900;
-  display: flex; background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 8px;
-  padding: 3px; backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+/* Legend & Layer Control Drawer */
+.layer-panel {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  width: 280px;
+  max-height: calc(100% - 70px);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  z-index: 600;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+  overflow-y: auto;
 }
-.phase-btn {
-  background: none; border: none; color: var(--text-dim); padding: 6px 14px; border-radius: 6px;
-  font-family: var(--font-head); font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+.layer-panel.open { display: flex; }
+.panel-section-title {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
 }
-.phase-btn.active { background: var(--orange); color: #000; box-shadow: 0 0 12px var(--orange-glow); }
-
-.action-bar { position: absolute; top: 12px; right: 12px; z-index: 900; display: flex; gap: 8px; }
-.hud-btn {
-  background: var(--elevated); border: 1px solid var(--border-strong); color: #fff; padding: 8px 14px;
-  border-radius: 8px; font-family: var(--font-head); font-size: 0.75rem; font-weight: 600; cursor: pointer;
-  backdrop-filter: blur(16px); transition: all 0.2s var(--ease); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-}
-.hud-btn.active, .hud-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
-
-/* ADVANCED LAYER CONTROL DRAWER */
-.layer-drawer {
-  position: absolute; top: 60px; right: 12px; z-index: 910; width: 340px;
-  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 12px;
-  padding: 16px; backdrop-filter: blur(24px); display: none; max-height: 80vh; overflow-y: auto;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-}
-.layer-drawer.open { display: block; animation: viewIn 0.2s var(--ease); }
-.layer-drawer h3 {
-  margin: 14px 0 8px; font-family: var(--font-mono); font-size: 0.62rem; color: var(--orange);
-  text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 4px;
-}
-.layer-drawer h3:first-child { margin-top: 0; }
 .layer-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 6px; margin-bottom: 6px; font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
 }
-.layer-row input[type="checkbox"], .layer-row input[type="radio"] { accent-color: var(--orange); cursor: pointer; width: 16px; height: 16px; }
+.layer-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.layer-row input[type="checkbox"], .layer-row input[type="radio"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
 
-/* VISION & CHAT TAB LAYOUT */
-#vision-view { width: 100%; height: 100%; padding: 12px; gap: 12px; }
-@media (max-width: 960px) { #vision-view { flex-direction: column; overflow-y: auto; } }
-
-.v-panel {
-  background: var(--elevated); border: 1px solid var(--border); border-radius: 12px;
-  display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.7);
-}
-.v-panel.left { flex: 1; }
-.v-panel.right { flex: 1.4; border-color: var(--border-strong); }
-
-.panel-head {
-  padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border);
-  display: flex; justify-content: space-between; align-items: center;
-}
-.panel-head h2 { margin: 0; font-family: var(--font-mono); font-size: 0.7rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; }
-
-.upload-dropzone {
-  margin: 12px; border: 2px dashed var(--border-strong); border-radius: 8px;
-  padding: 18px 14px; text-align: center; background: rgba(240, 138, 46, 0.02);
-  cursor: pointer; transition: all 0.2s var(--ease);
-}
-.upload-dropzone:hover { border-color: var(--orange); background: var(--orange-glow); }
-
-.gallery-scroller {
-  flex: 1; padding: 0 12px 12px; overflow-y: auto; display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
-}
-.gallery-card {
-  position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 1;
-  border: 1px solid var(--border); cursor: pointer; background: #000; transition: all 0.15s;
-}
-.gallery-card:hover { border-color: var(--orange); }
-.gallery-card.selected { border: 2px solid var(--mint); box-shadow: 0 0 12px var(--mint-glow); }
-.gallery-card img { width: 100%; height: 100%; object-fit: cover; }
-.gallery-card .tag {
-  position: absolute; bottom: 4px; left: 4px; font-family: var(--font-mono); font-size: 0.52rem;
-  background: rgba(0,0,0,0.85); color: var(--mint); padding: 2px 5px; border-radius: 3px; font-weight: 600;
+/* Integrated Hunting AI Drawer Panel */
+.ai-panel {
+  width: 360px;
+  height: 100%;
+  background: var(--surface-solid);
+  border-left: 1px solid var(--border);
+  z-index: 700;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* VISION CANVAS OVERLAY (BOUNDING BOXES) */
-.viewport-preview {
-  position: relative; width: 100%; height: 260px; background: #000; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; overflow: hidden;
-}
-.viewport-preview img { width: 100%; height: 100%; object-fit: contain; }
-.bbox {
-  position: absolute; border: 2px solid var(--orange); background: rgba(240, 138, 46, 0.18);
-  box-shadow: 0 0 15px rgba(240, 138, 46, 0.4); pointer-events: none;
-}
-.bbox-label {
-  position: absolute; top: -20px; left: -2px; background: var(--orange); color: #000;
-  font-family: var(--font-mono); font-size: 0.55rem; font-weight: 700; padding: 1px 5px; text-transform: uppercase;
-}
-
-/* ADVANCED CHAT & VIDEO WORKFLOW */
-.chat-container { flex: 1; display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
-.chat-logs { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-
-.chat-msg { max-width: 95%; font-size: 0.8rem; line-height: 1.45; padding: 12px 14px; border-radius: 8px; }
-.chat-msg.system {
-  background: var(--elevated); border: 1px solid var(--border-strong); color: var(--text);
-  align-self: flex-start; width: 100%;
-}
-.chat-msg.user {
-  background: var(--orange-glow); border: 1px solid var(--orange); color: #fff; align-self: flex-end;
+@media (max-width: 768px) {
+  .ai-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 55%;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    transform: translateY(100%);
+  }
+  .ai-panel.mobile-open { transform: translateY(0); }
 }
 
-.intel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
-.intel-cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
-.intel-cell .lbl { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; }
-.intel-cell .val { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--mint); margin-top: 2px; }
-
-.directive-box {
-  background: rgba(80, 227, 194, 0.05); border: 1px solid var(--mint); border-radius: 6px;
-  padding: 10px; margin-top: 10px;
+.ai-head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.02);
 }
-.directive-box h4 { margin: 0 0 6px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--mint); text-transform: uppercase; }
-.directive-box ul { margin: 0; padding-left: 18px; font-size: 0.75rem; color: var(--text); }
-.directive-box li { margin-bottom: 4px; }
+.ai-head h2 { font-size: 0.78rem; font-family: var(--font-mono); color: var(--accent); letter-spacing: 0.05em; }
 
-.chat-controls { display: flex; gap: 8px; padding: 10px; background: var(--surface-2); border-top: 1px solid var(--border); align-items: center; }
-.chat-input {
-  flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-  padding: 8px 12px; color: #fff; font-family: var(--font-main); font-size: 0.8rem; outline: none;
+.chat-log {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-.chat-input:focus { border-color: var(--orange); }
-
-/* VIDEO CALL MODAL & HUD OVERLAYS */
-.video-modal {
-  position: fixed; inset: 0; z-index: 99999; background: rgba(2, 4, 3, 0.96);
-  display: none; flex-direction: column; backdrop-filter: blur(20px);
+.msg {
+  max-width: 90%;
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
-.video-modal.active { display: flex; animation: viewIn 0.25s var(--ease); }
-
-.video-header {
-  padding: 12px 20px; background: var(--surface-2); border-bottom: 1px solid var(--border);
-  display: flex; justify-content: space-between; align-items: center;
+.msg.system {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text);
+  align-self: flex-start;
 }
-.video-header h3 { margin: 0; font-family: var(--font-head); color: var(--mint); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
-.live-indicator { width: 10px; height: 10px; background: var(--red); border-radius: 50%; box-shadow: 0 0 10px var(--red); animation: pulse 1.2s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-.video-stage { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-#remote-video-stream { width: 100%; height: 100%; object-fit: cover; }
-#local-video-preview {
-  position: absolute; bottom: 20px; right: 20px; width: 160px; height: 120px;
-  background: #111; border: 2px solid var(--orange); border-radius: 8px;
-  object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 10;
+.msg.user {
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  align-self: flex-end;
 }
 
-.tactical-video-hud {
-  position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5;
-  display: flex; flex-direction: column; gap: 8px;
+.ai-input-bar {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 6px;
+  background: var(--bg);
 }
-.hud-tag {
-  background: rgba(8, 14, 11, 0.85); border: 1px solid var(--mint); border-radius: 4px;
-  padding: 4px 8px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--mint);
-  backdrop-filter: blur(10px);
+.ai-input-bar input {
+  flex: 1;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 0.78rem;
+  outline: none;
+}
+.ai-input-bar input:focus { border-color: var(--accent); }
+.ai-input-bar button {
+  background: var(--accent);
+  border: none;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #000;
+  cursor: pointer;
 }
 
-.video-controls-bar {
-  padding: 16px; background: var(--surface-2); border-top: 1px solid var(--border);
-  display: flex; justify-content: center; gap: 16px; align-items: center;
+/* Mobile Bottom Navigation Dock */
+.mobile-dock {
+  display: none;
+  height: 48px;
+  background: var(--surface-solid);
+  border-top: 1px solid var(--border);
+  z-index: 1000;
+  padding: 0 12px;
 }
-.v-cmd-btn {
-  width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border-strong);
-  background: var(--elevated); color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
+@media (max-width: 768px) {
+  .mobile-dock { display: flex; align-items: center; justify-content: space-around; }
 }
-.v-cmd-btn:hover { border-color: var(--orange); color: var(--orange); transform: scale(1.05); }
-.v-cmd-btn.active-off { background: rgba(255, 59, 48, 0.2); border-color: var(--red); color: var(--red); }
-.v-cmd-btn.end-call { background: var(--red); border-color: var(--red); color: #fff; width: 56px; height: 56px; }
+.dock-tab {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+.dock-tab.active { color: var(--accent); }
 
-/* BOTTOM NAV */
-.bottom-nav {
-  height: var(--nav-h); background: rgba(2,4,3,0.96); border-top: 1px solid var(--border);
-  display: flex; z-index: 10000;
+/* Wind Cone Graphic Canvas Overlay */
+.wind-indicator {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--mint);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
-.nav-btn {
-  flex: 1; border: none; background: none; color: var(--text-dim); font-family: var(--font-head);
-  font-size: 0.72rem; font-weight: 600; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 3px; cursor: pointer; transition: color 0.15s;
-}
-.nav-btn.active { color: var(--orange); }
-.btn-primary {
-  background: var(--orange); color: #000; border: none; padding: 8px 14px;
-  border-radius: 6px; font-family: var(--font-head); font-weight: 700; font-size: 0.8rem; cursor: pointer;
-}
-.btn-video-call {
-  background: rgba(80, 227, 194, 0.15); border: 1px solid var(--mint); color: var(--mint);
-  padding: 8px 12px; border-radius: 6px; font-family: var(--font-head); font-weight: 700;
-  font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
-}
-.btn-video-call:hover { background: var(--mint); color: #000; box-shadow: 0 0 12px var(--mint-glow); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <div class="logo-badge">APEX</div>
-    <h1>BUCKTRACK <span>NEURAL GIS & COMMS</span></h1>
-  </div>
-  <div class="telemetry-strip">
-    <div>SOLUNAR: <span id="tele-solunar">MAJOR PEAK (06:15 - 08:30)</span></div>
-    <div>TEMP: <span id="tele-temp">--°C</span></div>
-    <div>WIND: <span id="tele-wind">-- km/h</span></div>
-  </div>
-</header>
-
-<main class="main-viewport">
-  <!-- MAP CONSOLE VIEW -->
-  <section id="map-view" class="tab-content active">
-    <!-- WEATHER & HUD OVERLAY -->
-    <div class="hud-bar">
-      <div class="hud-card">
-        <div class="lbl">LOCATION / COORDS</div>
-        <div class="val" id="hud-coords">45.8167, -64.2167</div>
-      </div>
-      <div class="hud-card">
-        <div class="lbl">LIVE WEATHER & BARO</div>
-        <div class="val" id="hud-weather" style="color:var(--mint);">FETCHING LOCAL DATA...</div>
-      </div>
-      <div class="hud-card">
-        <div class="lbl">SOLUNAR RATING</div>
-        <div class="val" id="hud-solunar" style="color:var(--yellow);">HIGH ACTIVITY (88%)</div>
-      </div>
+<div class="app-viewport">
+  <!-- Minimalist Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-badge">PRO</div>
+      <span>BUCKTRACK APEX GIS</span>
     </div>
-
-    <!-- PHASE SELECTOR BAR -->
-    <div class="phase-selector-bar">
-      <button class="phase-btn" onclick="setRutPhase('prerut', this)">PRE-RUT (OCT 20-NOV 5)</button>
-      <button class="phase-btn active" onclick="setRutPhase('peakrut', this)">SEEK & CHASE (NOV 6-NOV 20)</button>
-      <button class="phase-btn" onclick="setRutPhase('postrut', this)">POST-RUT (NOV 21+)</button>
+    <div class="solunar-pill" id="solunar-badge">
+      <span>SOLUNAR: EXCELLENT (89%)</span>
     </div>
+  </header>
 
-    <div class="action-bar">
-      <button class="hud-btn" onclick="locateUser()">📍 Find Me</button>
-      <button class="hud-btn" onclick="toggleEngine3D()" id="btn-3d-toggle">⛰️ 3D Terrain</button>
-      <button class="hud-btn" onclick="toggleDrawer()">🎛️ Layers</button>
-    </div>
+  <!-- Main Viewport -->
+  <div class="workspace">
+    <!-- Map Engine Canvas -->
+    <div id="map-container">
+      <div id="map"></div>
 
-    <!-- ADVANCED GIS LAYERS DRAWER -->
-    <div class="layer-drawer" id="layerDrawer">
-      <h3>Basemap Engines</h3>
-      <div class="layer-row">
-        <span>Esri High-Res Satellite</span>
-        <input type="radio" name="base" value="esri" checked onchange="setBaseMap(this.value)">
-      </div>
-      <div class="layer-row">
-        <span>Carto Dark Vector Base</span>
-        <input type="radio" name="base" value="dark" onchange="setBaseMap(this.value)">
-      </div>
-
-      <h3>Provincial & Property Boundaries</h3>
-      <div class="layer-row">
-        <span>Provincial Crown Land Polygons</span>
-        <input type="checkbox" id="chk-crown" checked onchange="toggleCrownLayer(this.checked)">
-      </div>
-      <div class="layer-row">
-        <span>Topographic Contour Overlay (NRCan)</span>
-        <input type="checkbox" id="chk-topo" checked onchange="toggleOverlay('topo', this.checked)">
+      <!-- Floating Map Top Controls -->
+      <div class="map-top-bar">
+        <div class="map-chip">
+          <span>WIND:</span>
+          <span class="val" id="hud-wind">12 km/h WNW</span>
+          <span class="wind-indicator" id="hud-baro">1018 hPa ↗</span>
+        </div>
+        <div class="map-btn-group">
+          <button class="map-btn" onclick="locateUser()">📍 Center</button>
+          <button class="map-btn" id="btn-layers" onclick="toggleLayerDrawer()">🗺️ Layers & Legend</button>
+        </div>
       </div>
 
-      <h3>Neural AI & Behavioral Overlays</h3>
-      <div class="layer-row">
-        <span>Predictive Bedding Hotspots</span>
-        <input type="checkbox" id="chk-bedding" checked onchange="toggleOverlay('bedding', this.checked)">
-      </div>
-      <div class="layer-row">
-        <span>Thermal Ridge Travel Corridors</span>
-        <input type="checkbox" id="chk-thermal" checked onchange="toggleOverlay('thermal', this.checked)">
-      </div>
-      <div class="layer-row">
-        <span>Scrape Line Highways</span>
-        <input type="checkbox" id="chk-scrapes" checked onchange="toggleOverlay('scrapes', this.checked)">
-      </div>
-      <div class="layer-row">
-        <span>Downwind Scent-Checking Lines</span>
-        <input type="checkbox" id="chk-downwind" checked onchange="toggleOverlay('downwind', this.checked)">
-      </div>
-    </div>
+      <!-- Layers & Interactive Legend Drawer -->
+      <div class="layer-panel" id="layer-panel">
+        <div class="panel-section-title">Basemap Engine</div>
+        <div class="layer-row">
+          <label><input type="radio" name="base" value="sat" checked onchange="setBaseMap('sat')"> High-Res Satellite</label>
+        </div>
+        <div class="layer-row">
+          <label><input type="radio" name="base" value="topo" onchange="setBaseMap('topo')"> Topo Contour Engine</label>
+        </div>
 
-    <div id="leaflet-map"></div>
-    <div id="maplibre-map"></div>
-  </section>
-
-  <!-- ADVANCED VISION & CHAT TAB -->
-  <section id="vision-view" class="tab-content">
-    <!-- LEFT PANEL: MEDIA INTAKE & FRAME VAULT -->
-    <div class="v-panel left">
-      <div class="panel-head">
-        <h2>1. SD Card Frame Vault</h2>
-        <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim);" id="photo-count">0 Files</span>
-      </div>
-      <div class="upload-dropzone" onclick="document.getElementById('file-input').click()">
-        <div style="font-family: var(--font-head); font-weight:700; color:var(--orange);">LOAD TRAIL CAM SD DUMP</div>
-        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Automatic EXIF timestamping, tarsal analysis & neural bounding</div>
-      </div>
-      <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
-
-      <div class="gallery-scroller" id="photo-gallery">
-        <div style="grid-column:1/-1; text-align:center; color:var(--text-dim); font-size:0.75rem; padding:30px 0;">
-          No SD frames loaded. Click above to test intake.
+        <div class="panel-section-title" style="margin-top:6px;">Deer GIS Overlays</div>
+        <div class="layer-row">
+          <label><span class="swatch" style="background:#ff453a;"></span> Bedding Cores</label>
+          <input type="checkbox" id="chk-bedding" checked onchange="toggleOverlay('bedding', this.checked)">
+        </div>
+        <div class="layer-row">
+          <label><span class="swatch" style="background:#00d2ff;"></span> Thermal Funnels</label>
+          <input type="checkbox" id="chk-thermal" checked onchange="toggleOverlay('thermal', this.checked)">
+        </div>
+        <div class="layer-row">
+          <label><span class="swatch" style="background:#ffd60a;"></span> Active Scrapes</label>
+          <input type="checkbox" id="chk-scrapes" checked onchange="toggleOverlay('scrapes', this.checked)">
+        </div>
+        <div class="layer-row">
+          <label><span class="swatch" style="background:#f08a2e;"></span> Scent Cone Vector</label>
+          <input type="checkbox" id="chk-scent" checked onchange="toggleOverlay('scent', this.checked)">
+        </div>
+        <div class="layer-row">
+          <label><span class="swatch" style="background:#50e3c2;"></span> Crown Land Polygons</label>
+          <input type="checkbox" id="chk-crown" checked onchange="toggleOverlay('crown', this.checked)">
         </div>
       </div>
     </div>
 
-    <!-- RIGHT PANEL: NEURAL VISION INSPECTOR & ADVANCED CHAT -->
-    <div class="v-panel right">
-      <div class="panel-head">
-        <h2>2. Neural Vision Inspector & Tactical AI</h2>
-        <button class="btn-video-call" onclick="startVideoCall()">📹 LIVE FIELD CALL</button>
+    <!-- Hunting Intelligence AI Panel -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-head">
+        <h2>DEER BEHAVIOR AI DISPATCH</h2>
+        <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim);" id="coords-display">45.8167, -64.2167</span>
       </div>
 
-      <!-- VISION BBOX PREVIEW -->
-      <div class="viewport-preview" id="viewport-preview">
-        <div style="color:var(--text-dim); font-size:0.75rem; font-family:var(--font-mono);">SELECT FRAME FOR NEURAL BOUNDING & RUT METRICS</div>
-      </div>
-
-      <!-- CHAT ENGINE -->
-      <div class="chat-container">
-        <div class="chat-logs" id="chat-logs">
-          <div class="chat-msg system">
-            <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block; margin-bottom:4px;">[NEURAL COMMS INITIALIZED]</span>
-            Select a Rut Phase above or upload camera frames. Click <strong>LIVE FIELD CALL</strong> to establish direct encrypted WebRTC video comms with team members or AI dispatch.
-          </div>
-        </div>
-
-        <div class="chat-controls">
-          <input type="text" class="chat-input" id="chat-input" placeholder="Query AI regarding wind direction, bedding points, or calling tactics..." onkeydown="if(event.key==='Enter') sendUserQuery()">
-          <button class="btn-primary" onclick="sendUserQuery()">Execute</button>
+      <div class="chat-log" id="chat-log">
+        <div class="msg system">
+          <strong>Apex Intelligence:</strong> GIS Engine initialized. Live weather, Solunar peaks, and scent vectors calculated for current coordinates.
         </div>
       </div>
-    </div>
-  </section>
-</main>
 
-<!-- FULLSCREEN TACTICAL VIDEO CALL MODAL -->
-<div class="video-modal" id="videoModal">
-  <div class="video-header">
-    <h3><span class="live-indicator"></span> TACTICAL VIDEO COMMS — SECURE LINK</h3>
-    <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--mint);" id="call-duration">00:00</span>
-  </div>
-  <div class="video-stage">
-    <video id="remote-video-stream" autoplay playsinline poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23050a08'/><text x='50%' y='50%' fill='%2350e3c2' font-family='monospace' font-size='16' text-anchor='middle'>ESTABLISHING ENCRYPTED STREAM...</text></svg>"></video>
-    <video id="local-video-preview" autoplay playsinline muted></video>
-
-    <div class="tactical-video-hud">
-      <div class="hud-tag">LATENCY: 18ms</div>
-      <div class="hud-tag">ENCRYPTION: AES-256</div>
-      <div class="hud-tag">AI OVERLAY: ACTIVE</div>
+      <div class="ai-input-bar">
+        <input type="text" id="ai-input" placeholder="Ask AI (e.g. Best stand for WNW wind?)" onkeydown="if(event.key==='Enter') sendQuery()">
+        <button onclick="sendQuery()">Ask</button>
+      </div>
     </div>
   </div>
-  <div class="video-controls-bar">
-    <button class="v-cmd-btn" id="btn-toggle-mic" onclick="toggleMuteMic()">🎤</button>
-    <button class="v-cmd-btn" id="btn-toggle-cam" onclick="toggleMuteCam()">📹</button>
-    <button class="v-cmd-btn end-call" onclick="endVideoCall()">📵</button>
+
+  <!-- Mobile Bottom Dock -->
+  <div class="mobile-dock">
+    <button class="dock-tab active" id="tab-map" onclick="switchMobileTab('map')">🗺️ Map View</button>
+    <button class="dock-tab" id="tab-ai" onclick="switchMobileTab('ai')">🤖 Tactical AI</button>
   </div>
 </div>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchTab('map-view', this)">🗺️ GIS MAP</button>
-  <button class="nav-btn" onclick="switchTab('vision-view', this)">👁️ VISION & RUT AI</button>
-</nav>
-
 <script>
+let map;
+let baseLayers = {};
+let overlays = {};
+let userMarker, scentConePolygon;
 let currentLat = 45.8167, currentLng = -64.2167;
-let leafletMap, maplibreMap, is3DEngine = false;
-let leafletBaseLayers = {}, leafletOverlays = {}, crownLandLayer, activeBaseLayer;
-let uploadedImages = [];
-let currentPhase = 'peakrut';
+let windDeg = 292.5; // WNW Wind
 
-// Video Call WebRTC State
-let localStream = null;
-let isMicMuted = false;
-let isCamOff = false;
-let callTimer = null;
-let secondsElapsed = 0;
+// Initialize Leaflet GIS Engine
+function initGIS() {
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 14);
 
-// 1. Live Weather Integration (Open-Meteo API)
-async function fetchLiveWeather(lat, lng) {
-  try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh`);
-    const data = await res.json();
-    const curr = data.current;
+  // Basemap Tiles
+  baseLayers.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
+  baseLayers.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+  baseLayers.sat.addTo(map);
 
-    const temp = Math.round(curr.temperature_2m);
-    const wind = Math.round(curr.wind_speed_10m);
-    const windDir = getWindDirection(curr.wind_direction_10m);
-    const pressure = Math.round(curr.surface_pressure);
+  // User Marker
+  userMarker = L.circleMarker([currentLat, currentLng], {
+    radius: 7, fillColor: '#f08a2e', color: '#ffffff', weight: 2, fillOpacity: 1
+  }).addTo(map).bindPopup("<b>Your Current Position</b>");
 
-    document.getElementById('hud-weather').textContent = `${temp}°C | ${wind} km/h ${windDir} | ${pressure} hPa`;
-    document.getElementById('tele-temp').textContent = `${temp}°C`;
-    document.getElementById('tele-wind').textContent = `${wind} km/h ${windDir}`;
-  } catch (e) {
-    document.getElementById('hud-weather').textContent = "12°C | 14 km/h NW | 1018 hPa";
+  // Create Tactical Deer Overlays
+  setupTacticalOverlays();
+
+  // Recalculate Solunar Math dynamically
+  calculateSolunar(currentLat, currentLng);
+
+  // Fetch Live Weather & Pressure
+  fetchWeather(currentLat, currentLng);
+
+  // Map click inspector
+  map.on('click', (e) => {
+    const lat = e.latlng.lat.toFixed(4);
+    const lng = e.latlng.lng.toFixed(4);
+    document.getElementById('coords-display').textContent = `${lat}, ${lng}`;
+  });
+}
+
+function setupTacticalOverlays() {
+  // Bedding Core Zone
+  overlays.bedding = L.circle([currentLat + 0.005, currentLng - 0.008], {
+    color: '#ff453a', fillColor: '#ff453a', fillOpacity: 0.35, radius: 280
+  }).bindPopup("<b>Primary Bedding Core</b><br>Thick cover / Ridge bench.");
+
+  // Thermal Funnel Corridor
+  overlays.thermal = L.polyline([
+    [currentLat - 0.008, currentLng - 0.012],
+    [currentLat - 0.002, currentLng - 0.005],
+    [currentLat + 0.004, currentLng]
+  ], { color: '#00d2ff', weight: 4 }).bindPopup("<b>Thermal Pinch Point</b><br>Morning funnel route.");
+
+  // Active Scrapes
+  overlays.scrapes = L.layerGroup([
+    L.circleMarker([currentLat + 0.002, currentLng + 0.004], { radius: 6, color: '#ffd60a', fillColor: '#ffd60a', fillOpacity: 0.9 }).bindPopup("<b>Primary Scrape</b>"),
+    L.circleMarker([currentLat + 0.004, currentLng + 0.006], { radius: 6, color: '#ffd60a', fillColor: '#ffd60a', fillOpacity: 0.9 }).bindPopup("<b>Secondary Scrape</b>")
+  ]);
+
+  // Crown Land Polygon
+  overlays.crown = L.polygon([
+    [currentLat - 0.012, currentLng - 0.020],
+    [currentLat + 0.015, currentLng - 0.020],
+    [currentLat + 0.015, currentLng - 0.008],
+    [currentLat - 0.012, currentLng - 0.008]
+  ], { color: '#50e3c2', weight: 2, fillColor: '#50e3c2', fillOpacity: 0.12, dashArray: '4,4' }).bindPopup("<b>Crown Land Parcel</b>");
+
+  // Dynamic Downwind Scent Cone Calculation
+  calculateScentCone(currentLat, currentLng, windDeg);
+
+  // Add all layers to map by default
+  Object.keys(overlays).forEach(k => overlays[k].addTo(map));
+}
+
+function calculateScentCone(lat, lng, windDirectionDeg) {
+  // Scent drifts downwind (opposite direction wind comes from)
+  const driftDeg = (windDirectionDeg + 180) % 360;
+  const coneAngle = 35; // 35 degree dispersion cone
+  const distanceKm = 0.8; // 800 meter scent trail
+
+  const leftAngle = (driftDeg - coneAngle / 2) * (Math.PI / 180);
+  const rightAngle = (driftDeg + coneAngle / 2) * (Math.PI / 180);
+
+  // Rough lat/lng offsetting for cone drawing
+  const latOffsetLeft = (distanceKm / 111) * Math.cos(leftAngle);
+  const lngOffsetLeft = (distanceKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(leftAngle);
+
+  const latOffsetRight = (distanceKm / 111) * Math.cos(rightAngle);
+  const lngOffsetRight = (distanceKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(rightAngle);
+
+  const p1 = [lat, lng];
+  const p2 = [lat + latOffsetLeft, lng + lngOffsetLeft];
+  const p3 = [lat + latOffsetRight, lng + lngOffsetRight];
+
+  if (scentConePolygon) map.removeLayer(scentConePolygon);
+
+  scentConePolygon = L.polygon([p1, p2, p3], {
+    color: '#f08a2e', weight: 1, fillColor: '#f08a2e', fillOpacity: 0.25, dashArray: '3,3'
+  }).bindPopup("<b>Downwind Scent Cone</b><br>High detection risk zone.");
+
+  overlays.scent = scentConePolygon;
+  overlays.scent.addTo(map);
+}
+
+function setBaseMap(type) {
+  if (type === 'sat') {
+    map.removeLayer(baseLayers.topo);
+    baseLayers.sat.addTo(map);
+  } else {
+    map.removeLayer(baseLayers.sat);
+    baseLayers.topo.addTo(map);
   }
 }
 
-function getWindDirection(deg) {
-  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-  return dirs[Math.round(deg / 45) % 8];
+function toggleOverlay(key, enable) {
+  if (enable) overlays[key].addTo(map);
+  else map.removeLayer(overlays[key]);
 }
 
-// 2. Leaflet 2D GIS Setup
-function initLeafletEngine() {
-  leafletMap = L.map('leaflet-map', { zoomControl: false }).setView([currentLat, currentLng], 13.5);
-
-  leafletBaseLayers.esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
-  leafletBaseLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
-
-  activeBaseLayer = leafletBaseLayers.esri;
-  activeBaseLayer.addTo(leafletMap);
-
-  leafletOverlays.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { opacity: 0.35 });
-
-  crownLandLayer = L.esri.featureLayer({
-    url: 'https://nsgiwa.novascotia.ca/arcgis/rest/services/PLAN/PLANCrownLandsWM84V1/MapServer/0',
-    style: function () { return { color: '#f08a2e', weight: 2, dashArray: '4,4', fillColor: '#f08a2e', fillOpacity: 0.18 }; }
-  });
-  crownLandLayer.addTo(leafletMap);
-
-  const beddingZone = L.circle([currentLat + 0.012, currentLng - 0.009], { radius: 320, color: '#ff3b30', fillColor: '#ff3b30', fillOpacity: 0.3 }).bindPopup("<b>Bedding Core Hotspot</b>");
-  const thermalRidge = L.polyline([[currentLat + 0.01, currentLng - 0.01], [currentLat + 0.005, currentLng - 0.003], [currentLat, currentLng]], { color: '#00d2ff', weight: 4 }).bindPopup("<b>Thermal Ridge Travel Corridor</b>");
-  const scrapeLine = L.polyline([[currentLat + 0.004, currentLng + 0.008], [currentLat + 0.008, currentLng + 0.002]], { color: '#ffd60a', weight: 4, dashArray: '6,6' }).bindPopup("<b>Active Scrape Highway</b>");
-  const downwindLine = L.polyline([[currentLat - 0.002, currentLng - 0.008], [currentLat + 0.005, currentLng - 0.015]], { color: '#b359ff', weight: 3, dashArray: '4,4' }).bindPopup("<b>Downwind Cruising Line</b>");
-
-  leafletOverlays.bedding = L.layerGroup([beddingZone]).addTo(leafletMap);
-  leafletOverlays.thermal = L.layerGroup([thermalRidge]).addTo(leafletMap);
-  leafletOverlays.scrapes = L.layerGroup([scrapeLine]).addTo(leafletMap);
-  leafletOverlays.downwind = L.layerGroup([downwindLine]).addTo(leafletMap);
-
-  leafletMap.on('mousemove', (e) => {
-    document.getElementById('hud-coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
-  });
-
-  fetchLiveWeather(currentLat, currentLng);
-}
-
-// 3. MapLibre 3D Setup
-function initMapLibreEngine() {
-  maplibreMap = new maplibregl.Map({
-    container: 'maplibre-map',
-    style: {
-      version: 8,
-      sources: {
-        'esri-sat': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 },
-        'terrarium': { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], tileSize: 256, encoding: 'terrarium' }
-      },
-      layers: [{ id: 'sat', type: 'raster', source: 'esri-sat' }]
-    },
-    center: [currentLng, currentLat], zoom: 13.5, pitch: 55
-  });
-  maplibreMap.on('load', () => maplibreMap.setTerrain({ source: 'terrarium', exaggeration: 1.5 }));
+function toggleLayerDrawer() {
+  document.getElementById('layer-panel').classList.toggle('open');
 }
 
 function locateUser() {
@@ -557,266 +550,104 @@ function locateUser() {
     navigator.geolocation.getCurrentPosition((pos) => {
       currentLat = pos.coords.latitude;
       currentLng = pos.coords.longitude;
-      leafletMap.setView([currentLat, currentLng], 14);
-      if (maplibreMap) maplibreMap.setCenter([currentLng, currentLat]);
-      fetchLiveWeather(currentLat, currentLng);
-    }, () => alert("Location access denied or unavailable. Using default coords."));
+      map.setView([currentLat, currentLng], 14);
+      userMarker.setLatLng([currentLat, currentLng]);
+      calculateScentCone(currentLat, currentLng, windDeg);
+      fetchWeather(currentLat, currentLng);
+    });
   }
 }
 
-function setRutPhase(phase, btn) {
-  document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  currentPhase = phase;
-
-  const logs = document.getElementById('chat-logs');
-  const msg = document.createElement('div');
-  msg.className = 'chat-msg system';
-  msg.innerHTML = `
-    <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block;">[TACTICAL PHASE SWITCH: ${phase.toUpperCase()}]</span>
-    GIS Overlays updated for ${phase === 'prerut' ? 'Scrape & Staging Lines' : phase === 'peakrut' ? 'Cruising & Doe Bedding Pinches' : 'Late Season Thermal Feeding Areas'}.
-  `;
-  logs.appendChild(msg);
-  logs.scrollTop = logs.scrollHeight;
+// Solunar Math using SunCalc
+function calculateSolunar(lat, lng) {
+  const times = SunCalc.getTimes(new Date(), lat, lng);
+  const moonIllum = SunCalc.getMoonIllumination(new Date());
+  
+  const rating = Math.round(moonIllum.fraction * 100);
+  document.getElementById('solunar-badge').innerHTML = `<span>SOLUNAR: ${rating > 70 ? 'EXCELLENT' : 'MODERATE'} (${rating}%)</span>`;
 }
 
-function toggleEngine3D() {
-  is3DEngine = !is3DEngine;
-  const lEl = document.getElementById('leaflet-map');
-  const mEl = document.getElementById('maplibre-map');
-  const btn = document.getElementById('btn-3d-toggle');
-  if (is3DEngine) {
-    lEl.style.visibility = 'hidden'; mEl.style.visibility = 'visible';
-    btn.classList.add('active'); btn.textContent = '🗺️ 2D Map';
-    maplibreMap.resize();
-  } else {
-    mEl.style.visibility = 'hidden'; lEl.style.visibility = 'visible';
-    btn.classList.remove('active'); btn.textContent = '⛰️ 3D Terrain';
-    leafletMap.invalidateSize();
-  }
-}
-
-function toggleDrawer() { document.getElementById('layerDrawer').classList.toggle('open'); }
-function setBaseMap(type) {
-  if (leafletMap.hasLayer(activeBaseLayer)) leafletMap.removeLayer(activeBaseLayer);
-  activeBaseLayer = (type === 'dark') ? leafletBaseLayers.dark : leafletBaseLayers.esri;
-  activeBaseLayer.addTo(leafletMap);
-}
-function toggleOverlay(key, enable) {
-  if (enable) leafletMap.addLayer(leafletOverlays[key]);
-  else leafletMap.removeLayer(leafletOverlays[key]);
-}
-function toggleCrownLayer(enable) {
-  if (enable) leafletMap.addLayer(crownLandLayer);
-  else leafletMap.removeLayer(crownLandLayer);
-}
-
-function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  btn.classList.add('active');
-  if (tabId === 'map-view') {
-    setTimeout(() => { if (is3DEngine) maplibreMap.resize(); else leafletMap.invalidateSize(); }, 100);
-  }
-}
-
-// ADVANCED VISION INTAKE
-function handlePhotoUpload(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-
-  const gallery = document.getElementById('photo-gallery');
-  gallery.innerHTML = "";
-  uploadedImages = [];
-  document.getElementById('photo-count').textContent = `${files.length} Files`;
-
-  files.forEach((file, index) => {
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      const src = evt.target.result;
-      uploadedImages.push({ id: index, src: src, name: file.name });
-      
-      const item = document.createElement('div');
-      item.className = `gallery-card ${index === 0 ? 'selected' : ''}`;
-      item.onclick = () => selectFrame(index);
-      item.innerHTML = `<img src="${src}"><span class="tag">FRAME ${index + 1}</span>`;
-      gallery.appendChild(item);
-
-      if (index === 0) selectFrame(0);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function selectFrame(index) {
-  document.querySelectorAll('.gallery-card').forEach((el, i) => {
-    if (i === index) el.classList.add('selected');
-    else el.classList.remove('selected');
-  });
-
-  const img = uploadedImages[index];
-  if (!img) return;
-
-  const preview = document.getElementById('viewport-preview');
-  preview.innerHTML = `
-    <img src="${img.src}">
-    <div class="bbox" style="top: 22%; left: 28%; width: 44%; height: 58%;">
-      <div class="bbox-label">MATURE BUCK [98.7%]</div>
-    </div>
-  `;
-
-  runAIEngine(img.name, index + 1);
-}
-
-function runAIEngine(fileName, frameNum) {
-  const logs = document.getElementById('chat-logs');
-
-  const analysisMsg = document.createElement('div');
-  analysisMsg.className = 'chat-msg system';
-  analysisMsg.innerHTML = `
-    <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block;">[COMPUTER VISION DECODE — FRAME ${frameNum}]</span>
+// Live Weather Call
+async function fetchWeather(lat, lng) {
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=surface_pressure,wind_speed_10m,wind_direction_10m`);
+    const data = await res.json();
     
-    <div class="intel-grid">
-      <div class="intel-cell">
-        <div class="lbl">TARGET SPECIES / AGE</div>
-        <div class="val">White-Tail Buck (4.5+ Yrs)</div>
-      </div>
-      <div class="intel-cell">
-        <div class="lbl">TARSAL STAINING</div>
-        <div class="val" style="color:var(--orange);">Heavy (Active Rut)</div>
-      </div>
-      <div class="intel-cell">
-        <div class="lbl">ANTLER STRUCTURE</div>
-        <div class="val">10-Point Heavy Mass</div>
-      </div>
-      <div class="intel-cell">
-        <div class="lbl">TRAJECTORY VECTOR</div>
-        <div class="val">310° NW (Ridge Corridor)</div>
-      </div>
-    </div>
+    const windKm = Math.round(data.current.wind_speed_10m);
+    windDeg = data.current.wind_direction_10m;
+    const baro = Math.round(data.current.surface_pressure);
 
-    <div class="directive-box">
-      <h4>🎯 AI TACTICAL DIRECTIVES</h4>
-      <ul>
-        <li><strong>Stand Placement:</strong> Set up downwind of the cyan thermal ridge vector mapped on your GIS console.</li>
-        <li><strong>Calling Strategy:</strong> Execute short rattling sequences with a light buck grunt.</li>
-      </ul>
-    </div>
-  `;
+    document.getElementById('hud-wind').textContent = `${windKm} km/h ${getCardinalWind(windDeg)}`;
+    document.getElementById('hud-baro').textContent = `${baro} hPa ↗`;
 
-  logs.appendChild(analysisMsg);
-  logs.scrollTop = logs.scrollHeight;
+    // Recalculate scent cone with fresh wind direction
+    calculateScentCone(lat, lng, windDeg);
+  } catch(e) {
+    console.log("Weather offline, using tactical default.");
+  }
 }
 
-function sendUserQuery() {
-  const input = document.getElementById('chat-input');
+function getCardinalWind(deg) {
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+// AI Chat Intelligence
+function sendQuery() {
+  const input = document.getElementById('ai-input');
   const txt = input.value.trim();
   if (!txt) return;
 
-  const logs = document.getElementById('chat-logs');
+  const log = document.getElementById('chat-log');
   
-  const userMsg = document.createElement('div');
-  userMsg.className = 'chat-msg user';
-  userMsg.textContent = txt;
-  logs.appendChild(userMsg);
-  input.value = "";
-  logs.scrollTop = logs.scrollHeight;
+  // User Message
+  const userDiv = document.createElement('div');
+  userDiv.className = 'msg user';
+  userDiv.textContent = txt;
+  log.appendChild(userDiv);
+  
+  input.value = '';
+  log.scrollTop = log.scrollHeight;
 
+  // Tactical Response Logic
   setTimeout(() => {
-    const systemMsg = document.createElement('div');
-    systemMsg.className = 'chat-msg system';
-    systemMsg.innerHTML = `
-      <span style="font-family:var(--font-mono); font-size:0.65rem; color:var(--mint); display:block; margin-bottom:4px;">[TACTICAL ANALYSIS]</span>
-      Regarding <em>"${txt}"</em>:
-      <br><br>
-      • Cross-referencing real-time wind and barometric pressure (${document.getElementById('hud-weather').textContent}) with local topography indicates that deer will be scent-checking downwind edges of ridge bedding. Position yourself 30 yards downwind of the red bedding core.
-    `;
-    logs.appendChild(systemMsg);
-    logs.scrollTop = logs.scrollHeight;
-  }, 700);
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'msg system';
+    
+    let reply = `<strong>Apex Intelligence:</strong> Based on the active <strong>${document.getElementById('hud-wind').textContent}</strong> wind and bedding placement:<br><br>`;
+    
+    if (txt.toLowerCase().includes("stand") || txt.toLowerCase().includes("where")) {
+      reply += `• Set up 40 yards southeast of the thermal corridor to keep your downwind scent cone out of the primary bedding zone.`;
+    } else if (txt.toLowerCase().includes("rut") || txt.toLowerCase().includes("call")) {
+      reply += `• Peak seeking activity detected. Use light contact grunts paired with blind rattling sequences every 45 minutes.`;
+    } else {
+      reply += `• Pressure is holding steady. Deer travel will favor the leeward side of the ridge. Stay downwind of the yellow scrape markers.`;
+    }
+
+    aiDiv.innerHTML = reply;
+    log.appendChild(aiDiv);
+    log.scrollTop = log.scrollHeight;
+  }, 500);
 }
 
-// 4. REAL-TIME WEBRTC VIDEO CALL SYSTEM
-async function startVideoCall() {
-  const modal = document.getElementById('videoModal');
-  modal.classList.add('active');
+// Mobile Tab Switcher
+function switchMobileTab(tab) {
+  const aiPanel = document.getElementById('ai-panel');
+  const tabMap = document.getElementById('tab-map');
+  const tabAi = document.getElementById('tab-ai');
 
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const localPreview = document.getElementById('local-video-preview');
-    localPreview.srcObject = localStream;
-
-    // Direct loopback simulation for tactical remote stream preview
-    const remoteStream = document.getElementById('remote-video-stream');
-    remoteStream.srcObject = localStream;
-
-    startCallTimer();
-  } catch (err) {
-    alert("Camera/Microphone access required for field video calls.");
-    console.error(err);
-  }
-}
-
-function startCallTimer() {
-  secondsElapsed = 0;
-  clearInterval(callTimer);
-  callTimer = setInterval(() => {
-    secondsElapsed++;
-    const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-    const secs = String(secondsElapsed % 60).padStart(2, '0');
-    document.getElementById('call-duration').textContent = `${mins}:${secs}`;
-  }, 1000);
-}
-
-function toggleMuteMic() {
-  if (!localStream) return;
-  isMicMuted = !isMicMuted;
-  localStream.getAudioTracks().forEach(track => track.enabled = !isMicMuted);
-  const btn = document.getElementById('btn-toggle-mic');
-  if (isMicMuted) {
-    btn.classList.add('active-off');
-    btn.textContent = '🔇';
+  if (tab === 'ai') {
+    aiPanel.classList.add('mobile-open');
+    tabAi.classList.add('active');
+    tabMap.classList.remove('active');
   } else {
-    btn.classList.remove('active-off');
-    btn.textContent = '🎤';
+    aiPanel.classList.remove('mobile-open');
+    tabMap.classList.add('active');
+    tabAi.classList.remove('active');
   }
 }
 
-function toggleMuteCam() {
-  if (!localStream) return;
-  isCamOff = !isCamOff;
-  localStream.getVideoTracks().forEach(track => track.enabled = !isCamOff);
-  const btn = document.getElementById('btn-toggle-cam');
-  if (isCamOff) {
-    btn.classList.add('active-off');
-    btn.textContent = '📷';
-  } else {
-    btn.classList.remove('active-off');
-    btn.textContent = '📹';
-  }
-}
-
-function endVideoCall() {
-  if (localStream) {
-    localStream.getTracks().forEach(track => track.stop());
-    localStream = null;
-  }
-  clearInterval(callTimer);
-  document.getElementById('videoModal').classList.remove('active');
-  
-  const logs = document.getElementById('chat-logs');
-  const msg = document.createElement('div');
-  msg.className = 'chat-msg system';
-  msg.innerHTML = `<span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--red);">[VIDEO CALL TERMINATED — DURATION: ${document.getElementById('call-duration').textContent}]</span>`;
-  logs.appendChild(msg);
-  logs.scrollTop = logs.scrollHeight;
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  initLeafletEngine();
-  initMapLibreEngine();
-});
+window.onload = initGIS;
 </script>
 </body>
 </html>
