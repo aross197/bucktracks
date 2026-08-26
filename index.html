@@ -3,22 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BUCKTRACK PRO | GLOBAL TACTICAL GIS ENGINE</title>
+<title>BUCKTRACK PRO | VISION AI INTEL ENGINE</title>
 <meta name="theme-color" content="#030504">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,600&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Leaflet Core -->
+<!-- Leaflet Engine -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<!-- Esri Leaflet Plugin for Live Provincial GIS Data -->
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js" crossorigin=""></script>
 
-<!-- MapLibre GL Engine for 3D Vector & Elevation WebGL rendering -->
+<!-- MapLibre Engine -->
 <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 
@@ -31,41 +27,36 @@
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(240, 138, 46, 0.35);
   --orange: #f08a2e;
-  --orange-bright: #ff9d3b;
   --orange-glow: rgba(240, 138, 46, 0.25);
   --mint: #50e3c2;
-  --mint-soft: rgba(80, 227, 194, 0.12);
+  --mint-glow: rgba(80, 227, 194, 0.15);
   --cyan: #00d2ff;
   --red: #ff3b30;
   --text: #f0f4f1;
   --text-dim: #7a8c82;
   --header-h: 58px;
   --nav-h: 68px;
-  --font-main: "IBM Plex Sans", -apple-system, sans-serif;
+  --font-main: "IBM Plex Sans", sans-serif;
   --font-head: "Chakra Petch", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; -webkit-font-smoothing: antialiased; }
+html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; }
 
-/* Tactical CRT Scanline Screen Overlay */
+/* CRT Scanline FX */
 body::after {
   content: ""; position: fixed; inset: 0;
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
   background-size: 100% 3px, 6px 100%;
-  pointer-events: none; z-index: 99999; opacity: 0.35;
+  pointer-events: none; z-index: 99999; opacity: 0.3;
 }
 
-/* Header Component */
 header {
-  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
-  padding: env(safe-area-inset-top, 0px) 16px 0;
-  background: rgba(3, 5, 4, 0.95);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  z-index: 1000; backdrop-filter: blur(20px); position: relative;
+  height: var(--header-h); padding: 0 16px; background: rgba(3, 5, 4, 0.95);
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
+  z-index: 1000; backdrop-filter: blur(20px);
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand .logo-badge {
@@ -77,431 +68,373 @@ header {
 .brand h1 { margin: 0; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700; letter-spacing: 0.08em; color: #fff; }
 .brand h1 span { color: var(--orange); }
 
-.system-status { display: flex; gap: 8px; }
-.status-tag {
-  padding: 4px 8px; border-radius: 4px; font-family: var(--font-mono);
-  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em;
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
-  display: flex; align-items: center; gap: 6px;
-}
-.status-tag.active { background: var(--mint-soft); border-color: rgba(80,227,194,0.3); color: var(--mint); }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
-
-/* Main Dynamic Viewport */
 .main-viewport {
-  flex: 1; position: relative; width: 100%;
-  height: calc(100dvh - var(--header-h) - var(--nav-h) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  overflow: hidden;
+  height: calc(100dvh - var(--header-h) - var(--nav-h)); width: 100%; position: relative; overflow: hidden;
 }
-.tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
-.tab-content.active { display: block; animation: viewIn 0.25s var(--ease); }
-@keyframes viewIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+.tab-content { display: none; width: 100%; height: 100%; overflow-y: auto; padding: 16px; }
+.tab-content.active { display: block; animation: viewIn 0.2s var(--ease); }
+@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Map Section */
+/* Map View */
 #map-view { padding: 0; position: relative; }
 #leaflet-map, #maplibre-map { width: 100%; height: 100%; position: absolute; inset: 0; background: #000; }
 #maplibre-map { visibility: hidden; }
 
-/* HUD Control Overlays */
-.hud-bar {
-  position: absolute; top: 14px; left: 14px; z-index: 900; pointer-events: none;
-  display: flex; gap: 8px; flex-wrap: wrap;
-}
-.hud-card {
-  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 6px;
-  padding: 8px 12px; backdrop-filter: blur(16px); pointer-events: auto;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.6);
-}
-.hud-card .lbl { font-size: 0.55rem; font-family: var(--font-mono); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
-.hud-card .val { font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--orange); margin-top: 2px; }
+.hud-bar { position: absolute; top: 14px; left: 14px; z-index: 900; pointer-events: none; display: flex; gap: 8px; }
+.hud-card { background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 12px; backdrop-filter: blur(16px); }
+.hud-card .lbl { font-size: 0.55rem; font-family: var(--font-mono); color: var(--text-dim); text-transform: uppercase; }
+.hud-card .val { font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--orange); margin-top: 1px; }
 
 .action-bar { position: absolute; top: 14px; right: 14px; z-index: 900; display: flex; gap: 8px; }
 .hud-btn {
-  background: var(--elevated); border: 1px solid var(--border-strong);
-  color: #fff; padding: 10px 14px; border-radius: 6px; font-family: var(--font-head);
-  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; cursor: pointer;
-  backdrop-filter: blur(16px); box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-  display: flex; align-items: center; gap: 6px; transition: all 0.2s var(--ease);
+  background: var(--elevated); border: 1px solid var(--border-strong); color: #fff; padding: 8px 12px;
+  border-radius: 6px; font-family: var(--font-head); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  backdrop-filter: blur(16px); transition: all 0.2s var(--ease);
 }
-.hud-btn:hover, .hud-btn.active { border-color: var(--orange); background: var(--orange-glow); color: var(--orange); }
+.hud-btn.active { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
 
-/* Tactical Drawer for GIS Feeds */
-.gis-drawer {
-  position: absolute; top: 62px; right: 14px; z-index: 910; width: 320px;
-  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 10px;
-  padding: 16px; backdrop-filter: blur(24px); display: none; max-height: 75vh; overflow-y: auto;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.8);
-}
-.gis-drawer.open { display: block; animation: viewIn 0.2s var(--ease); }
-.gis-drawer h3 {
-  margin: 0 0 10px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--orange);
-  text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 6px;
-}
-.layer-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 12px; background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 6px; margin-bottom: 6px; font-size: 0.75rem;
-}
-.layer-row input { accent-color: var(--orange); cursor: pointer; width: 16px; height: 16px; }
+/* Intake & Vision Layout */
+.intake-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: 100%; }
+@media (max-width: 900px) { .intake-grid { grid-template-columns: 1fr; height: auto; } }
 
-/* Dashboard Cards & Media Intake */
 .card {
-  background: var(--elevated); border: 1px solid var(--border);
-  border-radius: 12px; padding: 18px; margin-bottom: 14px;
-  backdrop-filter: blur(16px); box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  background: var(--elevated); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; backdrop-filter: blur(16px); display: flex; flex-direction: column;
 }
 .card h2 {
-  margin: 0 0 12px; font-size: 0.8rem; font-family: var(--font-mono);
-  color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em;
-  border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  margin: 0 0 12px; font-size: 0.8rem; font-family: var(--font-mono); color: var(--orange);
+  text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--border); padding-bottom: 6px;
+  display: flex; justify-content: space-between; align-items: center;
 }
+
 .upload-box {
-  border: 2px dashed var(--border-strong); border-radius: 10px;
-  padding: 32px 20px; text-align: center; background: rgba(240,138,46,0.02);
-  cursor: pointer; transition: all 0.2s var(--ease);
+  border: 2px dashed var(--border-strong); border-radius: 10px; padding: 24px 16px;
+  text-align: center; background: rgba(240,138,46,0.02); cursor: pointer; transition: all 0.2s var(--ease);
 }
 .upload-box:hover { border-color: var(--orange); background: var(--orange-glow); }
-.upload-box .title { font-family: var(--font-head); font-size: 1rem; font-weight: 700; color: var(--orange); margin: 0; }
-.upload-box .sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; }
 
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 12px; max-height: 220px; overflow-y: auto; }
 .gallery-item {
-  position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1;
-  border: 1px solid var(--border); background: #000;
+  position: relative; border-radius: 6px; overflow: hidden; aspect-ratio: 1;
+  border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s;
 }
+.gallery-item:hover { transform: scale(1.03); border-color: var(--orange); }
+.gallery-item.selected { border: 2px solid var(--mint); box-shadow: 0 0 10px var(--mint-glow); }
 .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-.gallery-item .badge {
-  position: absolute; top: 6px; left: 6px; font-family: var(--font-mono);
-  font-size: 0.55rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-  background: rgba(0,0,0,0.85); color: var(--orange); border: 1px solid var(--orange);
+.gallery-item .tag {
+  position: absolute; bottom: 2px; left: 2px; font-family: var(--font-mono); font-size: 0.5rem;
+  background: rgba(0,0,0,0.85); color: var(--mint); padding: 1px 4px; border-radius: 3px;
 }
 
-/* Bottom Nav Controls */
+/* Chat & Vision Output Engine */
+.chat-window {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; min-height: 380px;
+}
+.chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 90%; font-size: 0.8rem; line-height: 1.45; padding: 10px 12px; border-radius: 8px; }
+.msg.ai {
+  background: var(--elevated); border: 1px solid var(--border-strong); color: var(--text);
+  align-self: flex-start; font-family: var(--font-main);
+}
+.msg.user {
+  background: var(--orange-glow); border: 1px solid var(--orange); color: #fff;
+  align-self: flex-end; font-family: var(--font-main);
+}
+.msg .badge-title {
+  font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; color: var(--orange);
+  text-transform: uppercase; margin-bottom: 4px; display: block;
+}
+.msg .action-list { margin: 6px 0 0; padding-left: 18px; color: var(--mint); font-family: var(--font-mono); font-size: 0.72rem; }
+
+.chat-input-bar {
+  display: flex; gap: 8px; padding: 10px; background: var(--surface); border-top: 1px solid var(--border);
+}
+.chat-input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 12px; color: #fff; font-family: var(--font-main); font-size: 0.8rem; outline: none;
+}
+.chat-input:focus { border-color: var(--orange); }
+
 .bottom-nav {
-  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: rgba(3,5,4,0.96); border-top: 1px solid var(--border);
-  display: flex; z-index: 10000; backdrop-filter: blur(20px);
+  height: var(--nav-h); background: rgba(3,5,4,0.96); border-top: 1px solid var(--border);
+  display: flex; z-index: 10000;
 }
 .nav-btn {
-  flex: 1; border: none; background: none; color: var(--text-dim);
-  font-family: var(--font-head); font-size: 0.7rem; font-weight: 600;
-  letter-spacing: 0.05em; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 4px; cursor: pointer; position: relative;
-  transition: color 0.15s;
+  flex: 1; border: none; background: none; color: var(--text-dim); font-family: var(--font-head);
+  font-size: 0.7rem; font-weight: 600; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; cursor: pointer; transition: color 0.15s;
 }
 .nav-btn.active { color: var(--orange); }
-.nav-btn.active::before {
-  content: ""; position: absolute; top: 0; left: 30%; right: 30%; height: 2px;
-  background: var(--orange); box-shadow: 0 0 10px var(--orange);
-}
-.nav-btn .icon { font-size: 1.2rem; }
-
 .btn-primary {
-  background: var(--orange); color: #000; border: none; padding: 12px 16px;
-  border-radius: 6px; font-family: var(--font-head); font-weight: 700;
-  font-size: 0.85rem; cursor: pointer; width: 100%; letter-spacing: 0.05em;
-  box-shadow: 0 4px 15px var(--orange-glow); transition: all 0.15s var(--ease);
+  background: var(--orange); color: #000; border: none; padding: 8px 14px;
+  border-radius: 6px; font-family: var(--font-head); font-weight: 700; font-size: 0.8rem;
+  cursor: pointer; transition: all 0.15s;
 }
-.btn-primary:active { transform: scale(0.98); }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <div class="logo-badge">GIS</div>
-    <h1>BUCKTRACK <span>ULTRA</span></h1>
+    <div class="logo-badge">AI</div>
+    <h1>BUCKTRACK <span>VISION INTEL</span></h1>
   </div>
-  <div class="system-status">
-    <div class="status-tag active"><span class="status-dot"></span><span id="gis-status-lbl">GeoNova WFS</span></div>
-    <div class="status-tag"><span>ZONE 104</span></div>
-  </div>
+  <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--mint);">NEURAL ENGINE READY</div>
 </header>
 
 <main class="main-viewport">
-  <!-- Map Console Viewport -->
+  <!-- Map Section -->
   <section id="map-view" class="tab-content active">
-    <!-- Spatial Telemetry HUD Bar -->
     <div class="hud-bar">
       <div class="hud-card">
-        <div class="lbl">LAT / LON VECTOR</div>
+        <div class="lbl">COORDINATES</div>
         <div class="val" id="hud-coords">45.8167, -64.2167</div>
       </div>
       <div class="hud-card">
-        <div class="lbl">ELEVATION (NRCan LiDAR)</div>
-        <div class="val" id="hud-ele">142m MSL</div>
-      </div>
-      <div class="hud-card">
-        <div class="lbl">LIVE CROWN DATA</div>
-        <div class="val" style="color:var(--mint);" id="hud-crown-status">Synchronized</div>
+        <div class="lbl">TARGET ZONE</div>
+        <div class="val" style="color:var(--mint);">Springhill Sector 4</div>
       </div>
     </div>
-
-    <!-- Map Control Buttons -->
     <div class="action-bar">
       <button class="hud-btn" onclick="toggleEngine3D()" id="btn-3d-toggle">⛰️ 3D Globe</button>
-      <button class="hud-btn" onclick="toggleDrawer()">🎛️ Layers</button>
     </div>
-
-    <!-- Layers & GIS Drawer -->
-    <div class="gis-drawer" id="gisDrawer">
-      <h3>Basemap Engines</h3>
-      <div class="layer-row">
-        <span>Esri World High-Res Satellite</span>
-        <input type="radio" name="base" value="esri" checked onchange="setBaseMap(this.value)">
-      </div>
-      <div class="layer-row">
-        <span>NRCan Topographic Vector Tile</span>
-        <input type="radio" name="base" value="nrcan" onchange="setBaseMap(this.value)">
-      </div>
-
-      <h3 style="margin-top: 14px;">National / Global Overlays</h3>
-      <div class="layer-row">
-        <span>Provincial Crown Land Polygons</span>
-        <input type="checkbox" id="chk-crown" checked onchange="toggleCrownLayer(this.checked)">
-      </div>
-      <div class="layer-row">
-        <span>NRCan High-Res Elevation Contours</span>
-        <input type="checkbox" id="chk-topo" checked onchange="toggleOverlay('topo', this.checked)">
-      </div>
-      <div class="layer-row">
-        <span>AI Predictive Thermal Corridors</span>
-        <input type="checkbox" id="chk-ai" checked onchange="toggleOverlay('ai', this.checked)">
-      </div>
-    </div>
-
-    <!-- Dual Map Engine Containers -->
     <div id="leaflet-map"></div>
     <div id="maplibre-map"></div>
   </section>
 
-  <!-- Trail Cam Media Intake & Neural Index -->
+  <!-- Intake & AI Chat Section -->
   <section id="photos-view" class="tab-content">
-    <div class="card">
-      <h2>Camera Intake & Neural Index</h2>
-      <div class="upload-box" onclick="document.getElementById('file-input').click()">
-        <p class="title">DROP TRAIL CAM SD CARD DUMP</p>
-        <p class="sub">Auto-indexes timestamps, spatial coordinates, and local weather history</p>
-      </div>
-      <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
-    </div>
-    <div class="card">
-      <h2>Indexed Vault (<span id="photo-count">0</span>)</h2>
-      <div class="gallery-grid" id="photo-gallery"></div>
-    </div>
-  </section>
+    <div class="intake-grid">
+      <!-- Media Intake Side -->
+      <div class="card">
+        <h2>
+          <span>1. SD Card / Photo Dump</span>
+          <span style="color:var(--text-dim); font-size:0.65rem;" id="photo-count">0 Files</span>
+        </h2>
+        <div class="upload-box" onclick="document.getElementById('file-input').click()">
+          <div style="font-family: var(--font-head); font-weight:700; color:var(--orange);">SELECT / DROP TRAIL CAM PHOTOS</div>
+          <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 4px;">Automated EXIF Extraction & Visual Target Analysis</div>
+        </div>
+        <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 
-  <!-- AI Prediction & Corridor Briefing -->
-  <section id="ai-view" class="tab-content">
-    <div class="card">
-      <h2>Target Buck Intelligence</h2>
-      <p style="font-size:0.85rem; color:var(--text-dim); line-height:1.5;">
-        Spatial neural network models bedding density against thermal corridors, wind elevation vector shifts, and multi-year feed schedules.
-      </p>
-      <button class="btn-primary" onclick="runFullPrediction()">Generate Tactical Route Brief</button>
-    </div>
-    <div class="card">
-      <h2>Predictive Corridor Analysis</h2>
-      <div id="intel-output" style="font-family:var(--font-mono); font-size:0.75rem; color:var(--mint); line-height:1.6;">
-        System ready. Upload multi-year camera data to compute peak movement vectors.
+        <h2 style="margin-top: 14px;">Indexed Frames (Click to Analyze)</h2>
+        <div class="gallery-grid" id="photo-gallery">
+          <div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--text-dim); text-align: center; padding: 20px 0;">
+            No photos loaded. Click above to test SD import.
+          </div>
+        </div>
+      </div>
+
+      <!-- Vision AI Chat Side -->
+      <div class="card">
+        <h2><span>2. Vision AI Analysis & Tactical Directives</span></h2>
+        <div class="chat-window">
+          <div class="chat-messages" id="chat-msgs">
+            <div class="msg ai">
+              <span class="badge-title">SYSTEM ASSISTANT</span>
+              Upload photos or click a frame from the gallery. I will decode what the AI sees (antler configuration, age class, trajectory) and give you your next step.
+            </div>
+          </div>
+          <div class="chat-input-bar">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Ask AI about travel corridor, wind setup, or bait response..." onkeydown="if(event.key==='Enter') sendUserQuery()">
+            <button class="btn-primary" onclick="sendUserQuery()">Send</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 </main>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="switchTab('map-view', this)"><span class="icon">🗺️</span>MAP</button>
-  <button class="nav-btn" onclick="switchTab('photos-view', this)"><span class="icon">📸</span>INTAKE</button>
-  <button class="nav-btn" onclick="switchTab('ai-view', this)"><span class="icon">🎯</span>INTEL</button>
+  <button class="nav-btn active" onclick="switchTab('map-view', this)">🗺️ MAP</button>
+  <button class="nav-btn" onclick="switchTab('photos-view', this)">📸 VISION INTAKE</button>
 </nav>
 
 <script>
-// Base Coordinates (Springhill / Zone 104 Default)
 const DEFAULT_COORDS = [45.8167, -64.2167];
+let leafletMap, maplibreMap, is3DEngine = false;
+let uploadedImages = [];
 
-let leafletMap, maplibreMap;
-let activeBaseLayer;
-let leafletBaseLayers = {};
-let leafletOverlays = {};
-let crownLandLayer;
-let is3DEngine = false;
-
-// 1. Initialize 2D GIS Engine (Leaflet + GeoNova WFS FeatureServer + NRCan)
 function initLeafletEngine() {
-  leafletMap = L.map('leaflet-map', { zoomControl: false, attributionControl: false }).setView(DEFAULT_COORDS, 13);
-
-  // Basemap Tiles
-  leafletBaseLayers.esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
-  leafletBaseLayers.nrcan = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
-
-  activeBaseLayer = leafletBaseLayers.esri;
-  activeBaseLayer.addTo(leafletMap);
-
-  // NRCan Topographic Contour Lines Overlay
-  leafletOverlays.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { opacity: 0.35, maxZoom: 17 });
-  leafletOverlays.topo.addTo(leafletMap);
-
-  // GeoNova Provincial Crown Land Live Feature Layer Integration
-  crownLandLayer = L.esri.featureLayer({
-    url: 'https://nsgiwa.novascotia.ca/arcgis/rest/services/PLAN/PLANCrownLandsWM84V1/MapServer/0',
-    style: function () {
-      return { color: '#f08a2e', weight: 2, dashArray: '4,4', fillColor: '#f08a2e', fillOpacity: 0.2 };
-    }
-  }).bindPopup(function (layer) {
-    return `<b>Provincial Crown Land Parcel</b><br>Designation: ${layer.feature.properties.LAND_TYPE || 'Public Access Allowed'}`;
-  });
-  crownLandLayer.addTo(leafletMap);
-
-  // AI Tactical Layer Group
-  const thermalLine = L.polyline([
-    [45.8280, -64.2280], [45.8210, -64.2200], [45.8150, -64.2120]
-  ], { color: '#00d2ff', weight: 4, opacity: 0.85 }).bindPopup("<b>Primary Thermal Wind Ridge</b><br>Calculated funnel zone for NW wind.");
-
-  const beddingHotspot = L.circle([45.8290, -64.2260], {
-    radius: 300, color: '#ff3b30', fillColor: '#ff3b30', fillOpacity: 0.35
-  }).bindPopup("<b>AI Bedding Prediction Hotspot</b><br>92% Confidence based on slope angle & thermal cover.");
-
-  leafletOverlays.ai = L.layerGroup([thermalLine, beddingHotspot]);
-  leafletOverlays.ai.addTo(leafletMap);
-
-  // Telemetry Updates
+  leafletMap = L.map('leaflet-map', { zoomControl: false }).setView(DEFAULT_COORDS, 13);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(leafletMap);
   leafletMap.on('mousemove', (e) => {
     document.getElementById('hud-coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
   });
 }
 
-// 2. Initialize Global 3D GPU Elevation Engine (MapLibre GL JS + AWS Terrarium RGB)
 function initMapLibreEngine() {
   maplibreMap = new maplibregl.Map({
     container: 'maplibre-map',
     style: {
       version: 8,
       sources: {
-        'esri-satellite': {
-          type: 'raster',
-          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-          tileSize: 256
-        },
-        'terrain-source': {
-          type: 'raster-dem',
-          tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-          tileSize: 256,
-          encoding: 'terrarium'
-        }
+        'esri-sat': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 },
+        'terrarium': { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], tileSize: 256, encoding: 'terrarium' }
       },
-      layers: [
-        {
-          id: 'satellite-layer',
-          type: 'raster',
-          source: 'esri-satellite',
-          minzoom: 0,
-          maxzoom: 20
-        }
-      ]
+      layers: [{ id: 'sat', type: 'raster', source: 'esri-sat' }]
     },
-    center: [-64.2167, 45.8167],
-    zoom: 13.5,
-    pitch: 55,
-    bearing: -15
+    center: [-64.2167, 45.8167], zoom: 13.5, pitch: 55
   });
-
-  maplibreMap.on('load', () => {
-    maplibreMap.setTerrain({ source: 'terrain-source', exaggeration: 1.5 });
-  });
-
-  maplibreMap.on('mousemove', (e) => {
-    document.getElementById('hud-coords').textContent = `${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`;
-  });
+  maplibreMap.on('load', () => maplibreMap.setTerrain({ source: 'terrarium', exaggeration: 1.5 }));
 }
 
-// Engine Toggle Switch
-window.toggleEngine3D = function() {
+function toggleEngine3D() {
   is3DEngine = !is3DEngine;
-  const lMapEl = document.getElementById('leaflet-map');
-  const mMapEl = document.getElementById('maplibre-map');
+  const lEl = document.getElementById('leaflet-map');
+  const mEl = document.getElementById('maplibre-map');
   const btn = document.getElementById('btn-3d-toggle');
-
   if (is3DEngine) {
-    lMapEl.style.visibility = 'hidden';
-    mMapEl.style.visibility = 'visible';
-    btn.classList.add('active');
-    btn.textContent = '🗺️ 2D Map';
+    lEl.style.visibility = 'hidden'; mEl.style.visibility = 'visible';
+    btn.classList.add('active'); btn.textContent = '🗺️ 2D Map';
     maplibreMap.resize();
   } else {
-    mMapEl.style.visibility = 'hidden';
-    lMapEl.style.visibility = 'visible';
-    btn.classList.remove('active');
-    btn.textContent = '⛰️ 3D Globe';
+    mEl.style.visibility = 'hidden'; lEl.style.visibility = 'visible';
+    btn.classList.remove('active'); btn.textContent = '⛰️ 3D Globe';
     leafletMap.invalidateSize();
   }
-};
+}
 
-window.toggleDrawer = function() {
-  document.getElementById('gisDrawer').classList.toggle('open');
-};
-
-window.setBaseMap = function(type) {
-  if (leafletMap.hasLayer(activeBaseLayer)) leafletMap.removeLayer(activeBaseLayer);
-  activeBaseLayer = (type === 'nrcan') ? leafletBaseLayers.nrcan : leafletBaseLayers.esri;
-  activeBaseLayer.addTo(leafletMap);
-};
-
-window.toggleOverlay = function(key, enable) {
-  if (enable) leafletMap.addLayer(leafletOverlays[key]);
-  else leafletMap.removeLayer(leafletOverlays[key]);
-};
-
-window.toggleCrownLayer = function(enable) {
-  if (enable) leafletMap.addLayer(crownLandLayer);
-  else leafletMap.removeLayer(crownLandLayer);
-};
-
-window.switchTab = function(tabId, btn) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   btn.classList.add('active');
   if (tabId === 'map-view') {
-    setTimeout(() => {
-      if (is3DEngine) maplibreMap.resize();
-      else leafletMap.invalidateSize();
-    }, 100);
+    setTimeout(() => { if (is3DEngine) maplibreMap.resize(); else leafletMap.invalidateSize(); }, 100);
   }
-};
+}
 
-window.runFullPrediction = function() {
-  const output = document.getElementById('intel-output');
-  output.innerHTML = `
-    [AI ANALYTICS ENGINE]<br>
-    -----------------------------------<br>
-    > Processing Topo Slopes & Wind Deflection...<br>
-    > Calculating Solunar Peak: 06:12 AM - 08:45 AM<br>
-    > Primary Bedding Zone: High Ridge Sector Northwest<br>
-    > Wind Edge Bias: Dominant NW flow favoring South pinch point<br>
-    > STATUS: Tactical layer updated on map console.
-  `;
-};
-
-window.handlePhotoUpload = function(e) {
+// Photo Upload + AI Auto Analysis Trigger
+function handlePhotoUpload(e) {
   const files = Array.from(e.target.files);
+  if (!files.length) return;
+
   const gallery = document.getElementById('photo-gallery');
-  document.getElementById('photo-count').textContent = files.length;
-  
   gallery.innerHTML = "";
+  uploadedImages = [];
+  document.getElementById('photo-count').textContent = `${files.length} Files`;
+
   files.forEach((file, index) => {
     const reader = new FileReader();
-    reader.onload = function(event) {
-      gallery.innerHTML += `
-        <div class="gallery-item">
-          <span class="badge">CAM ${index + 1}</span>
-          <img src="${event.target.result}" alt="Trail Cam">
-        </div>
-      `;
+    reader.onload = function(evt) {
+      const src = evt.target.result;
+      uploadedImages.push({ id: index, src: src, name: file.name });
+      
+      const item = document.createElement('div');
+      item.className = `gallery-item ${index === 0 ? 'selected' : ''}`;
+      item.onclick = () => selectFrameForAnalysis(index);
+      item.innerHTML = `<img src="${src}"><span class="tag">FRAME ${index + 1}</span>`;
+      gallery.appendChild(item);
+
+      if (index === 0) runVisionAIAnalysis(file.name, 1);
     };
     reader.readAsDataURL(file);
   });
-};
+}
+
+function selectFrameForAnalysis(index) {
+  document.querySelectorAll('.gallery-item').forEach((el, i) => {
+    if (i === index) el.classList.add('selected');
+    else el.classList.remove('selected');
+  });
+  const img = uploadedImages[index];
+  if (img) runVisionAIAnalysis(img.name, index + 1);
+}
+
+// Simulated High-Accuracy AI Vision Detection Output
+function runVisionAIAnalysis(fileName, frameNum) {
+  const msgs = document.getElementById('chat-msgs');
+
+  // Insert loading state
+  const loadingMsg = document.createElement('div');
+  loadingMsg.className = 'msg ai';
+  loadingMsg.id = 'temp-loader';
+  loadingMsg.innerHTML = `<span class="badge-title">AI VISION NEURAL SCANNING...</span> Analyzing raster pixels on Frame ${frameNum} (${fileName})...`;
+  msgs.appendChild(loadingMsg);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  setTimeout(() => {
+    const temp = document.getElementById('temp-loader');
+    if (temp) temp.remove();
+
+    const mockDetections = [
+      {
+        target: "MATURE 10-POINT BUCK (Est. 4.5 YRS)",
+        confidence: "96.4%",
+        time: "21:42 (Night Transition)",
+        direction: "Heading West toward Ridge Cedar Swamp",
+        analysis: "Wide main beams extending past ears with heavy tine mass. Deep chest and dropped brisket.",
+        nextSteps: [
+          "Check thermal wind layer on 3D Map for West ridge funnel.",
+          "Set trail camera 150m North along the ridge line to verify bedding area.",
+          "Avoid daylight entry; target movement is strictly nocturnal right now."
+        ]
+      },
+      {
+        target: "2x JUNIOR BUCKS (8-POINT & SPIKE)",
+        confidence: "91.2%",
+        time: "18:15 (Last Light)",
+        direction: "Heading East toward lower Oak Flats",
+        analysis: "High velvet/early scrape activity. Relaxed posture indicating low scent pressure.",
+        nextSteps: [
+          "Maintain current bait/feed mixture.",
+          "Keep wind vector South-Southwest when approaching setup."
+        ]
+      }
+    ];
+
+    const data = mockDetections[frameNum % mockDetections.length];
+
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'msg ai';
+    aiMsg.innerHTML = `
+      <span class="badge-title">👁️ WHAT AI SEES — FRAME ${frameNum}</span>
+      <strong>Target Identified:</strong> ${data.target} (${data.confidence} Match)<br>
+      <strong>Detection Time:</strong> ${data.time}<br>
+      <strong>Movement Vector:</strong> ${data.direction}<br><br>
+      <strong>Visual Breakdown:</strong> ${data.analysis}
+      
+      <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:6px;">
+        <span class="badge-title" style="color:var(--mint);">🎯 WHAT YOU NEED TO DO NEXT</span>
+        <ul class="action-list">
+          ${data.nextSteps.map(s => `<li>${s}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+    msgs.appendChild(aiMsg);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 1000);
+}
+
+function sendUserQuery() {
+  const input = document.getElementById('chat-input');
+  const txt = input.value.trim();
+  if (!txt) return;
+
+  const msgs = document.getElementById('chat-msgs');
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg user';
+  userMsg.textContent = txt;
+  msgs.appendChild(userMsg);
+  input.value = "";
+  msgs.scrollTop = msgs.scrollHeight;
+
+  setTimeout(() => {
+    const aiResponse = document.createElement('div');
+    aiResponse.className = 'msg ai';
+    aiResponse.innerHTML = `
+      <span class="badge-title">TACTICAL DIRECTIVE</span>
+      Based on your query ("${txt}") cross-referenced with uploaded frame data:
+      <br><br>
+      • <strong>Wind Recommendation:</strong> Keep your approach on the downwind side along the Northwest timber line.
+      <br>• <strong>Map Action:</strong> I have flagged the thermal corridor on your map console. Toggle 3D Globe to view slope elevation pitch.
+    `;
+    msgs.appendChild(aiResponse);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 800);
+}
 
 window.addEventListener('DOMContentLoaded', () => {
   initLeafletEngine();
