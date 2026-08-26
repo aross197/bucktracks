@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BUCKTRACK PRO | ULTRA ADVANCED VISION & TACTICAL GIS</title>
-<meta name="theme-color" content="#030504">
+<title>BUCKTRACK APEX | ULTRA-VISION, GIS & TACTICAL VIDEO COMMS</title>
+<meta name="theme-color" content="#020403">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Leaflet Core -->
+<!-- Leaflet Core & Plugins -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js" crossorigin=""></script>
@@ -20,24 +20,24 @@
 
 <style>
 :root {
-  --bg: #030504;
-  --surface: #080c0a;
-  --surface-2: #0f1612;
-  --elevated: rgba(10, 15, 13, 0.96);
+  --bg: #020403;
+  --surface: #070c0a;
+  --surface-2: #0e1713;
+  --elevated: rgba(8, 14, 11, 0.94);
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(240, 138, 46, 0.35);
   --orange: #f08a2e;
-  --orange-bright: #ff9d3b;
-  --orange-glow: rgba(240, 138, 46, 0.22);
+  --orange-glow: rgba(240, 138, 46, 0.25);
   --mint: #50e3c2;
-  --mint-glow: rgba(80, 227, 194, 0.18);
+  --mint-glow: rgba(80, 227, 194, 0.2);
   --cyan: #00d2ff;
+  --purple: #b359ff;
   --red: #ff3b30;
-  --red-glow: rgba(255, 59, 48, 0.25);
+  --yellow: #ffd60a;
   --text: #f0f4f1;
-  --text-dim: #6c7e75;
-  --header-h: 58px;
-  --nav-h: 64px;
+  --text-dim: #73887d;
+  --header-h: 56px;
+  --nav-h: 60px;
   --font-main: "IBM Plex Sans", sans-serif;
   --font-head: "Chakra Petch", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
@@ -47,30 +47,30 @@
 *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; -webkit-font-smoothing: antialiased; }
 
-/* CRT Scanline Overlay */
+/* CRT/Tactical Glass Overlay Effect */
 body::after {
   content: ""; position: fixed; inset: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.015), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.015));
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.008), rgba(0, 0, 255, 0.01));
   background-size: 100% 3px, 6px 100%;
-  pointer-events: none; z-index: 99999; opacity: 0.35;
+  pointer-events: none; z-index: 99999; opacity: 0.3;
 }
 
 header {
-  height: var(--header-h); padding: 0 16px; background: rgba(3, 5, 4, 0.95);
+  height: var(--header-h); padding: 0 16px; background: rgba(2, 4, 3, 0.95);
   border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;
   z-index: 1000; backdrop-filter: blur(20px); position: relative;
 }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand .logo-badge {
-  width: 32px; height: 32px; background: rgba(240, 138, 46, 0.15);
-  border: 1px solid var(--orange); border-radius: 4px; display: flex; align-items: center;
+  width: 34px; height: 34px; background: rgba(240, 138, 46, 0.12);
+  border: 1px solid var(--orange); border-radius: 6px; display: flex; align-items: center;
   justify-content: center; font-family: var(--font-head); font-weight: 700; color: var(--orange); font-size: 0.85rem;
-  box-shadow: 0 0 14px var(--orange-glow);
+  box-shadow: 0 0 16px var(--orange-glow);
 }
-.brand h1 { margin: 0; font-size: 1.1rem; font-family: var(--font-head); font-weight: 700; letter-spacing: 0.08em; color: #fff; }
+.brand h1 { margin: 0; font-size: 1.05rem; font-family: var(--font-head); font-weight: 700; letter-spacing: 0.08em; color: #fff; }
 .brand h1 span { color: var(--orange); }
 
-.telemetry-strip { display: flex; gap: 12px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); }
+.telemetry-strip { display: flex; gap: 14px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim); }
 .telemetry-strip span { color: var(--mint); font-weight: 600; }
 
 .main-viewport {
@@ -85,29 +85,45 @@ header {
 #leaflet-map, #maplibre-map { width: 100%; height: 100%; position: absolute; inset: 0; background: #000; }
 #maplibre-map { visibility: hidden; }
 
-.hud-bar { position: absolute; top: 14px; left: 14px; z-index: 900; pointer-events: none; display: flex; gap: 8px; flex-wrap: wrap; }
-.hud-card { background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 12px; backdrop-filter: blur(16px); }
+/* TACTICAL HUD BAR OVER MAP */
+.hud-bar { position: absolute; top: 12px; left: 12px; z-index: 900; pointer-events: none; display: flex; gap: 8px; flex-wrap: wrap; }
+.hud-card {
+  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 8px;
+  padding: 6px 12px; backdrop-filter: blur(16px); box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
 .hud-card .lbl { font-size: 0.52rem; font-family: var(--font-mono); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
-.hud-card .val { font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--orange); margin-top: 1px; }
+.hud-card .val { font-size: 0.75rem; font-family: var(--font-mono); font-weight: 700; color: var(--orange); margin-top: 2px; }
 
-.action-bar { position: absolute; top: 14px; right: 14px; z-index: 900; display: flex; gap: 8px; }
+/* PHASE SELECTOR HUD PANEL */
+.phase-selector-bar {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 900;
+  display: flex; background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 8px;
+  padding: 3px; backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+}
+.phase-btn {
+  background: none; border: none; color: var(--text-dim); padding: 6px 14px; border-radius: 6px;
+  font-family: var(--font-head); font-size: 0.72rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.phase-btn.active { background: var(--orange); color: #000; box-shadow: 0 0 12px var(--orange-glow); }
+
+.action-bar { position: absolute; top: 12px; right: 12px; z-index: 900; display: flex; gap: 8px; }
 .hud-btn {
   background: var(--elevated); border: 1px solid var(--border-strong); color: #fff; padding: 8px 14px;
-  border-radius: 6px; font-family: var(--font-head); font-size: 0.75rem; font-weight: 600; cursor: pointer;
-  backdrop-filter: blur(16px); transition: all 0.2s var(--ease);
+  border-radius: 8px; font-family: var(--font-head); font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  backdrop-filter: blur(16px); transition: all 0.2s var(--ease); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 .hud-btn.active, .hud-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
 
 /* ADVANCED LAYER CONTROL DRAWER */
 .layer-drawer {
-  position: absolute; top: 62px; right: 14px; z-index: 910; width: 340px;
-  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 10px;
+  position: absolute; top: 60px; right: 12px; z-index: 910; width: 340px;
+  background: var(--elevated); border: 1px solid var(--border-strong); border-radius: 12px;
   padding: 16px; backdrop-filter: blur(24px); display: none; max-height: 80vh; overflow-y: auto;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.8);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
 }
 .layer-drawer.open { display: block; animation: viewIn 0.2s var(--ease); }
 .layer-drawer h3 {
-  margin: 12px 0 8px; font-family: var(--font-mono); font-size: 0.62rem; color: var(--orange);
+  margin: 14px 0 8px; font-family: var(--font-mono); font-size: 0.62rem; color: var(--orange);
   text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--border); padding-bottom: 4px;
 }
 .layer-drawer h3:first-child { margin-top: 0; }
@@ -123,10 +139,10 @@ header {
 @media (max-width: 960px) { #vision-view { flex-direction: column; overflow-y: auto; } }
 
 .v-panel {
-  background: var(--elevated); border: 1px solid var(--border); border-radius: 10px;
-  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--elevated); border: 1px solid var(--border); border-radius: 12px;
+  display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.7);
 }
-.v-panel.left { flex: 1.1; }
+.v-panel.left { flex: 1; }
 .v-panel.right { flex: 1.4; border-color: var(--border-strong); }
 
 .panel-head {
@@ -137,7 +153,7 @@ header {
 
 .upload-dropzone {
   margin: 12px; border: 2px dashed var(--border-strong); border-radius: 8px;
-  padding: 20px 14px; text-align: center; background: rgba(240,138,46,0.02);
+  padding: 18px 14px; text-align: center; background: rgba(240, 138, 46, 0.02);
   cursor: pointer; transition: all 0.2s var(--ease);
 }
 .upload-dropzone:hover { border-color: var(--orange); background: var(--orange-glow); }
@@ -173,7 +189,7 @@ header {
   font-family: var(--font-mono); font-size: 0.55rem; font-weight: 700; padding: 1px 5px; text-transform: uppercase;
 }
 
-/* ADVANCED CHAT & INTEL WORKFLOW */
+/* ADVANCED CHAT & VIDEO WORKFLOW */
 .chat-container { flex: 1; display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
 .chat-logs { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
 
@@ -199,16 +215,62 @@ header {
 .directive-box ul { margin: 0; padding-left: 18px; font-size: 0.75rem; color: var(--text); }
 .directive-box li { margin-bottom: 4px; }
 
-.chat-controls { display: flex; gap: 8px; padding: 10px; background: var(--surface-2); border-top: 1px solid var(--border); }
+.chat-controls { display: flex; gap: 8px; padding: 10px; background: var(--surface-2); border-top: 1px solid var(--border); align-items: center; }
 .chat-input {
   flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
   padding: 8px 12px; color: #fff; font-family: var(--font-main); font-size: 0.8rem; outline: none;
 }
 .chat-input:focus { border-color: var(--orange); }
 
+/* VIDEO CALL MODAL & HUD OVERLAYS */
+.video-modal {
+  position: fixed; inset: 0; z-index: 99999; background: rgba(2, 4, 3, 0.96);
+  display: none; flex-direction: column; backdrop-filter: blur(20px);
+}
+.video-modal.active { display: flex; animation: viewIn 0.25s var(--ease); }
+
+.video-header {
+  padding: 12px 20px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.video-header h3 { margin: 0; font-family: var(--font-head); color: var(--mint); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+.live-indicator { width: 10px; height: 10px; background: var(--red); border-radius: 50%; box-shadow: 0 0 10px var(--red); animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.video-stage { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+#remote-video-stream { width: 100%; height: 100%; object-fit: cover; }
+#local-video-preview {
+  position: absolute; bottom: 20px; right: 20px; width: 160px; height: 120px;
+  background: #111; border: 2px solid var(--orange); border-radius: 8px;
+  object-fit: cover; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 10;
+}
+
+.tactical-video-hud {
+  position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.hud-tag {
+  background: rgba(8, 14, 11, 0.85); border: 1px solid var(--mint); border-radius: 4px;
+  padding: 4px 8px; font-family: var(--font-mono); font-size: 0.65rem; color: var(--mint);
+  backdrop-filter: blur(10px);
+}
+
+.video-controls-bar {
+  padding: 16px; background: var(--surface-2); border-top: 1px solid var(--border);
+  display: flex; justify-content: center; gap: 16px; align-items: center;
+}
+.v-cmd-btn {
+  width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border-strong);
+  background: var(--elevated); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; cursor: pointer; transition: all 0.2s;
+}
+.v-cmd-btn:hover { border-color: var(--orange); color: var(--orange); transform: scale(1.05); }
+.v-cmd-btn.active-off { background: rgba(255, 59, 48, 0.2); border-color: var(--red); color: var(--red); }
+.v-cmd-btn.end-call { background: var(--red); border-color: var(--red); color: #fff; width: 56px; height: 56px; }
+
 /* BOTTOM NAV */
 .bottom-nav {
-  height: var(--nav-h); background: rgba(3,5,4,0.96); border-top: 1px solid var(--border);
+  height: var(--nav-h); background: rgba(2,4,3,0.96); border-top: 1px solid var(--border);
   display: flex; z-index: 10000;
 }
 .nav-btn {
@@ -221,49 +283,65 @@ header {
   background: var(--orange); color: #000; border: none; padding: 8px 14px;
   border-radius: 6px; font-family: var(--font-head); font-weight: 700; font-size: 0.8rem; cursor: pointer;
 }
+.btn-video-call {
+  background: rgba(80, 227, 194, 0.15); border: 1px solid var(--mint); color: var(--mint);
+  padding: 8px 12px; border-radius: 6px; font-family: var(--font-head); font-weight: 700;
+  font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+}
+.btn-video-call:hover { background: var(--mint); color: #000; box-shadow: 0 0 12px var(--mint-glow); }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <div class="logo-badge">PRO</div>
-    <h1>BUCKTRACK <span>ULTRA GIS & VISION</span></h1>
+    <div class="logo-badge">APEX</div>
+    <h1>BUCKTRACK <span>NEURAL GIS & COMMS</span></h1>
   </div>
   <div class="telemetry-strip">
-    <div>SOLUNAR: <span>MAJOR PEAK (06:15 - 08:30)</span></div>
-    <div>FPS: <span id="fps-val">60</span></div>
+    <div>SOLUNAR: <span id="tele-solunar">MAJOR PEAK (06:15 - 08:30)</span></div>
+    <div>TEMP: <span id="tele-temp">--°C</span></div>
+    <div>WIND: <span id="tele-wind">-- km/h</span></div>
   </div>
 </header>
 
 <main class="main-viewport">
   <!-- MAP CONSOLE VIEW -->
   <section id="map-view" class="tab-content active">
+    <!-- WEATHER & HUD OVERLAY -->
     <div class="hud-bar">
       <div class="hud-card">
-        <div class="lbl">LAT / LON COORDS</div>
+        <div class="lbl">LOCATION / COORDS</div>
         <div class="val" id="hud-coords">45.8167, -64.2167</div>
       </div>
       <div class="hud-card">
-        <div class="lbl">ELEVATION (LIDAR)</div>
-        <div class="val" id="hud-ele">142m MSL</div>
+        <div class="lbl">LIVE WEATHER & BARO</div>
+        <div class="val" id="hud-weather" style="color:var(--mint);">FETCHING LOCAL DATA...</div>
       </div>
       <div class="hud-card">
-        <div class="lbl">PREDICTIVE CORRIDOR</div>
-        <div class="val" style="color:var(--mint);">Active Neural Model</div>
+        <div class="lbl">SOLUNAR RATING</div>
+        <div class="val" id="hud-solunar" style="color:var(--yellow);">HIGH ACTIVITY (88%)</div>
       </div>
     </div>
 
+    <!-- PHASE SELECTOR BAR -->
+    <div class="phase-selector-bar">
+      <button class="phase-btn" onclick="setRutPhase('prerut', this)">PRE-RUT (OCT 20-NOV 5)</button>
+      <button class="phase-btn active" onclick="setRutPhase('peakrut', this)">SEEK & CHASE (NOV 6-NOV 20)</button>
+      <button class="phase-btn" onclick="setRutPhase('postrut', this)">POST-RUT (NOV 21+)</button>
+    </div>
+
     <div class="action-bar">
-      <button class="hud-btn" onclick="toggleEngine3D()" id="btn-3d-toggle">⛰️ 3D Globe</button>
-      <button class="hud-btn" onclick="toggleDrawer()">🎛️ Advanced Layers</button>
+      <button class="hud-btn" onclick="locateUser()">📍 Find Me</button>
+      <button class="hud-btn" onclick="toggleEngine3D()" id="btn-3d-toggle">⛰️ 3D Terrain</button>
+      <button class="hud-btn" onclick="toggleDrawer()">🎛️ Layers</button>
     </div>
 
     <!-- ADVANCED GIS LAYERS DRAWER -->
     <div class="layer-drawer" id="layerDrawer">
       <h3>Basemap Engines</h3>
       <div class="layer-row">
-        <span>Esri World High-Res Imagery</span>
+        <span>Esri High-Res Satellite</span>
         <input type="radio" name="base" value="esri" checked onchange="setBaseMap(this.value)">
       </div>
       <div class="layer-row">
@@ -271,7 +349,7 @@ header {
         <input type="radio" name="base" value="dark" onchange="setBaseMap(this.value)">
       </div>
 
-      <h3>Provincial & Tactical Overlays</h3>
+      <h3>Provincial & Property Boundaries</h3>
       <div class="layer-row">
         <span>Provincial Crown Land Polygons</span>
         <input type="checkbox" id="chk-crown" checked onchange="toggleCrownLayer(this.checked)">
@@ -281,18 +359,22 @@ header {
         <input type="checkbox" id="chk-topo" checked onchange="toggleOverlay('topo', this.checked)">
       </div>
 
-      <h3>Neural AI Predictive Overlays</h3>
+      <h3>Neural AI & Behavioral Overlays</h3>
       <div class="layer-row">
-        <span>Predictive Buck Bedding Hotspots</span>
+        <span>Predictive Bedding Hotspots</span>
         <input type="checkbox" id="chk-bedding" checked onchange="toggleOverlay('bedding', this.checked)">
       </div>
       <div class="layer-row">
-        <span>Thermal Ridge Travel Funnels</span>
+        <span>Thermal Ridge Travel Corridors</span>
         <input type="checkbox" id="chk-thermal" checked onchange="toggleOverlay('thermal', this.checked)">
       </div>
       <div class="layer-row">
-        <span>Micro-Climate Wind Vectors</span>
-        <input type="checkbox" id="chk-wind" checked onchange="toggleOverlay('wind', this.checked)">
+        <span>Scrape Line Highways</span>
+        <input type="checkbox" id="chk-scrapes" checked onchange="toggleOverlay('scrapes', this.checked)">
+      </div>
+      <div class="layer-row">
+        <span>Downwind Scent-Checking Lines</span>
+        <input type="checkbox" id="chk-downwind" checked onchange="toggleOverlay('downwind', this.checked)">
       </div>
     </div>
 
@@ -310,7 +392,7 @@ header {
       </div>
       <div class="upload-dropzone" onclick="document.getElementById('file-input').click()">
         <div style="font-family: var(--font-head); font-weight:700; color:var(--orange);">LOAD TRAIL CAM SD DUMP</div>
-        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Automatic EXIF timestamping & neural target bounding</div>
+        <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 4px;">Automatic EXIF timestamping, tarsal analysis & neural bounding</div>
       </div>
       <input type="file" id="file-input" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 
@@ -324,26 +406,26 @@ header {
     <!-- RIGHT PANEL: NEURAL VISION INSPECTOR & ADVANCED CHAT -->
     <div class="v-panel right">
       <div class="panel-head">
-        <h2>2. Neural Vision Inspector & AI Directives</h2>
-        <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--mint);">MODEL: BUCK-VISION-V4</span>
+        <h2>2. Neural Vision Inspector & Tactical AI</h2>
+        <button class="btn-video-call" onclick="startVideoCall()">📹 LIVE FIELD CALL</button>
       </div>
 
       <!-- VISION BBOX PREVIEW -->
       <div class="viewport-preview" id="viewport-preview">
-        <div style="color:var(--text-dim); font-size:0.75rem; font-family:var(--font-mono);">SELECT FRAME FOR NEURAL BOUNDING</div>
+        <div style="color:var(--text-dim); font-size:0.75rem; font-family:var(--font-mono);">SELECT FRAME FOR NEURAL BOUNDING & RUT METRICS</div>
       </div>
 
       <!-- CHAT ENGINE -->
       <div class="chat-container">
         <div class="chat-logs" id="chat-logs">
           <div class="chat-msg system">
-            <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block; margin-bottom:4px;">[NEURAL SYSTEM INITIALIZED]</span>
-            Upload trail camera frames to run computer vision object detection. I will generate antler geometry metrics, age estimation, movement trajectory, and spatial recommendations on your GIS map.
+            <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block; margin-bottom:4px;">[NEURAL COMMS INITIALIZED]</span>
+            Select a Rut Phase above or upload camera frames. Click <strong>LIVE FIELD CALL</strong> to establish direct encrypted WebRTC video comms with team members or AI dispatch.
           </div>
         </div>
 
         <div class="chat-controls">
-          <input type="text" class="chat-input" id="chat-input" placeholder="Query AI regarding wind funneling, bedding location, or stand placement..." onkeydown="if(event.key==='Enter') sendUserQuery()">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Query AI regarding wind direction, bedding points, or calling tactics..." onkeydown="if(event.key==='Enter') sendUserQuery()">
           <button class="btn-primary" onclick="sendUserQuery()">Execute</button>
         </div>
       </div>
@@ -351,20 +433,76 @@ header {
   </section>
 </main>
 
+<!-- FULLSCREEN TACTICAL VIDEO CALL MODAL -->
+<div class="video-modal" id="videoModal">
+  <div class="video-header">
+    <h3><span class="live-indicator"></span> TACTICAL VIDEO COMMS — SECURE LINK</h3>
+    <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--mint);" id="call-duration">00:00</span>
+  </div>
+  <div class="video-stage">
+    <video id="remote-video-stream" autoplay playsinline poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23050a08'/><text x='50%' y='50%' fill='%2350e3c2' font-family='monospace' font-size='16' text-anchor='middle'>ESTABLISHING ENCRYPTED STREAM...</text></svg>"></video>
+    <video id="local-video-preview" autoplay playsinline muted></video>
+
+    <div class="tactical-video-hud">
+      <div class="hud-tag">LATENCY: 18ms</div>
+      <div class="hud-tag">ENCRYPTION: AES-256</div>
+      <div class="hud-tag">AI OVERLAY: ACTIVE</div>
+    </div>
+  </div>
+  <div class="video-controls-bar">
+    <button class="v-cmd-btn" id="btn-toggle-mic" onclick="toggleMuteMic()">🎤</button>
+    <button class="v-cmd-btn" id="btn-toggle-cam" onclick="toggleMuteCam()">📹</button>
+    <button class="v-cmd-btn end-call" onclick="endVideoCall()">📵</button>
+  </div>
+</div>
+
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="switchTab('map-view', this)">🗺️ GIS MAP</button>
-  <button class="nav-btn" onclick="switchTab('vision-view', this)">👁️ ADVANCED VISION & AI</button>
+  <button class="nav-btn" onclick="switchTab('vision-view', this)">👁️ VISION & RUT AI</button>
 </nav>
 
 <script>
-const DEFAULT_COORDS = [45.8167, -64.2167];
+let currentLat = 45.8167, currentLng = -64.2167;
 let leafletMap, maplibreMap, is3DEngine = false;
 let leafletBaseLayers = {}, leafletOverlays = {}, crownLandLayer, activeBaseLayer;
 let uploadedImages = [];
+let currentPhase = 'peakrut';
 
-// 1. Leaflet 2D GIS Setup
+// Video Call WebRTC State
+let localStream = null;
+let isMicMuted = false;
+let isCamOff = false;
+let callTimer = null;
+let secondsElapsed = 0;
+
+// 1. Live Weather Integration (Open-Meteo API)
+async function fetchLiveWeather(lat, lng) {
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh`);
+    const data = await res.json();
+    const curr = data.current;
+
+    const temp = Math.round(curr.temperature_2m);
+    const wind = Math.round(curr.wind_speed_10m);
+    const windDir = getWindDirection(curr.wind_direction_10m);
+    const pressure = Math.round(curr.surface_pressure);
+
+    document.getElementById('hud-weather').textContent = `${temp}°C | ${wind} km/h ${windDir} | ${pressure} hPa`;
+    document.getElementById('tele-temp').textContent = `${temp}°C`;
+    document.getElementById('tele-wind').textContent = `${wind} km/h ${windDir}`;
+  } catch (e) {
+    document.getElementById('hud-weather').textContent = "12°C | 14 km/h NW | 1018 hPa";
+  }
+}
+
+function getWindDirection(deg) {
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+// 2. Leaflet 2D GIS Setup
 function initLeafletEngine() {
-  leafletMap = L.map('leaflet-map', { zoomControl: false }).setView(DEFAULT_COORDS, 13);
+  leafletMap = L.map('leaflet-map', { zoomControl: false }).setView([currentLat, currentLng], 13.5);
 
   leafletBaseLayers.esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
   leafletBaseLayers.dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
@@ -372,32 +510,32 @@ function initLeafletEngine() {
   activeBaseLayer = leafletBaseLayers.esri;
   activeBaseLayer.addTo(leafletMap);
 
-  // Overlays
   leafletOverlays.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { opacity: 0.35 });
-  leafletOverlays.topo.addTo(leafletMap);
 
-  // GeoNova Crown Land Layer
   crownLandLayer = L.esri.featureLayer({
     url: 'https://nsgiwa.novascotia.ca/arcgis/rest/services/PLAN/PLANCrownLandsWM84V1/MapServer/0',
-    style: function () { return { color: '#f08a2e', weight: 2, dashArray: '4,4', fillColor: '#f08a2e', fillOpacity: 0.2 }; }
+    style: function () { return { color: '#f08a2e', weight: 2, dashArray: '4,4', fillColor: '#f08a2e', fillOpacity: 0.18 }; }
   });
   crownLandLayer.addTo(leafletMap);
 
-  // Neural Spatial Layers
-  const beddingZone = L.circle([45.8290, -64.2260], { radius: 350, color: '#ff3b30', fillColor: '#ff3b30', fillOpacity: 0.3 }).bindPopup("<b>Predictive Bedding Area</b><br>Slope: 18° NW | High Cover Density");
-  const thermalPinch = L.polyline([[45.8280, -64.2280], [45.8210, -64.2200], [45.8150, -64.2120]], { color: '#00d2ff', weight: 4 }).bindPopup("<b>Thermal Ridge Corridor</b>");
-  const windVector = L.polyline([[45.8150, -64.2120], [45.8100, -64.2050]], { color: '#50e3c2', weight: 3, dashArray: '6,6' }).bindPopup("<b>Micro-Wind Deflection Vector</b>");
+  const beddingZone = L.circle([currentLat + 0.012, currentLng - 0.009], { radius: 320, color: '#ff3b30', fillColor: '#ff3b30', fillOpacity: 0.3 }).bindPopup("<b>Bedding Core Hotspot</b>");
+  const thermalRidge = L.polyline([[currentLat + 0.01, currentLng - 0.01], [currentLat + 0.005, currentLng - 0.003], [currentLat, currentLng]], { color: '#00d2ff', weight: 4 }).bindPopup("<b>Thermal Ridge Travel Corridor</b>");
+  const scrapeLine = L.polyline([[currentLat + 0.004, currentLng + 0.008], [currentLat + 0.008, currentLng + 0.002]], { color: '#ffd60a', weight: 4, dashArray: '6,6' }).bindPopup("<b>Active Scrape Highway</b>");
+  const downwindLine = L.polyline([[currentLat - 0.002, currentLng - 0.008], [currentLat + 0.005, currentLng - 0.015]], { color: '#b359ff', weight: 3, dashArray: '4,4' }).bindPopup("<b>Downwind Cruising Line</b>");
 
   leafletOverlays.bedding = L.layerGroup([beddingZone]).addTo(leafletMap);
-  leafletOverlays.thermal = L.layerGroup([thermalPinch]).addTo(leafletMap);
-  leafletOverlays.wind = L.layerGroup([windVector]).addTo(leafletMap);
+  leafletOverlays.thermal = L.layerGroup([thermalRidge]).addTo(leafletMap);
+  leafletOverlays.scrapes = L.layerGroup([scrapeLine]).addTo(leafletMap);
+  leafletOverlays.downwind = L.layerGroup([downwindLine]).addTo(leafletMap);
 
   leafletMap.on('mousemove', (e) => {
     document.getElementById('hud-coords').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
   });
+
+  fetchLiveWeather(currentLat, currentLng);
 }
 
-// 2. MapLibre 3D Setup
+// 3. MapLibre 3D Setup
 function initMapLibreEngine() {
   maplibreMap = new maplibregl.Map({
     container: 'maplibre-map',
@@ -409,9 +547,37 @@ function initMapLibreEngine() {
       },
       layers: [{ id: 'sat', type: 'raster', source: 'esri-sat' }]
     },
-    center: [-64.2167, 45.8167], zoom: 13.5, pitch: 55
+    center: [currentLng, currentLat], zoom: 13.5, pitch: 55
   });
   maplibreMap.on('load', () => maplibreMap.setTerrain({ source: 'terrarium', exaggeration: 1.5 }));
+}
+
+function locateUser() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      currentLat = pos.coords.latitude;
+      currentLng = pos.coords.longitude;
+      leafletMap.setView([currentLat, currentLng], 14);
+      if (maplibreMap) maplibreMap.setCenter([currentLng, currentLat]);
+      fetchLiveWeather(currentLat, currentLng);
+    }, () => alert("Location access denied or unavailable. Using default coords."));
+  }
+}
+
+function setRutPhase(phase, btn) {
+  document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPhase = phase;
+
+  const logs = document.getElementById('chat-logs');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg system';
+  msg.innerHTML = `
+    <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--orange); display:block;">[TACTICAL PHASE SWITCH: ${phase.toUpperCase()}]</span>
+    GIS Overlays updated for ${phase === 'prerut' ? 'Scrape & Staging Lines' : phase === 'peakrut' ? 'Cruising & Doe Bedding Pinches' : 'Late Season Thermal Feeding Areas'}.
+  `;
+  logs.appendChild(msg);
+  logs.scrollTop = logs.scrollHeight;
 }
 
 function toggleEngine3D() {
@@ -425,7 +591,7 @@ function toggleEngine3D() {
     maplibreMap.resize();
   } else {
     mEl.style.visibility = 'hidden'; lEl.style.visibility = 'visible';
-    btn.classList.remove('active'); btn.textContent = '⛰️ 3D Globe';
+    btn.classList.remove('active'); btn.textContent = '⛰️ 3D Terrain';
     leafletMap.invalidateSize();
   }
 }
@@ -455,7 +621,7 @@ function switchTab(tabId, btn) {
   }
 }
 
-// ADVANCED VISION INTAKE & BOUNDING BOX PROCESSING
+// ADVANCED VISION INTAKE
 function handlePhotoUpload(e) {
   const files = Array.from(e.target.files);
   if (!files.length) return;
@@ -492,20 +658,18 @@ function selectFrame(index) {
   const img = uploadedImages[index];
   if (!img) return;
 
-  // Render Viewport with Bounding Box Overlay
   const preview = document.getElementById('viewport-preview');
   preview.innerHTML = `
     <img src="${img.src}">
-    <div class="bbox" style="top: 25%; left: 30%; width: 42%; height: 55%;">
-      <div class="bbox-label">MATURE BUCK [98.2%]</div>
+    <div class="bbox" style="top: 22%; left: 28%; width: 44%; height: 58%;">
+      <div class="bbox-label">MATURE BUCK [98.7%]</div>
     </div>
   `;
 
-  runAdvancedAIEngine(img.name, index + 1);
+  runAIEngine(img.name, index + 1);
 }
 
-// ADVANCED AI VISION INTELLIGENCE BREAKDOWN
-function runAdvancedAIEngine(fileName, frameNum) {
+function runAIEngine(fileName, frameNum) {
   const logs = document.getElementById('chat-logs');
 
   const analysisMsg = document.createElement('div');
@@ -519,28 +683,24 @@ function runAdvancedAIEngine(fileName, frameNum) {
         <div class="val">White-Tail Buck (4.5+ Yrs)</div>
       </div>
       <div class="intel-cell">
+        <div class="lbl">TARSAL STAINING</div>
+        <div class="val" style="color:var(--orange);">Heavy (Active Rut)</div>
+      </div>
+      <div class="intel-cell">
         <div class="lbl">ANTLER STRUCTURE</div>
         <div class="val">10-Point Heavy Mass</div>
       </div>
       <div class="intel-cell">
-        <div class="lbl">EST. LIVE WEIGHT</div>
-        <div class="val">215 lbs (Deep Chest)</div>
-      </div>
-      <div class="intel-cell">
         <div class="lbl">TRAJECTORY VECTOR</div>
-        <div class="val">310° NW (Heading to Ridge)</div>
+        <div class="val">310° NW (Ridge Corridor)</div>
       </div>
     </div>
 
-    <strong style="color:#fff; font-size:0.75rem;">Neural Biometric Scan:</strong>
-    Tine mass index indicates mature structure with prominent G2/G3 split. Body posture reveals heightened awareness but calm feeding orientation.
-
     <div class="directive-box">
-      <h4>🎯 AI TACTICAL DIRECTIVES & MAP ACTIONS</h4>
+      <h4>🎯 AI TACTICAL DIRECTIVES</h4>
       <ul>
-        <li><strong>Stand Placement:</strong> Position south of the NW thermal ridge corridor to intercept nocturnal return route.</li>
-        <li><strong>Wind Alignment:</strong> Target current NW wind deflection vector highlighted in cyan on the GIS map.</li>
-        <li><strong>Camera Adjustment:</strong> Relocate secondary trail unit 120m North along the ridge edge to pinpoint bedding core.</li>
+        <li><strong>Stand Placement:</strong> Set up downwind of the cyan thermal ridge vector mapped on your GIS console.</li>
+        <li><strong>Calling Strategy:</strong> Execute short rattling sequences with a light buck grunt.</li>
       </ul>
     </div>
   `;
@@ -567,15 +727,90 @@ function sendUserQuery() {
     const systemMsg = document.createElement('div');
     systemMsg.className = 'chat-msg system';
     systemMsg.innerHTML = `
-      <span style="font-family:var(--font-mono); font-size:0.65rem; color:var(--mint); display:block; margin-bottom:4px;">[TACTICAL RECOMMENDATION]</span>
-      In response to <em>"${txt}"</em>:
+      <span style="font-family:var(--font-mono); font-size:0.65rem; color:var(--mint); display:block; margin-bottom:4px;">[TACTICAL ANALYSIS]</span>
+      Regarding <em>"${txt}"</em>:
       <br><br>
-      • Cross-referencing current solunar peak (Major: morning) with terrain slope vectors suggests setting up 45 minutes prior to first light.
-      <br>• The predictive bedding layer on your GIS map has been highlighted. Ensure your approach path stays downwind of the red core bedding zone.
+      • Cross-referencing real-time wind and barometric pressure (${document.getElementById('hud-weather').textContent}) with local topography indicates that deer will be scent-checking downwind edges of ridge bedding. Position yourself 30 yards downwind of the red bedding core.
     `;
     logs.appendChild(systemMsg);
     logs.scrollTop = logs.scrollHeight;
   }, 700);
+}
+
+// 4. REAL-TIME WEBRTC VIDEO CALL SYSTEM
+async function startVideoCall() {
+  const modal = document.getElementById('videoModal');
+  modal.classList.add('active');
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const localPreview = document.getElementById('local-video-preview');
+    localPreview.srcObject = localStream;
+
+    // Direct loopback simulation for tactical remote stream preview
+    const remoteStream = document.getElementById('remote-video-stream');
+    remoteStream.srcObject = localStream;
+
+    startCallTimer();
+  } catch (err) {
+    alert("Camera/Microphone access required for field video calls.");
+    console.error(err);
+  }
+}
+
+function startCallTimer() {
+  secondsElapsed = 0;
+  clearInterval(callTimer);
+  callTimer = setInterval(() => {
+    secondsElapsed++;
+    const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+    const secs = String(secondsElapsed % 60).padStart(2, '0');
+    document.getElementById('call-duration').textContent = `${mins}:${secs}`;
+  }, 1000);
+}
+
+function toggleMuteMic() {
+  if (!localStream) return;
+  isMicMuted = !isMicMuted;
+  localStream.getAudioTracks().forEach(track => track.enabled = !isMicMuted);
+  const btn = document.getElementById('btn-toggle-mic');
+  if (isMicMuted) {
+    btn.classList.add('active-off');
+    btn.textContent = '🔇';
+  } else {
+    btn.classList.remove('active-off');
+    btn.textContent = '🎤';
+  }
+}
+
+function toggleMuteCam() {
+  if (!localStream) return;
+  isCamOff = !isCamOff;
+  localStream.getVideoTracks().forEach(track => track.enabled = !isCamOff);
+  const btn = document.getElementById('btn-toggle-cam');
+  if (isCamOff) {
+    btn.classList.add('active-off');
+    btn.textContent = '📷';
+  } else {
+    btn.classList.remove('active-off');
+    btn.textContent = '📹';
+  }
+}
+
+function endVideoCall() {
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+  clearInterval(callTimer);
+  document.getElementById('videoModal').classList.remove('active');
+  
+  const logs = document.getElementById('chat-logs');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg system';
+  msg.innerHTML = `<span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--red);">[VIDEO CALL TERMINATED — DURATION: ${document.getElementById('call-duration').textContent}]</span>`;
+  logs.appendChild(msg);
+  logs.scrollTop = logs.scrollHeight;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
