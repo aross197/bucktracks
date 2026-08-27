@@ -2,806 +2,2354 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BUCKTRACK PRO | Apex Deer Intelligence & GIS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07100b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>BUCKTRACK PRO</title>
 
-<!-- Leaflet Core -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- SunCalc for precise Solunar/Sun/Moon math -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 
 <style>
-:root {
-  --bg: #050806;
-  --surface: rgba(12, 18, 14, 0.88);
-  --surface-solid: #0d1410;
-  --surface-elevated: #131d17;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-active: #f08a2e;
-  
-  --accent: #f08a2e;
-  --accent-glow: rgba(240, 138, 46, 0.2);
-  --mint: #50e3c2;
-  --mint-glow: rgba(80, 227, 194, 0.15);
-  --red: #ff453a;
-  --blue: #00d2ff;
-  --yellow: #ffd60a;
-  
-  --text: #f0f4f1;
-  --text-dim: #7a8f83;
-  
-  --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-  --font-mono: "SF Mono", "IBM Plex Mono", Menlo, monospace;
+:root{
+  --bg:#050806;
+  --panel:#0b120e;
+  --panel2:#101a14;
+  --panel3:#16221a;
+  --line:rgba(255,255,255,.09);
+  --text:#edf4ef;
+  --muted:#7f9286;
+  --orange:#f08a2e;
+  --green:#50e3c2;
+  --red:#ff453a;
+  --blue:#00d2ff;
+  --yellow:#ffd60a;
+  --shadow:0 12px 35px rgba(0,0,0,.55);
+  --mono:"SF Mono","Roboto Mono",Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; width: 100%; background: var(--bg); color: var(--text); font-family: var(--font-main); overflow: hidden; }
-
-.app-viewport {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  width: 100vw;
-  position: relative;
-  overflow: hidden;
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
 }
 
-/* Minimal Top Bar */
-header {
-  height: 44px;
-  background: var(--surface-solid);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  z-index: 1000;
-  flex-shrink: 0;
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
-  color: var(--text);
-}
-.brand-badge {
-  background: var(--accent);
-  color: #000;
-  font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 0.6rem;
-  padding: 2px 5px;
-  border-radius: 3px;
-}
-.solunar-pill {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--mint);
-  background: var(--mint-glow);
-  border: 1px solid rgba(80, 227, 194, 0.3);
-  padding: 3px 8px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
 }
 
-/* Main Workspace Split */
-.workspace {
-  flex: 1;
-  position: relative;
-  display: flex;
-  overflow: hidden;
+button,input{
+  font:inherit;
 }
 
-/* Map Engine Viewport */
-#map-container {
-  flex: 1;
-  height: 100%;
-  position: relative;
-  background: #020403;
-}
-#map { width: 100%; height: 100%; z-index: 1; }
-
-/* Floating Map Controls */
-.map-top-bar {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  z-index: 500;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-}
-.map-chip {
-  pointer-events: auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(16px);
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.map-chip .val { color: var(--accent); font-weight: 700; }
-
-.map-btn-group {
-  pointer-events: auto;
-  display: flex;
-  gap: 6px;
-}
-.map-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  backdrop-filter: blur(16px);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-}
-.map-btn:hover, .map-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--surface-elevated);
+button{
+  cursor:pointer;
 }
 
-/* Layer Control Drawer */
-.layer-panel {
-  position: absolute;
-  top: 50px;
-  right: 10px;
-  width: 280px;
-  max-height: calc(100% - 70px);
-  background: var(--surface-solid);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  z-index: 600;
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.8);
-  overflow-y: auto;
-}
-.layer-panel.open { display: flex; }
-.panel-section-title {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 4px;
-}
-.layer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.75rem;
-}
-.layer-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.layer-row input[type="checkbox"], .layer-row input[type="radio"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
-
-/* Integrated Right Panel - AI Chat & Cam Analyzer */
-.ai-panel {
-  width: 380px;
-  height: 100%;
-  background: var(--surface-solid);
-  border-left: 1px solid var(--border);
-  z-index: 700;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+.app{
+  width:100vw;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% -20%,rgba(80,227,194,.07),transparent 35%),
+    var(--bg);
 }
 
-@media (max-width: 768px) {
-  .ai-panel {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 60%;
-    border-left: none;
-    border-top: 1px solid var(--border);
-    transform: translateY(100%);
+/* HEADER */
+
+header{
+  height:54px;
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:
+    max(7px,env(safe-area-inset-top))
+    12px
+    7px
+    12px;
+  border-bottom:1px solid var(--line);
+  background:rgba(7,12,9,.96);
+  backdrop-filter:blur(18px);
+  z-index:2000;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+}
+
+.logo{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(145deg,var(--orange),#c85f13);
+  color:#080a08;
+  font-weight:900;
+  font-family:var(--mono);
+  box-shadow:0 0 18px rgba(240,138,46,.25);
+}
+
+.brand-text{
+  min-width:0;
+}
+
+.brand-name{
+  font-weight:900;
+  font-size:14px;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+
+.brand-sub{
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:8px;
+  letter-spacing:.12em;
+  margin-top:2px;
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--green);
+  white-space:nowrap;
+}
+
+.status-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 9px var(--green);
+}
+
+/* WORKSPACE */
+
+.workspace{
+  flex:1;
+  min-height:0;
+  position:relative;
+  display:flex;
+}
+
+.map-wrap{
+  position:relative;
+  flex:1;
+  min-width:0;
+  min-height:0;
+  background:#020403;
+}
+
+#map{
+  width:100%;
+  height:100%;
+}
+
+.leaflet-container{
+  background:#050806;
+  font-family:var(--sans);
+}
+
+.leaflet-control-attribution{
+  font-size:8px!important;
+  background:rgba(5,8,6,.75)!important;
+  color:#91a097!important;
+}
+
+.leaflet-control-attribution a{
+  color:#b9c9bf!important;
+}
+
+/* MAP HUD */
+
+.map-hud{
+  position:absolute;
+  top:10px;
+  left:10px;
+  right:10px;
+  z-index:800;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  pointer-events:none;
+}
+
+.hud-left,
+.hud-right{
+  display:flex;
+  gap:6px;
+  pointer-events:auto;
+}
+
+.hud-card{
+  background:rgba(7,12,9,.9);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:8px 10px;
+  backdrop-filter:blur(16px);
+  box-shadow:var(--shadow);
+}
+
+.weather-main{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.weather-icon{
+  font-size:20px;
+}
+
+.weather-label{
+  font-family:var(--mono);
+  color:var(--muted);
+  font-size:8px;
+  letter-spacing:.08em;
+}
+
+.weather-value{
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:800;
+  color:var(--green);
+  margin-top:2px;
+}
+
+.hud-button{
+  height:36px;
+  padding:0 11px;
+  border-radius:9px;
+  border:1px solid var(--line);
+  background:rgba(7,12,9,.92);
+  color:var(--text);
+  font-size:11px;
+  font-weight:800;
+  backdrop-filter:blur(16px);
+}
+
+.hud-button:active{
+  transform:scale(.97);
+}
+
+.hud-button.active{
+  color:var(--orange);
+  border-color:rgba(240,138,46,.55);
+}
+
+/* LOCATION CARD */
+
+.location-card{
+  position:absolute;
+  left:10px;
+  bottom:10px;
+  z-index:700;
+  max-width:calc(100% - 20px);
+  padding:8px 10px;
+  background:rgba(7,12,9,.88);
+  border:1px solid var(--line);
+  border-radius:9px;
+  backdrop-filter:blur(15px);
+  font-family:var(--mono);
+  font-size:8px;
+  color:var(--muted);
+}
+
+.location-card strong{
+  color:var(--text);
+}
+
+/* LAYER DRAWER */
+
+.drawer{
+  position:absolute;
+  right:10px;
+  top:55px;
+  width:min(310px,calc(100vw - 20px));
+  max-height:calc(100% - 75px);
+  overflow:auto;
+  z-index:1200;
+  display:none;
+  background:rgba(8,14,10,.98);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:13px;
+  box-shadow:0 20px 50px rgba(0,0,0,.75);
+  backdrop-filter:blur(20px);
+}
+
+.drawer.open{
+  display:block;
+}
+
+.drawer-title{
+  font-family:var(--mono);
+  color:var(--orange);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.12em;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:10px;
+}
+
+.section{
+  margin-bottom:15px;
+}
+
+.section:last-child{
+  margin-bottom:0;
+}
+
+.row{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#d9e3dd;
+  font-size:11px;
+}
+
+.row label{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex:1;
+}
+
+input[type=checkbox],
+input[type=radio]{
+  accent-color:var(--orange);
+  width:17px;
+  height:17px;
+}
+
+.swatch{
+  width:10px;
+  height:10px;
+  border-radius:3px;
+  flex-shrink:0;
+}
+
+/* RIGHT PANEL */
+
+.side-panel{
+  width:390px;
+  max-width:390px;
+  background:var(--panel);
+  border-left:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  z-index:900;
+}
+
+.panel-head{
+  height:48px;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:7px 10px;
+  border-bottom:1px solid var(--line);
+}
+
+.tabs{
+  display:flex;
+  gap:3px;
+  padding:3px;
+  background:#050806;
+  border:1px solid var(--line);
+  border-radius:8px;
+}
+
+.tab{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:6px;
+  padding:7px 9px;
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:900;
+}
+
+.tab.active{
+  color:#050806;
+  background:var(--orange);
+}
+
+.close-panel{
+  display:none;
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--text);
+}
+
+/* CONTENT */
+
+.tab-content{
+  flex:1;
+  min-height:0;
+  display:none;
+  flex-direction:column;
+}
+
+.tab-content.active{
+  display:flex;
+}
+
+/* CHAT */
+
+.chat-log{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  overscroll-behavior:contain;
+}
+
+.msg{
+  max-width:92%;
+  padding:10px 11px;
+  border-radius:11px;
+  font-size:12px;
+  line-height:1.45;
+  word-break:break-word;
+}
+
+.msg.system{
+  align-self:flex-start;
+  background:var(--panel2);
+  border:1px solid var(--line);
+}
+
+.msg.user{
+  align-self:flex-end;
+  color:#090b09;
+  background:var(--orange);
+  font-weight:700;
+}
+
+.msg-label{
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:900;
+  color:var(--green);
+  margin-bottom:4px;
+  letter-spacing:.08em;
+}
+
+.msg.user .msg-label{
+  color:#211006;
+}
+
+.chat-input{
+  padding:9px;
+  display:flex;
+  gap:7px;
+  border-top:1px solid var(--line);
+  background:#060a07;
+}
+
+.chat-input input{
+  min-width:0;
+  flex:1;
+  height:40px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  outline:0;
+  background:var(--panel2);
+  color:var(--text);
+  padding:0 11px;
+  font-size:12px;
+}
+
+.chat-input input:focus{
+  border-color:rgba(240,138,46,.65);
+}
+
+.send{
+  width:55px;
+  border:0;
+  border-radius:9px;
+  background:var(--orange);
+  color:#090a08;
+  font-weight:900;
+  font-size:11px;
+}
+
+/* CAMERA */
+
+.cam-content{
+  overflow-y:auto;
+  padding:12px;
+}
+
+.upload{
+  position:relative;
+  min-height:115px;
+  border:1.5px dashed rgba(240,138,46,.45);
+  border-radius:12px;
+  background:linear-gradient(145deg,rgba(240,138,46,.06),rgba(80,227,194,.03));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  overflow:hidden;
+}
+
+.upload input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  width:100%;
+  height:100%;
+  cursor:pointer;
+}
+
+.upload-icon{
+  font-size:25px;
+  margin-bottom:7px;
+}
+
+.upload-title{
+  font-size:12px;
+  font-weight:900;
+}
+
+.upload-sub{
+  color:var(--muted);
+  font-size:9px;
+  margin-top:4px;
+}
+
+.preview{
+  display:none;
+  position:relative;
+  margin-top:10px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:#000;
+}
+
+.preview.show{
+  display:block;
+}
+
+.preview img{
+  display:block;
+  width:100%;
+  max-height:300px;
+  object-fit:contain;
+  background:#000;
+}
+
+.photo-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:10px;
+}
+
+.info-box{
+  padding:9px;
+  background:var(--panel2);
+  border:1px solid var(--line);
+  border-radius:9px;
+}
+
+.info-label{
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:7px;
+  letter-spacing:.08em;
+}
+
+.info-value{
+  margin-top:3px;
+  color:var(--green);
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:800;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.analysis{
+  margin-top:10px;
+  display:none;
+  gap:9px;
+  flex-direction:column;
+}
+
+.analysis.show{
+  display:flex;
+}
+
+.card{
+  padding:11px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--panel2);
+}
+
+.card-title{
+  color:var(--orange);
+  font-family:var(--mono);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.1em;
+  margin-bottom:7px;
+}
+
+.card-text{
+  color:#cbd7cf;
+  font-size:11px;
+  line-height:1.5;
+}
+
+.notice{
+  border-color:rgba(255,214,10,.22);
+  background:rgba(255,214,10,.045);
+}
+
+.notice .card-title{
+  color:var(--yellow);
+}
+
+/* MOBILE DOCK */
+
+.dock{
+  display:none;
+  height:62px;
+  min-height:62px;
+  padding:
+    5px
+    8px
+    max(5px,env(safe-area-inset-bottom))
+    8px;
+  background:rgba(6,10,7,.98);
+  border-top:1px solid var(--line);
+  z-index:2000;
+}
+
+.dock-btn{
+  flex:1;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  font-size:9px;
+  font-weight:800;
+}
+
+.dock-icon{
+  font-size:18px;
+}
+
+.dock-btn.active{
+  color:var(--orange);
+  background:rgba(240,138,46,.07);
+}
+
+/* MAP MARKERS */
+
+.bt-marker{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  border:2px solid #fff;
+  box-shadow:0 0 0 3px rgba(0,0,0,.25),0 3px 12px rgba(0,0,0,.5);
+  font-size:12px;
+}
+
+.bt-marker.orange{background:var(--orange)}
+.bt-marker.red{background:var(--red)}
+.bt-marker.yellow{background:var(--yellow);color:#000}
+.bt-marker.green{background:var(--green);color:#000}
+
+.popup-title{
+  font-weight:900;
+  font-size:12px;
+}
+
+.popup-sub{
+  color:#64756b;
+  font-size:10px;
+  margin-top:3px;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+  header{
+    height:58px;
+    min-height:58px;
   }
-  .ai-panel.mobile-open { transform: translateY(0); }
+
+  .brand-sub{
+    display:none;
+  }
+
+  .brand-name{
+    font-size:12px;
+  }
+
+  .status{
+    font-size:8px;
+  }
+
+  .workspace{
+    min-height:0;
+  }
+
+  .map-wrap{
+    width:100%;
+  }
+
+  .side-panel{
+    position:absolute;
+    inset:0;
+    width:100%;
+    max-width:none;
+    transform:translateY(100%);
+    transition:transform .25s cubic-bezier(.2,.8,.2,1);
+    border-left:0;
+    border-top:1px solid var(--line);
+  }
+
+  .side-panel.mobile-open{
+    transform:translateY(0);
+  }
+
+  .close-panel{
+    display:block;
+  }
+
+  .dock{
+    display:flex;
+  }
+
+  .map-hud{
+    top:8px;
+    left:8px;
+    right:8px;
+  }
+
+  .hud-right{
+    gap:4px;
+  }
+
+  .hud-button{
+    width:38px;
+    padding:0;
+    font-size:17px;
+  }
+
+  .weather-main{
+    gap:6px;
+  }
+
+  .weather-icon{
+    font-size:17px;
+  }
+
+  .weather-label{
+    font-size:7px;
+  }
+
+  .weather-value{
+    font-size:9px;
+  }
+
+  .location-card{
+    bottom:8px;
+    left:8px;
+    font-size:7px;
+  }
+
+  .drawer{
+    top:51px;
+  }
 }
 
-.ai-head {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(255,255,255,0.02);
-}
-.ai-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg);
-  padding: 3px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-}
-.ai-tab-btn {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  font-size: 0.68rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.ai-tab-btn.active {
-  background: var(--accent);
-  color: #000;
+@media(min-width:769px){
+  .workspace{
+    flex-direction:row;
+  }
 }
 
-/* Tab Containers */
-.tab-content {
-  flex: 1;
-  display: none;
-  flex-direction: column;
-  overflow-y: auto;
-}
-.tab-content.active { display: flex; }
+/* SCROLLBARS */
 
-/* Chat Log View */
-.chat-log {
-  flex: 1;
-  padding: 12px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.msg {
-  max-width: 90%;
-  padding: 8px 11px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  line-height: 1.4;
-}
-.msg.system {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
-  color: var(--text);
-  align-self: flex-start;
-}
-.msg.user {
-  background: var(--accent);
-  color: #000;
-  font-weight: 600;
-  align-self: flex-end;
+::-webkit-scrollbar{
+  width:5px;
+  height:5px;
 }
 
-.ai-input-bar {
-  padding: 8px 10px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 6px;
-  background: var(--bg);
-}
-.ai-input-bar input {
-  flex: 1;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: #fff;
-  font-size: 0.78rem;
-  outline: none;
-}
-.ai-input-bar input:focus { border-color: var(--accent); }
-.ai-input-bar button {
-  background: var(--accent);
-  border: none;
-  padding: 0 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #000;
-  cursor: pointer;
+::-webkit-scrollbar-track{
+  background:transparent;
 }
 
-/* AI Trail Cam Vision Analyzer UI */
-.cam-analyzer-view {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.upload-dropzone {
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-  background: var(--surface-elevated);
-  cursor: pointer;
-  transition: border-color 0.2s;
-  position: relative;
-}
-.upload-dropzone:hover { border-color: var(--accent); }
-.upload-dropzone input[type="file"] {
-  position: absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
-}
-.drop-title { font-size: 0.78rem; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
-.drop-sub { font-size: 0.65rem; color: var(--text-dim); }
-
-.preview-container {
-  position: relative;
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: #000;
-  display: none;
-}
-.preview-container img { width: 100%; height: 180px; object-fit: cover; display: block; }
-.scanning-overlay {
-  position: absolute; inset:0;
-  background: linear-gradient(180deg, transparent 0%, rgba(80, 227, 194, 0.2) 50%, transparent 100%);
-  background-size: 100% 200%;
-  animation: scanSweep 2s infinite linear;
-  display: none;
-  pointer-events: none;
-}
-@keyframes scanSweep { 0% { background-position: 0 -200%; } 100% { background-position: 0 200%; } }
-
-/* Analysis Results Dashboard */
-.analysis-card {
-  background: var(--surface-elevated);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  display: none;
-  flex-direction: column;
-  gap: 8px;
-}
-.trophy-banner {
-  background: linear-gradient(90deg, #f08a2e, #ffd60a);
-  color: #000;
-  font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
-  padding: 6px 10px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  text-align: center;
-  box-shadow: 0 0 12px rgba(240, 138, 46, 0.4);
-}
-.stat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-}
-.stat-box {
-  background: rgba(255,255,255,0.03);
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-.stat-box .lbl { color: var(--text-dim); font-size: 0.58rem; }
-.stat-box .val { color: var(--mint); font-weight: 700; margin-top: 2px; }
-
-.harvest-intel-box {
-  background: rgba(80, 227, 194, 0.05);
-  border: 1px solid rgba(80, 227, 194, 0.2);
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 0.72rem;
-  line-height: 1.4;
-}
-.harvest-intel-box h4 {
-  color: var(--mint);
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  margin-bottom: 4px;
+::-webkit-scrollbar-thumb{
+  background:#26352c;
+  border-radius:10px;
 }
 
-/* Mobile Bottom Navigation Dock */
-.mobile-dock {
-  display: none;
-  height: 48px;
-  background: var(--surface-solid);
-  border-top: 1px solid var(--border);
-  z-index: 1000;
-  padding: 0 12px;
-}
-@media (max-width: 768px) {
-  .mobile-dock { display: flex; align-items: center; justify-content: space-around; }
-}
-.dock-tab {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  font-size: 0.72rem;
-  font-weight: 600;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  cursor: pointer;
-}
-.dock-tab.active { color: var(--accent); }
+/* LOADING */
 
-.wind-indicator {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--mint);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.loading{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#050806;
+  transition:opacity .3s;
+}
+
+.loading.hide{
+  opacity:0;
+  pointer-events:none;
+}
+
+.loader{
+  text-align:center;
+}
+
+.loader-logo{
+  font-family:var(--mono);
+  color:var(--orange);
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+
+.loader-text{
+  margin-top:8px;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:9px;
+}
+
+.spinner{
+  width:25px;
+  height:25px;
+  margin:15px auto 0;
+  border:2px solid rgba(240,138,46,.15);
+  border-top-color:var(--orange);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
 }
 </style>
 </head>
+
 <body>
 
-<div class="app-viewport">
-  <header>
-    <div class="brand">
-      <div class="brand-badge">PRO</div>
-      <span>BUCKTRACK APEX GIS</span>
-    </div>
-    <div class="solunar-pill" id="solunar-badge">
-      <span>SOLUNAR: EXCELLENT (89%)</span>
-    </div>
-  </header>
-
-  <div class="workspace">
-    <div id="map-container">
-      <div id="map"></div>
-
-      <div class="map-top-bar">
-        <div class="map-chip">
-          <span>WIND:</span>
-          <span class="val" id="hud-wind">12 km/h WNW</span>
-          <span class="wind-indicator" id="hud-baro">1018 hPa ↗</span>
-        </div>
-        <div class="map-btn-group">
-          <button class="map-btn" onclick="locateUser()">📍 Center</button>
-          <button class="map-btn" id="btn-layers" onclick="toggleLayerDrawer()">🗺️ Layers & Legend</button>
-        </div>
-      </div>
-
-      <div class="layer-panel" id="layer-panel">
-        <div class="panel-section-title">Basemap Engine</div>
-        <div class="layer-row">
-          <label><input type="radio" name="base" value="sat" checked onchange="setBaseMap('sat')"> High-Res Satellite</label>
-        </div>
-        <div class="layer-row">
-          <label><input type="radio" name="base" value="topo" onchange="setBaseMap('topo')"> Topo Contour Engine</label>
-        </div>
-
-        <div class="panel-section-title" style="margin-top:6px;">Deer GIS Overlays</div>
-        <div class="layer-row">
-          <label><span class="swatch" style="background:#ff453a;"></span> Bedding Cores</label>
-          <input type="checkbox" id="chk-bedding" checked onchange="toggleOverlay('bedding', this.checked)">
-        </div>
-        <div class="layer-row">
-          <label><span class="swatch" style="background:#00d2ff;"></span> Thermal Funnels</label>
-          <input type="checkbox" id="chk-thermal" checked onchange="toggleOverlay('thermal', this.checked)">
-        </div>
-        <div class="layer-row">
-          <label><span class="swatch" style="background:#ffd60a;"></span> Active Scrapes</label>
-          <input type="checkbox" id="chk-scrapes" checked onchange="toggleOverlay('scrapes', this.checked)">
-        </div>
-        <div class="layer-row">
-          <label><span class="swatch" style="background:#f08a2e;"></span> Scent Cone Vector</label>
-          <input type="checkbox" id="chk-scent" checked onchange="toggleOverlay('scent', this.checked)">
-        </div>
-        <div class="layer-row">
-          <label><span class="swatch" style="background:#50e3c2;"></span> Crown Land Polygons</label>
-          <input type="checkbox" id="chk-crown" checked onchange="toggleOverlay('crown', this.checked)">
-        </div>
-      </div>
-    </div>
-
-    <!-- Integrated Right Panel - Switchable AI Chat / Vision Analyzer -->
-    <div class="ai-panel" id="ai-panel">
-      <div class="ai-head">
-        <div class="ai-tabs">
-          <button class="ai-tab-btn active" onclick="switchAITab('chat')">DISPATCH AI</button>
-          <button class="ai-tab-btn" onclick="switchAITab('cam')">📷 CAM VISION AI</button>
-        </div>
-        <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim);" id="coords-display">45.8167, -64.2167</span>
-      </div>
-
-      <!-- Tab 1: AI Chat Dispatch -->
-      <div class="tab-content active" id="tab-chat-content">
-        <div class="chat-log" id="chat-log">
-          <div class="msg system">
-            <strong>Apex Intelligence:</strong> GIS Engine active. Scent vector calculated for current coordinates.
-          </div>
-        </div>
-        <div class="ai-input-bar">
-          <input type="text" id="ai-input" placeholder="Ask AI (e.g. Best stand for WNW wind?)" onkeydown="if(event.key==='Enter') sendQuery()">
-          <button onclick="sendQuery()">Ask</button>
-        </div>
-      </div>
-
-      <!-- Tab 2: AI Trail Camera Photo Analyzer -->
-      <div class="tab-content" id="tab-cam-content">
-        <div class="cam-analyzer-view">
-          <div class="upload-dropzone">
-            <input type="file" accept="image/*" onchange="analyzeTrailCamPhoto(this)">
-            <div class="drop-title">📸 UPLOAD TRAIL CAM PHOTO</div>
-            <div class="drop-sub">Tap to select photo or take new picture</div>
-          </div>
-
-          <div class="preview-container" id="cam-preview-box">
-            <img id="cam-img-preview" src="" alt="Trail Cam Capture">
-            <div class="scanning-overlay" id="scan-overlay"></div>
-          </div>
-
-          <div class="analysis-card" id="analysis-results">
-            <div class="trophy-banner" id="trophy-tag">🏆 BONE-FED CROWN BUCK DETECTED</div>
-
-            <div class="stat-grid">
-              <div class="stat-box">
-                <div class="lbl">ESTIMATED AGE</div>
-                <div class="val" id="res-age">5.5 Yrs (Mature)</div>
-              </div>
-              <div class="stat-box">
-                <div class="lbl">GROSS B&C SCORE</div>
-                <div class="val" id="res-score">158 3/8" (10-Point)</div>
-              </div>
-              <div class="stat-box">
-                <div class="lbl">BEHAVIOR PATTERN</div>
-                <div class="val" id="res-behavior">Pre-Rut Staging</div>
-              </div>
-              <div class="stat-box">
-                <div class="lbl">CONFIDENCE INDEX</div>
-                <div class="val" id="res-conf">98.4% Match</div>
-              </div>
-            </div>
-
-            <div class="harvest-intel-box">
-              <h4>🎯 HARVEST EXECUTION TACTICS</h4>
-              <p id="res-tactics">
-                This is a once-in-a-lifetime regional monarch. Thick tarsals & sagged belly indicate prime dominance. He's entering from the ridge bench 20 mins before dark. Position high on the thermal funnel downwind with a bow/rifle right now—he is ripe for harvest!
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="mobile-dock">
-    <button class="dock-tab active" id="tab-map" onclick="switchMobileTab('map')">🗺️ Map View</button>
-    <button class="dock-tab" id="tab-ai" onclick="switchMobileTab('ai')">🤖 Tactical AI</button>
+<div class="loading" id="loading">
+  <div class="loader">
+    <div class="loader-logo">BUCKTRACK</div>
+    <div class="loader-text">INITIALIZING FIELD SYSTEMS</div>
+    <div class="spinner"></div>
   </div>
 </div>
 
+<div class="app">
+
+<header>
+  <div class="brand">
+    <div class="logo">BT</div>
+    <div class="brand-text">
+      <div class="brand-name">BUCKTRACK PRO</div>
+      <div class="brand-sub">FIELD INTELLIGENCE / GIS COMMAND</div>
+    </div>
+  </div>
+
+  <div class="status">
+    <span class="status-dot"></span>
+    <span id="system-status">ONLINE</span>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <main class="map-wrap">
+
+    <div id="map"></div>
+
+    <div class="map-hud">
+
+      <div class="hud-left">
+
+        <div class="hud-card">
+          <div class="weather-main">
+            <div class="weather-icon" id="weather-icon">🌤️</div>
+            <div>
+              <div class="weather-label">LIVE WEATHER</div>
+              <div class="weather-value" id="hud-weather">Loading…</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="hud-right">
+
+        <button class="hud-button" onclick="locateUser()" title="Use current location">
+          📍
+        </button>
+
+        <button class="hud-button" id="layers-button" onclick="toggleLayers()" title="Map layers">
+          ☰
+        </button>
+
+      </div>
+    </div>
+
+    <div class="location-card">
+      <span>POSITION </span>
+      <strong id="coords-display">45.8167, -64.2167</strong>
+      <span> · </span>
+      <span id="accuracy-display">DEFAULT</span>
+    </div>
+
+    <div class="drawer" id="layer-drawer">
+
+      <div class="drawer-title">MAP ENGINE</div>
+
+      <div class="section">
+
+        <div class="row">
+          <label>
+            <input type="radio" name="basemap" checked onchange="setBase('sat')">
+            Satellite
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            <input type="radio" name="basemap" onchange="setBase('topo')">
+            Topographic
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            <input type="radio" name="basemap" onchange="setBase('street')">
+            Street
+          </label>
+        </div>
+
+      </div>
+
+      <div class="drawer-title">FIELD LAYERS</div>
+
+      <div class="section">
+
+        <div class="row">
+          <label>
+            <span class="swatch" style="background:#f08a2e"></span>
+            Current position
+          </label>
+          <input type="checkbox" checked onchange="toggleLayer('position',this.checked)">
+        </div>
+
+        <div class="row">
+          <label>
+            <span class="swatch" style="background:#ff453a"></span>
+            Bedding area
+          </label>
+          <input type="checkbox" checked onchange="toggleLayer('bedding',this.checked)">
+        </div>
+
+        <div class="row">
+          <label>
+            <span class="swatch" style="background:#ffd60a"></span>
+            Scrape markers
+          </label>
+          <input type="checkbox" checked onchange="toggleLayer('scrapes',this.checked)">
+        </div>
+
+        <div class="row">
+          <label>
+            <span class="swatch" style="background:#00d2ff"></span>
+            Movement corridor
+          </label>
+          <input type="checkbox" checked onchange="toggleLayer('corridor',this.checked)">
+        </div>
+
+        <div class="row">
+          <label>
+            <span class="swatch" style="background:#50e3c2"></span>
+            Scent drift
+          </label>
+          <input type="checkbox" checked onchange="toggleLayer('scent',this.checked)">
+        </div>
+
+      </div>
+
+      <div class="drawer-title">MAP ACTIONS</div>
+
+      <div class="section">
+
+        <div class="row">
+          <button class="hud-button" style="width:100%" onclick="dropWaypoint()">
+            ＋ Drop waypoint
+          </button>
+        </div>
+
+        <div class="row">
+          <button class="hud-button" style="width:100%" onclick="clearWaypoints()">
+            Clear waypoints
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <aside class="side-panel" id="side-panel">
+
+    <div class="panel-head">
+
+      <div class="tabs">
+
+        <button class="tab active" id="chat-tab" onclick="switchPanel('chat')">
+          FIELD DESK
+        </button>
+
+        <button class="tab" id="cam-tab" onclick="switchPanel('cam')">
+          PHOTO LOG
+        </button>
+
+      </div>
+
+      <button class="close-panel" onclick="closeMobilePanel()">✕</button>
+
+    </div>
+
+    <!-- FIELD DESK -->
+
+    <section class="tab-content active" id="chat-panel">
+
+      <div class="chat-log" id="chat-log">
+
+        <div class="msg system">
+          <div class="msg-label">BUCKTRACK FIELD DESK</div>
+          System online. Weather and map data are live. Ask about wind, position, weather, map coordinates, or current field conditions.
+        </div>
+
+      </div>
+
+      <div class="chat-input">
+
+        <input
+          id="chat-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Ask about current conditions…"
+          onkeydown="if(event.key==='Enter') sendQuery()"
+        >
+
+        <button class="send" onclick="sendQuery()">SEND</button>
+
+      </div>
+
+    </section>
+
+    <!-- PHOTO LOG -->
+
+    <section class="tab-content cam-content" id="cam-panel">
+
+      <div class="upload">
+
+        <input
+          type="file"
+          id="photo-input"
+          accept="image/*"
+          capture="environment"
+          onchange="processPhoto(this)"
+        >
+
+        <div class="upload-icon">📷</div>
+
+        <div class="upload-title">ADD TRAIL-CAM PHOTO</div>
+
+        <div class="upload-sub">
+          Select an image or take a new field photo
+        </div>
+
+      </div>
+
+      <div class="preview" id="preview">
+
+        <img id="photo-preview" alt="Trail camera image">
+
+      </div>
+
+      <div class="photo-info" id="photo-info" style="display:none">
+
+        <div class="info-box">
+          <div class="info-label">FILE</div>
+          <div class="info-value" id="photo-name">—</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-label">SIZE</div>
+          <div class="info-value" id="photo-size">—</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-label">IMAGE</div>
+          <div class="info-value" id="photo-dimensions">—</div>
+        </div>
+
+        <div class="info-box">
+          <div class="info-label">CAPTURED</div>
+          <div class="info-value" id="photo-date">—</div>
+        </div>
+
+      </div>
+
+      <div class="analysis" id="photo-analysis">
+
+        <div class="card">
+
+          <div class="card-title">LOCAL IMAGE INSPECTION</div>
+
+          <div class="card-text" id="image-summary">
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="card-title">FIELD RECORD</div>
+
+          <div class="card-text">
+            This image has been loaded locally. BUCKTRACK does not invent animal identification, age, antler score, behaviour, or harvest predictions without an actual computer-vision model connected to the application.
+          </div>
+
+        </div>
+
+        <div class="card notice">
+
+          <div class="card-title">PHOTO LOCATION</div>
+
+          <div class="card-text" id="photo-location">
+            Current field position: —
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </aside>
+
+</div>
+
+<nav class="dock">
+
+  <button class="dock-btn active" id="dock-map" onclick="mobileView('map')">
+    <span class="dock-icon">🗺️</span>
+    MAP
+  </button>
+
+  <button class="dock-btn" id="dock-desk" onclick="mobileView('desk')">
+    <span class="dock-icon">📡</span>
+    FIELD DESK
+  </button>
+
+  <button class="dock-btn" id="dock-photo" onclick="mobileView('photo')">
+    <span class="dock-icon">📷</span>
+    PHOTO LOG
+  </button>
+
+</nav>
+
+</div>
+
 <script>
+"use strict";
+
+/* ============================================================
+   BUCKTRACK PRO
+   Real map + real geolocation + real Open-Meteo weather.
+   No simulated AI, no fabricated animal detection.
+   ============================================================ */
+
 let map;
+let currentLat = 45.8167;
+let currentLng = -64.2167;
+
+let currentWindDeg = 292;
+let currentWindSpeed = 0;
+let currentTemp = null;
+let currentPressure = null;
+
 let baseLayers = {};
-let overlays = {};
-let userMarker, scentConePolygon;
-let currentLat = 45.8167, currentLng = -64.2167;
-let windDeg = 292.5;
+let layers = {};
+let waypoints = [];
 
-function initGIS() {
-  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 14);
+let userMarker;
+let accuracyCircle;
+let scentPolygon;
 
-  baseLayers.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
-  baseLayers.topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+const $ = id => document.getElementById(id);
+
+/* ------------------------------------------------------------
+   INITIALIZATION
+------------------------------------------------------------ */
+
+window.addEventListener("load", async () => {
+
+  try {
+
+    initMap();
+    createFieldLayers();
+    bindMapEvents();
+
+    await loadWeather(currentLat,currentLng);
+
+    calculateSunMoon(currentLat,currentLng);
+
+    setTimeout(() => {
+      $("loading").classList.add("hide");
+    },400);
+
+  } catch(error) {
+
+    console.error(error);
+
+    $("system-status").textContent = "MAP ERROR";
+    $("loading").classList.add("hide");
+
+  }
+
+});
+
+/* ------------------------------------------------------------
+   MAP
+------------------------------------------------------------ */
+
+function initMap(){
+
+  map = L.map("map",{
+    zoomControl:false,
+    preferCanvas:true,
+    attributionControl:true
+  }).setView([currentLat,currentLng],14);
+
+  L.control.zoom({
+    position:"bottomright"
+  }).addTo(map);
+
+  baseLayers.sat = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      maxZoom:19,
+      attribution:"Tiles © Esri"
+    }
+  );
+
+  baseLayers.topo = L.tileLayer(
+    "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom:17,
+      attribution:"© OpenStreetMap contributors, SRTM | OpenTopoMap"
+    }
+  );
+
+  baseLayers.street = L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom:19,
+      attribution:"© OpenStreetMap contributors"
+    }
+  );
+
   baseLayers.sat.addTo(map);
 
-  userMarker = L.circleMarker([currentLat, currentLng], {
-    radius: 7, fillColor: '#f08a2e', color: '#ffffff', weight: 2, fillOpacity: 1
-  }).addTo(map).bindPopup("<b>Your Position</b>");
+  userMarker = L.marker(
+    [currentLat,currentLng],
+    {
+      icon:createMarkerIcon("orange","●"),
+      zIndexOffset:1000
+    }
+  ).bindPopup(
+    "<div class='popup-title'>Current position</div>" +
+    "<div class='popup-sub'>BUCKTRACK field position</div>"
+  ).addTo(map);
 
-  setupTacticalOverlays();
-  calculateSolunar(currentLat, currentLng);
-  fetchWeather(currentLat, currentLng);
+  accuracyCircle = L.circle(
+    [currentLat,currentLng],
+    {
+      radius:20,
+      color:"#f08a2e",
+      weight:1,
+      fillColor:"#f08a2e",
+      fillOpacity:.08
+    }
+  ).addTo(map);
 
-  map.on('click', (e) => {
-    document.getElementById('coords-display').textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+  layers.position = L.layerGroup([
+    userMarker,
+    accuracyCircle
+  ]).addTo(map);
+
+}
+
+/* ------------------------------------------------------------
+   FIELD LAYERS
+------------------------------------------------------------ */
+
+function createFieldLayers(){
+
+  const lat = currentLat;
+  const lng = currentLng;
+
+  layers.bedding = L.circle(
+    [lat + .0045,lng - .006],
+    {
+      radius:240,
+      color:"#ff453a",
+      weight:2,
+      fillColor:"#ff453a",
+      fillOpacity:.13
+    }
+  ).bindPopup(
+    "<div class='popup-title'>Field bedding area</div>" +
+    "<div class='popup-sub'>User-defined map layer. Verify on the ground.</div>"
+  );
+
+  layers.scrapes = L.layerGroup([
+
+    L.marker(
+      [lat + .0018,lng + .0035],
+      {icon:createMarkerIcon("yellow","S")}
+    ).bindPopup(
+      "<div class='popup-title'>Scrape waypoint</div>" +
+      "<div class='popup-sub'>Map marker</div>"
+    ),
+
+    L.marker(
+      [lat + .0038,lng + .0052],
+      {icon:createMarkerIcon("yellow","S")}
+    ).bindPopup(
+      "<div class='popup-title'>Scrape waypoint</div>" +
+      "<div class='popup-sub'>Map marker</div>"
+    )
+
+  ]).addTo(map);
+
+  layers.corridor = L.polyline(
+    [
+      [lat - .007,lng - .012],
+      [lat - .003,lng - .007],
+      [lat + .001,lng - .002],
+      [lat + .005,lng + .003]
+    ],
+    {
+      color:"#00d2ff",
+      weight:4,
+      opacity:.8
+    }
+  ).bindPopup(
+    "<div class='popup-title'>Movement corridor</div>" +
+    "<div class='popup-sub'>User-defined planning layer.</div>"
+  ).addTo(map);
+
+  calculateScentLayer();
+
+}
+
+/* ------------------------------------------------------------
+   MARKER ICON
+------------------------------------------------------------ */
+
+function createMarkerIcon(color,text){
+
+  return L.divIcon({
+    className:"",
+    html:`<div class="bt-marker ${color}">${text}</div>`,
+    iconSize:[26,26],
+    iconAnchor:[13,13],
+    popupAnchor:[0,-15]
   });
+
 }
 
-function setupTacticalOverlays() {
-  overlays.bedding = L.circle([currentLat + 0.005, currentLng - 0.008], { color: '#ff453a', fillColor: '#ff453a', fillOpacity: 0.35, radius: 280 }).bindPopup("<b>Bedding Core</b>");
-  overlays.thermal = L.polyline([[currentLat - 0.008, currentLng - 0.012], [currentLat - 0.002, currentLng - 0.005], [currentLat + 0.004, currentLng]], { color: '#00d2ff', weight: 4 }).bindPopup("<b>Thermal Pinch</b>");
-  overlays.scrapes = L.layerGroup([
-    L.circleMarker([currentLat + 0.002, currentLng + 0.004], { radius: 6, color: '#ffd60a', fillColor: '#ffd60a', fillOpacity: 0.9 }),
-    L.circleMarker([currentLat + 0.004, currentLng + 0.006], { radius: 6, color: '#ffd60a', fillColor: '#ffd60a', fillOpacity: 0.9 })
-  ]);
-  overlays.crown = L.polygon([[currentLat - 0.012, currentLng - 0.020], [currentLat + 0.015, currentLng - 0.020], [currentLat + 0.015, currentLng - 0.008], [currentLat - 0.012, currentLng - 0.008]], { color: '#50e3c2', weight: 2, fillColor: '#50e3c2', fillOpacity: 0.12, dashArray: '4,4' });
+/* ------------------------------------------------------------
+   MAP CLICK
+------------------------------------------------------------ */
 
-  calculateScentCone(currentLat, currentLng, windDeg);
-  Object.keys(overlays).forEach(k => overlays[k].addTo(map));
-}
+function bindMapEvents(){
 
-function calculateScentCone(lat, lng, windDirectionDeg) {
-  const driftDeg = (windDirectionDeg + 180) % 360;
-  const coneAngle = 35;
-  const distanceKm = 0.8;
+  map.on("click",event => {
 
-  const leftAngle = (driftDeg - coneAngle / 2) * (Math.PI / 180);
-  const rightAngle = (driftDeg + coneAngle / 2) * (Math.PI / 180);
+    currentLat = event.latlng.lat;
+    currentLng = event.latlng.lng;
 
-  const latOffsetLeft = (distanceKm / 111) * Math.cos(leftAngle);
-  const lngOffsetLeft = (distanceKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(leftAngle);
-  const latOffsetRight = (distanceKm / 111) * Math.cos(rightAngle);
-  const lngOffsetRight = (distanceKm / (111 * Math.cos(lat * Math.PI / 180))) * Math.sin(rightAngle);
+    updateCoordinates();
 
-  if (scentConePolygon) map.removeLayer(scentConePolygon);
-  scentConePolygon = L.polygon([[lat, lng], [lat + latOffsetLeft, lng + lngOffsetLeft], [lat + latOffsetRight, lng + lngOffsetRight]], {
-    color: '#f08a2e', weight: 1, fillColor: '#f08a2e', fillOpacity: 0.25, dashArray: '3,3'
   });
-  overlays.scent = scentConePolygon;
-  overlays.scent.addTo(map);
+
 }
 
-function setBaseMap(type) {
-  if (type === 'sat') { map.removeLayer(baseLayers.topo); baseLayers.sat.addTo(map); }
-  else { map.removeLayer(baseLayers.sat); baseLayers.topo.addTo(map); }
+/* ------------------------------------------------------------
+   BASEMAP
+------------------------------------------------------------ */
+
+function setBase(type){
+
+  Object.values(baseLayers).forEach(layer => {
+
+    if(map.hasLayer(layer)){
+      map.removeLayer(layer);
+    }
+
+  });
+
+  baseLayers[type].addTo(map);
+
 }
 
-function toggleOverlay(key, enable) {
-  if (enable) overlays[key].addTo(map);
-  else map.removeLayer(overlays[key]);
+/* ------------------------------------------------------------
+   LAYERS
+------------------------------------------------------------ */
+
+function toggleLayers(){
+
+  $("layer-drawer").classList.toggle("open");
+
 }
 
-function toggleLayerDrawer() {
-  document.getElementById('layer-panel').classList.toggle('open');
-}
+function toggleLayer(name,enabled){
 
-function locateUser() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      currentLat = pos.coords.latitude;
-      currentLng = pos.coords.longitude;
-      map.setView([currentLat, currentLng], 14);
-      userMarker.setLatLng([currentLat, currentLng]);
-      calculateScentCone(currentLat, currentLng, windDeg);
-      fetchWeather(currentLat, currentLng);
-    });
+  if(!layers[name]) return;
+
+  if(enabled){
+    layers[name].addTo(map);
+  }else{
+    map.removeLayer(layers[name]);
   }
+
 }
 
-function calculateSolunar(lat, lng) {
-  const moonIllum = SunCalc.getMoonIllumination(new Date());
-  const rating = Math.round(moonIllum.fraction * 100);
-  document.getElementById('solunar-badge').innerHTML = `<span>SOLUNAR: ${rating > 70 ? 'EXCELLENT' : 'MODERATE'} (${rating}%)</span>`;
-}
+/* ------------------------------------------------------------
+   GEOLOCATION
+------------------------------------------------------------ */
 
-async function fetchWeather(lat, lng) {
-  try {
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=surface_pressure,wind_speed_10m,wind_direction_10m`);
-    const data = await res.json();
-    const windKm = Math.round(data.current.wind_speed_10m);
-    windDeg = data.current.wind_direction_10m;
-    document.getElementById('hud-wind').textContent = `${windKm} km/h ${getCardinalWind(windDeg)}`;
-    document.getElementById('hud-baro').textContent = `${Math.round(data.current.surface_pressure)} hPa ↗`;
-    calculateScentCone(lat, lng, windDeg);
-  } catch(e){}
-}
+function locateUser(){
 
-function getCardinalWind(deg) {
-  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-  return dirs[Math.round(deg / 45) % 8];
-}
+  if(!navigator.geolocation){
 
-function switchAITab(tab) {
-  document.querySelectorAll('.ai-tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    addMessage(
+      "Geolocation is not supported by this browser.",
+      false
+    );
 
-  if (tab === 'chat') {
-    document.querySelectorAll('.ai-tab-btn')[0].classList.add('active');
-    document.getElementById('tab-chat-content').classList.add('active');
-  } else {
-    document.querySelectorAll('.ai-tab-btn')[1].classList.add('active');
-    document.getElementById('tab-cam-content').classList.add('active');
+    return;
+
   }
+
+  $("system-status").textContent = "LOCATING…";
+
+  navigator.geolocation.getCurrentPosition(
+
+    async position => {
+
+      currentLat = position.coords.latitude;
+      currentLng = position.coords.longitude;
+
+      const accuracy = position.coords.accuracy;
+
+      userMarker.setLatLng([
+        currentLat,
+        currentLng
+      ]);
+
+      accuracyCircle.setLatLng([
+        currentLat,
+        currentLng
+      ]);
+
+      accuracyCircle.setRadius(
+        Math.max(accuracy,10)
+      );
+
+      map.setView(
+        [currentLat,currentLng],
+        16,
+        {animate:true}
+      );
+
+      updateCoordinates(
+        accuracy
+      );
+
+      calculateScentLayer();
+
+      await loadWeather(
+        currentLat,
+        currentLng
+      );
+
+      calculateSunMoon(
+        currentLat,
+        currentLng
+      );
+
+      $("system-status").textContent = "ONLINE";
+
+    },
+
+    error => {
+
+      $("system-status").textContent = "LOCATION ERROR";
+
+      let message = "Unable to get your location.";
+
+      if(error.code === 1){
+        message = "Location permission was denied. Enable location access for BUCKTRACK.";
+      }
+
+      if(error.code === 2){
+        message = "Your location could not be determined.";
+      }
+
+      if(error.code === 3){
+        message = "Location request timed out.";
+      }
+
+      addMessage(message,false);
+
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:15000,
+      maximumAge:30000
+    }
+
+  );
+
 }
 
-/* Trail Cam AI Vision Analyzer Engine */
-function analyzeTrailCamPhoto(input) {
-  if (!input.files || !input.files[0]) return;
+/* ------------------------------------------------------------
+   COORDINATES
+------------------------------------------------------------ */
 
-  const file = input.files[0];
-  const reader = new FileReader();
+function updateCoordinates(accuracy){
 
-  reader.onload = function(e) {
-    const previewBox = document.getElementById('cam-preview-box');
-    const img = document.getElementById('cam-img-preview');
-    const overlay = document.getElementById('scan-overlay');
-    const results = document.getElementById('analysis-results');
+  $("coords-display").textContent =
+    `${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
 
-    img.src = e.target.result;
-    previewBox.style.display = 'block';
-    overlay.style.display = 'block';
-    results.style.display = 'none';
+  $("accuracy-display").textContent =
+    accuracy
+      ? `±${Math.round(accuracy)}m`
+      : "MAP POSITION";
 
-    // Simulated Deep Learning Neural Network Vision Processing
-    setTimeout(() => {
-      overlay.style.display = 'none';
-      results.style.display = 'flex';
+}
 
-      // Dynamic AI Target Profile Output
-      document.getElementById('trophy-tag').textContent = "🏆 CERTIFIED MONARCH BUCK DETECTED";
-      document.getElementById('res-age').textContent = "5.5 - 6.5 Yrs (Fully Mature)";
-      document.getElementById('res-score').textContent = "162 4/8\" (Mainframe 10)";
-      document.getElementById('res-behavior').textContent = "Pre-Rut Daylight Staging";
-      document.getElementById('res-conf').textContent = "99.1% Vision Accuracy";
-      document.getElementById('res-tactics').innerHTML = `
-        <strong>RECOMMENDED HARVEST STRATEGY:</strong><br>
-        • <strong>Anatomy & Maturity:</strong> Deep chest-to-leg ratio, swayback, stained tarsals. Absolute wall-hanger.<br>
-        • <strong>Wind Window:</strong> Entry vectors indicate he uses the WNW wind to check the lower scrape line.<br>
-        • <strong>Call Strategy:</strong> Do not aggressive-rattle; use soft snort-wheeze if he stays out of range.<br>
-        • <strong>Motive:</strong> Get your gear on. He is moving in daylight on this exact ridge—execute today!
-      `;
-    }, 1800);
+/* ------------------------------------------------------------
+   REAL WEATHER
+------------------------------------------------------------ */
+
+async function loadWeather(lat,lng){
+
+  $("hud-weather").textContent = "Loading…";
+
+  const url =
+    "https://api.open-meteo.com/v1/forecast" +
+    `?latitude=${encodeURIComponent(lat)}` +
+    `&longitude=${encodeURIComponent(lng)}` +
+    "&current=temperature_2m,relative_humidity_2m,apparent_temperature," +
+    "is_day,precipitation,rain,showers,snowfall,weather_code," +
+    "surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m" +
+    "&wind_speed_unit=kmh" +
+    "&temperature_unit=celsius" +
+    "&timezone=auto";
+
+  try{
+
+    const response = await fetch(
+      url,
+      {
+        cache:"no-store"
+      }
+    );
+
+    if(!response.ok){
+      throw new Error("Weather request failed");
+    }
+
+    const data = await response.json();
+
+    if(!data.current){
+      throw new Error("No current weather data");
+    }
+
+    const w = data.current;
+
+    currentWindDeg =
+      Number(w.wind_direction_10m) || 0;
+
+    currentWindSpeed =
+      Number(w.wind_speed_10m) || 0;
+
+    currentTemp =
+      Number(w.temperature_2m);
+
+    currentPressure =
+      Number(w.surface_pressure);
+
+    $("hud-weather").textContent =
+      `${Math.round(currentTemp)}°C · ${Math.round(currentWindSpeed)} km/h ${windDirection(currentWindDeg)}`;
+
+    $("weather-icon").textContent =
+      weatherIcon(w.weather_code,w.is_day);
+
+    calculateScentLayer();
+
+    updateWeatherMessage();
+
+  }catch(error){
+
+    console.error(error);
+
+    $("hud-weather").textContent =
+      "Weather unavailable";
+
+    $("weather-icon").textContent =
+      "⚠️";
+
+  }
+
+}
+
+/* ------------------------------------------------------------
+   WEATHER HELPERS
+------------------------------------------------------------ */
+
+function windDirection(degrees){
+
+  const dirs = [
+    "N","NE","E","SE",
+    "S","SW","W","NW"
+  ];
+
+  return dirs[
+    Math.round(degrees / 45) % 8
+  ];
+
+}
+
+function weatherIcon(code,isDay){
+
+  if(code === 0)
+    return isDay ? "☀️" : "🌙";
+
+  if([1,2].includes(code))
+    return isDay ? "🌤️" : "☁️";
+
+  if(code === 3)
+    return "☁️";
+
+  if([45,48].includes(code))
+    return "🌫️";
+
+  if([51,53,55,56,57].includes(code))
+    return "🌦️";
+
+  if([61,63,65,66,67,80,81,82].includes(code))
+    return "🌧️";
+
+  if([71,73,75,77,85,86].includes(code))
+    return "🌨️";
+
+  if([95,96,99].includes(code))
+    return "⛈️";
+
+  return "🌤️";
+
+}
+
+/* ------------------------------------------------------------
+   SCENT DRIFT
+------------------------------------------------------------ */
+
+function calculateScentLayer(){
+
+  if(!map) return;
+
+  if(scentPolygon){
+    map.removeLayer(scentPolygon);
+  }
+
+  /*
+    Meteorological wind direction describes where the wind
+    comes FROM. Deer scent travels approximately DOWNWIND,
+    so we add 180 degrees.
+  */
+
+  const travel =
+    (currentWindDeg + 180) % 360;
+
+  const width = 28;
+  const distanceKm = .65;
+
+  const left =
+    (travel - width / 2) *
+    Math.PI / 180;
+
+  const right =
+    (travel + width / 2) *
+    Math.PI / 180;
+
+  const latFactor =
+    111;
+
+  const lngFactor =
+    111 * Math.cos(
+      currentLat * Math.PI / 180
+    );
+
+  const p1 = [
+    currentLat,
+    currentLng
+  ];
+
+  const p2 = [
+    currentLat +
+      distanceKm / latFactor *
+      Math.cos(left),
+
+    currentLng +
+      distanceKm / lngFactor *
+      Math.sin(left)
+  ];
+
+  const p3 = [
+    currentLat +
+      distanceKm / latFactor *
+      Math.cos(right),
+
+    currentLng +
+      distanceKm / lngFactor *
+      Math.sin(right)
+  ];
+
+  scentPolygon =
+    L.polygon(
+      [p1,p2,p3],
+      {
+        color:"#f08a2e",
+        weight:1,
+        dashArray:"5 4",
+        fillColor:"#f08a2e",
+        fillOpacity:.17
+      }
+    ).bindPopup(
+      "<div class='popup-title'>Wind / scent drift</div>" +
+      `<div class='popup-sub'>Wind from ${windDirection(currentWindDeg)} · ${Math.round(currentWindSpeed)} km/h</div>`
+    );
+
+  layers.scent = scentPolygon;
+
+  scentPolygon.addTo(map);
+
+}
+
+/* ------------------------------------------------------------
+   SUN / MOON
+------------------------------------------------------------ */
+
+function calculateSunMoon(lat,lng){
+
+  try{
+
+    const now = new Date();
+
+    const sun =
+      SunCalc.getTimes(
+        now,
+        lat,
+        lng
+      );
+
+    const moon =
+      SunCalc.getMoonIllumination(now);
+
+    const moonPercent =
+      Math.round(
+        moon.fraction * 100
+      );
+
+    let status = "FIELD";
+
+    if(now >= sun.sunrise && now <= sun.sunset){
+      status = "DAY";
+    }else{
+      status = "NIGHT";
+    }
+
+    $("status").textContent =
+      status;
+
+    addSystemStatus(
+      `Sun cycle: ${status}. Moon illumination ${moonPercent}%.`
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+  }
+
+}
+
+function addSystemStatus(text){
+
+  const existing =
+    $("chat-log").querySelector(".initial-solunar");
+
+  if(existing) return;
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    "msg system initial-solunar";
+
+  div.innerHTML =
+    `<div class="msg-label">FIELD DATA</div>${escapeHTML(text)}`;
+
+  $("chat-log").appendChild(div);
+
+}
+
+/* ------------------------------------------------------------
+   WEATHER CHAT
+------------------------------------------------------------ */
+
+function updateWeatherMessage(){
+
+  const existing =
+    $("chat-log").querySelector(".weather-update");
+
+  if(existing){
+    existing.remove();
+  }
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    "msg system weather-update";
+
+  div.innerHTML =
+    `<div class="msg-label">LIVE WEATHER</div>` +
+    `Temperature ${Math.round(currentTemp)}°C. ` +
+    `Wind ${Math.round(currentWindSpeed)} km/h from ${windDirection(currentWindDeg)}. ` +
+    `Pressure ${Math.round(currentPressure)} hPa.`;
+
+  $("chat-log").appendChild(div);
+
+}
+
+/* ------------------------------------------------------------
+   FIELD DESK
+------------------------------------------------------------ */
+
+function sendQuery(){
+
+  const input =
+    $("chat-input");
+
+  const text =
+    input.value.trim();
+
+  if(!text) return;
+
+  addMessage(text,true);
+
+  input.value = "";
+
+  const response =
+    answerFieldQuestion(text);
+
+  setTimeout(() => {
+
+    addMessage(
+      response,
+      false
+    );
+
+  },150);
+
+}
+
+function addMessage(text,user){
+
+  const log =
+    $("chat-log");
+
+  const div =
+    document.createElement("div");
+
+  div.className =
+    "msg " +
+    (user ? "user" : "system");
+
+  div.innerHTML =
+    `<div class="msg-label">${
+      user ? "YOU" : "FIELD DESK"
+    }</div>` +
+    escapeHTML(text);
+
+  log.appendChild(div);
+
+  log.scrollTop =
+    log.scrollHeight;
+
+}
+
+function answerFieldQuestion(question){
+
+  const q =
+    question.toLowerCase();
+
+  if(
+    q.includes("wind") ||
+    q.includes("scent") ||
+    q.includes("downwind")
+  ){
+
+    return `
+Current live wind: ${Math.round(currentWindSpeed)} km/h from ${windDirection(currentWindDeg)}.
+The orange cone on the map represents the calculated downwind drift direction from the current map position. Wind can shift locally around terrain, so treat the cone as a planning aid rather than a guarantee.
+`;
+
+  }
+
+  if(
+    q.includes("weather") ||
+    q.includes("temperature") ||
+    q.includes("temp")
+  ){
+
+    if(currentTemp === null){
+      return "Live weather has not loaded yet.";
+    }
+
+    return `
+Live conditions are ${Math.round(currentTemp)}°C with wind ${Math.round(currentWindSpeed)} km/h from ${windDirection(currentWindDeg)} and pressure around ${Math.round(currentPressure)} hPa.
+`;
+
+  }
+
+  if(
+    q.includes("location") ||
+    q.includes("where") ||
+    q.includes("coordinate") ||
+    q.includes("coordinates")
+  ){
+
+    return `
+Current map position is ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}.
+`;
+
+  }
+
+  if(
+    q.includes("stand") ||
+    q.includes("setup") ||
+    q.includes("position")
+  ){
+
+    return `
+Use the map layers to compare your marked areas with the current wind direction. A practical setup should keep your approach and shooting position from exposing your scent to the area you are watching. Verify wind and terrain conditions in the field.
+`;
+
+  }
+
+  if(
+    q.includes("map") ||
+    q.includes("satellite") ||
+    q.includes("topo")
+  ){
+
+    return `
+Use the ☰ map menu to switch between satellite, topographic, and street maps. You can also toggle field layers and drop your own waypoints.
+`;
+
+  }
+
+  if(
+    q.includes("photo") ||
+    q.includes("camera") ||
+    q.includes("trail cam")
+  ){
+
+    return `
+Open PHOTO LOG at the bottom of the screen and add a trail-camera image. BUCKTRACK will record the actual image information locally. No animal identification or antler score is fabricated.
+`;
+
+  }
+
+  return `
+I can work with the live data available in BUCKTRACK: current weather, wind direction, map position, scent drift, map layers, waypoints, and local photo records. Try asking about wind, weather, position, maps, or photos.
+`;
+
+}
+
+/* ------------------------------------------------------------
+   PHOTO LOG
+------------------------------------------------------------ */
+
+function processPhoto(input){
+
+  if(!input.files || !input.files[0]){
+    return;
+  }
+
+  const file =
+    input.files[0];
+
+  if(!file.type.startsWith("image/")){
+    return;
+  }
+
+  const preview =
+    $("photo-preview");
+
+  const box =
+    $("preview");
+
+  const info =
+    $("photo-info");
+
+  const analysis =
+    $("photo-analysis");
+
+  const reader =
+    new FileReader();
+
+  reader.onload = event => {
+
+    preview.src =
+      event.target.result;
+
+    box.classList.add("show");
+
+    info.style.display =
+      "grid";
+
+    analysis.classList.add("show");
+
+    $("photo-name").textContent =
+      file.name;
+
+    $("photo-size").textContent =
+      formatBytes(file.size);
+
+    $("photo-date").textContent =
+      new Date(
+        file.lastModified
+      ).toLocaleString();
+
+    $("photo-location").textContent =
+      `Current field position: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+
+    preview.onload = () => {
+
+      $("photo-dimensions").textContent =
+        `${preview.naturalWidth} × ${preview.naturalHeight}`;
+
+      const megapixels =
+        (
+          preview.naturalWidth *
+          preview.naturalHeight /
+          1000000
+        ).toFixed(1);
+
+      $("image-summary").textContent =
+        `Image loaded successfully. Resolution ${preview.naturalWidth} × ${preview.naturalHeight} (${megapixels} MP). File size ${formatBytes(file.size)}.`;
+
+    };
+
   };
 
   reader.readAsDataURL(file);
+
 }
 
-function sendQuery() {
-  const input = document.getElementById('ai-input');
-  const txt = input.value.trim();
-  if (!txt) return;
+/* ------------------------------------------------------------
+   PHOTO UTILITIES
+------------------------------------------------------------ */
 
-  const log = document.getElementById('chat-log');
-  const userDiv = document.createElement('div');
-  userDiv.className = 'msg user';
-  userDiv.textContent = txt;
-  log.appendChild(userDiv);
-  input.value = '';
-  log.scrollTop = log.scrollHeight;
+function formatBytes(bytes){
 
-  setTimeout(() => {
-    const aiDiv = document.createElement('div');
-    aiDiv.className = 'msg system';
-    aiDiv.innerHTML = `<strong>Apex Intelligence:</strong> Wind is currently <strong>${document.getElementById('hud-wind').textContent}</strong>. Position downwind of the primary scrape marker on the thermal funnel.`;
-    log.appendChild(aiDiv);
-    log.scrollTop = log.scrollHeight;
-  }, 500);
-}
-
-function switchMobileTab(tab) {
-  const aiPanel = document.getElementById('ai-panel');
-  const tabMap = document.getElementById('tab-map');
-  const tabAi = document.getElementById('tab-ai');
-
-  if (tab === 'ai') {
-    aiPanel.classList.add('mobile-open');
-    tabAi.classList.add('active');
-    tabMap.classList.remove('active');
-  } else {
-    aiPanel.classList.remove('mobile-open');
-    tabMap.classList.add('active');
-    tabAi.classList.remove('active');
+  if(bytes === 0){
+    return "0 B";
   }
+
+  const units =
+    ["B","KB","MB","GB"];
+
+  const i =
+    Math.floor(
+      Math.log(bytes) /
+      Math.log(1024)
+    );
+
+  return (
+    bytes /
+    Math.pow(1024,i)
+  ).toFixed(i ? 1 : 0) +
+    " " +
+    units[i];
+
 }
 
-window.onload = initGIS;
+/* ------------------------------------------------------------
+   WAYPOINTS
+------------------------------------------------------------ */
+
+function dropWaypoint(){
+
+  if(!map) return;
+
+  const center =
+    map.getCenter();
+
+  const marker =
+    L.marker(
+      [center.lat,center.lng],
+      {
+        icon:createMarkerIcon(
+          "green",
+          "W"
+        )
+      }
+    ).bindPopup(
+      "<div class='popup-title'>BUCKTRACK waypoint</div>" +
+      `<div class='popup-sub'>${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}</div>`
+    ).addTo(map);
+
+  waypoints.push(marker);
+
+}
+
+function clearWaypoints(){
+
+  waypoints.forEach(marker => {
+
+    map.removeLayer(marker);
+
+  });
+
+  waypoints = [];
+
+}
+
+/* ------------------------------------------------------------
+   PANEL
+------------------------------------------------------------ */
+
+function switchPanel(panel){
+
+  $("chat-tab").classList.toggle(
+    "active",
+    panel === "chat"
+  );
+
+  $("cam-tab").classList.toggle(
+    "active",
+    panel === "cam"
+  );
+
+  $("chat-panel").classList.toggle(
+    "active",
+    panel === "chat"
+  );
+
+  $("cam-panel").classList.toggle(
+    "active",
+    panel === "cam"
+  );
+
+}
+
+function mobileView(view){
+
+  if(window.innerWidth > 768){
+    return;
+  }
+
+  const panel =
+    $("side-panel");
+
+  $("dock-map").classList.toggle(
+    "active",
+    view === "map"
+  );
+
+  $("dock-desk").classList.toggle(
+    "active",
+    view === "desk"
+  );
+
+  $("dock-photo").classList.toggle(
+    "active",
+    view === "photo"
+  );
+
+  if(view === "map"){
+
+    panel.classList.remove(
+      "mobile-open"
+    );
+
+    return;
+
+  }
+
+  panel.classList.add(
+    "mobile-open"
+  );
+
+  if(view === "desk"){
+    switchPanel("chat");
+  }
+
+  if(view === "photo"){
+    switchPanel("cam");
+  }
+
+}
+
+function closeMobilePanel(){
+
+  $("side-panel").classList.remove(
+    "mobile-open"
+  );
+
+  $("dock-map").classList.add(
+    "active"
+  );
+
+  $("dock-desk").classList.remove(
+    "active"
+  );
+
+  $("dock-photo").classList.remove(
+    "active"
+  );
+
+}
+
+/* ------------------------------------------------------------
+   ESCAPE HTML
+------------------------------------------------------------ */
+
+function escapeHTML(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+/* ------------------------------------------------------------
+   RESPONSIVE MAP FIX
+------------------------------------------------------------ */
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    if(map){
+
+      setTimeout(
+        () => map.invalidateSize(),
+        150
+      );
+
+    }
+
+  }
+);
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if(
+      !document.hidden &&
+      map
+    ){
+
+      setTimeout(
+        () => map.invalidateSize(),
+        150
+      );
+
+    }
+
+  }
+);
 </script>
+
 </body>
 </html>
