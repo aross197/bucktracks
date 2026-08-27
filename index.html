@@ -1110,7 +1110,6 @@ input[type=radio]{
           type="file"
           id="photo-input"
           accept="image/*"
-          capture="environment"
           onchange="processPhoto(this)"
         >
 
@@ -1218,12 +1217,6 @@ input[type=radio]{
 <script>
 "use strict";
 
-/* ============================================================
-   BUCKTRACK PRO
-   Real map + real geolocation + real Open-Meteo weather.
-   No simulated AI, no fabricated animal detection.
-   ============================================================ */
-
 let map;
 let currentLat = 45.8167;
 let currentLng = -64.2167;
@@ -1243,43 +1236,26 @@ let scentPolygon;
 
 const $ = id => document.getElementById(id);
 
-/* ------------------------------------------------------------
-   INITIALIZATION
------------------------------------------------------------- */
-
 window.addEventListener("load", async () => {
-
   try {
-
     initMap();
     createFieldLayers();
     bindMapEvents();
 
     await loadWeather(currentLat,currentLng);
-
     calculateSunMoon(currentLat,currentLng);
 
     setTimeout(() => {
       $("loading").classList.add("hide");
     },400);
-
   } catch(error) {
-
     console.error(error);
-
     $("system-status").textContent = "MAP ERROR";
     $("loading").classList.add("hide");
-
   }
-
 });
 
-/* ------------------------------------------------------------
-   MAP
------------------------------------------------------------- */
-
 function initMap(){
-
   map = L.map("map",{
     zoomControl:false,
     preferCanvas:true,
@@ -1342,15 +1318,9 @@ function initMap(){
     userMarker,
     accuracyCircle
   ]).addTo(map);
-
 }
 
-/* ------------------------------------------------------------
-   FIELD LAYERS
------------------------------------------------------------- */
-
 function createFieldLayers(){
-
   const lat = currentLat;
   const lng = currentLng;
 
@@ -1369,7 +1339,6 @@ function createFieldLayers(){
   );
 
   layers.scrapes = L.layerGroup([
-
     L.marker(
       [lat + .0018,lng + .0035],
       {icon:createMarkerIcon("yellow","S")}
@@ -1385,7 +1354,6 @@ function createFieldLayers(){
       "<div class='popup-title'>Scrape waypoint</div>" +
       "<div class='popup-sub'>Map marker</div>"
     )
-
   ]).addTo(map);
 
   layers.corridor = L.polyline(
@@ -1406,15 +1374,9 @@ function createFieldLayers(){
   ).addTo(map);
 
   calculateScentLayer();
-
 }
 
-/* ------------------------------------------------------------
-   MARKER ICON
------------------------------------------------------------- */
-
 function createMarkerIcon(color,text){
-
   return L.divIcon({
     className:"",
     html:`<div class="bt-marker ${color}">${text}</div>`,
@@ -1422,56 +1384,31 @@ function createMarkerIcon(color,text){
     iconAnchor:[13,13],
     popupAnchor:[0,-15]
   });
-
 }
-
-/* ------------------------------------------------------------
-   MAP CLICK
------------------------------------------------------------- */
 
 function bindMapEvents(){
-
   map.on("click",event => {
-
     currentLat = event.latlng.lat;
     currentLng = event.latlng.lng;
-
     updateCoordinates();
-
   });
-
 }
 
-/* ------------------------------------------------------------
-   BASEMAP
------------------------------------------------------------- */
-
 function setBase(type){
-
   Object.values(baseLayers).forEach(layer => {
-
     if(map.hasLayer(layer)){
       map.removeLayer(layer);
     }
-
   });
 
   baseLayers[type].addTo(map);
-
 }
 
-/* ------------------------------------------------------------
-   LAYERS
------------------------------------------------------------- */
-
 function toggleLayers(){
-
   $("layer-drawer").classList.toggle("open");
-
 }
 
 function toggleLayer(name,enabled){
-
   if(!layers[name]) return;
 
   if(enabled){
@@ -1479,131 +1416,65 @@ function toggleLayer(name,enabled){
   }else{
     map.removeLayer(layers[name]);
   }
-
 }
 
-/* ------------------------------------------------------------
-   GEOLOCATION
------------------------------------------------------------- */
-
 function locateUser(){
-
   if(!navigator.geolocation){
-
-    addMessage(
-      "Geolocation is not supported by this browser.",
-      false
-    );
-
+    addMessage("Geolocation is not supported by this browser.", false);
     return;
-
   }
 
   $("system-status").textContent = "LOCATING…";
 
   navigator.geolocation.getCurrentPosition(
-
     async position => {
-
       currentLat = position.coords.latitude;
       currentLng = position.coords.longitude;
-
       const accuracy = position.coords.accuracy;
 
-      userMarker.setLatLng([
-        currentLat,
-        currentLng
-      ]);
+      userMarker.setLatLng([currentLat, currentLng]);
+      accuracyCircle.setLatLng([currentLat, currentLng]);
+      accuracyCircle.setRadius(Math.max(accuracy,10));
 
-      accuracyCircle.setLatLng([
-        currentLat,
-        currentLng
-      ]);
+      map.setView([currentLat,currentLng], 16, {animate:true});
 
-      accuracyCircle.setRadius(
-        Math.max(accuracy,10)
-      );
-
-      map.setView(
-        [currentLat,currentLng],
-        16,
-        {animate:true}
-      );
-
-      updateCoordinates(
-        accuracy
-      );
-
+      updateCoordinates(accuracy);
       calculateScentLayer();
-
-      await loadWeather(
-        currentLat,
-        currentLng
-      );
-
-      calculateSunMoon(
-        currentLat,
-        currentLng
-      );
+      await loadWeather(currentLat, currentLng);
+      calculateSunMoon(currentLat, currentLng);
 
       $("system-status").textContent = "ONLINE";
-
     },
-
     error => {
-
       $("system-status").textContent = "LOCATION ERROR";
-
       let message = "Unable to get your location.";
 
       if(error.code === 1){
         message = "Location permission was denied. Enable location access for BUCKTRACK.";
       }
-
       if(error.code === 2){
         message = "Your location could not be determined.";
       }
-
       if(error.code === 3){
         message = "Location request timed out.";
       }
 
       addMessage(message,false);
-
     },
-
     {
       enableHighAccuracy:true,
       timeout:15000,
       maximumAge:30000
     }
-
   );
-
 }
-
-/* ------------------------------------------------------------
-   COORDINATES
------------------------------------------------------------- */
 
 function updateCoordinates(accuracy){
-
-  $("coords-display").textContent =
-    `${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
-
-  $("accuracy-display").textContent =
-    accuracy
-      ? `±${Math.round(accuracy)}m`
-      : "MAP POSITION";
-
+  $("coords-display").textContent = `${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+  $("accuracy-display").textContent = accuracy ? `±${Math.round(accuracy)}m` : "MAP POSITION";
 }
 
-/* ------------------------------------------------------------
-   REAL WEATHER
------------------------------------------------------------- */
-
 async function loadWeather(lat,lng){
-
   $("hud-weather").textContent = "Loading…";
 
   const url =
@@ -1618,282 +1489,123 @@ async function loadWeather(lat,lng){
     "&timezone=auto";
 
   try{
-
-    const response = await fetch(
-      url,
-      {
-        cache:"no-store"
-      }
-    );
-
-    if(!response.ok){
-      throw new Error("Weather request failed");
-    }
+    const response = await fetch(url, { cache:"no-store" });
+    if(!response.ok) throw new Error("Weather request failed");
 
     const data = await response.json();
-
-    if(!data.current){
-      throw new Error("No current weather data");
-    }
+    if(!data.current) throw new Error("No current weather data");
 
     const w = data.current;
+    currentWindDeg = Number(w.wind_direction_10m) || 0;
+    currentWindSpeed = Number(w.wind_speed_10m) || 0;
+    currentTemp = Number(w.temperature_2m);
+    currentPressure = Number(w.surface_pressure);
 
-    currentWindDeg =
-      Number(w.wind_direction_10m) || 0;
-
-    currentWindSpeed =
-      Number(w.wind_speed_10m) || 0;
-
-    currentTemp =
-      Number(w.temperature_2m);
-
-    currentPressure =
-      Number(w.surface_pressure);
-
-    $("hud-weather").textContent =
-      `${Math.round(currentTemp)}°C · ${Math.round(currentWindSpeed)} km/h ${windDirection(currentWindDeg)}`;
-
-    $("weather-icon").textContent =
-      weatherIcon(w.weather_code,w.is_day);
+    $("hud-weather").textContent = `${Math.round(currentTemp)}°C · ${Math.round(currentWindSpeed)} km/h ${windDirection(currentWindDeg)}`;
+    $("weather-icon").textContent = weatherIcon(w.weather_code,w.is_day);
 
     calculateScentLayer();
-
     updateWeatherMessage();
-
   }catch(error){
-
     console.error(error);
-
-    $("hud-weather").textContent =
-      "Weather unavailable";
-
-    $("weather-icon").textContent =
-      "⚠️";
-
+    $("hud-weather").textContent = "Weather unavailable";
+    $("weather-icon").textContent = "⚠️";
   }
-
 }
 
-/* ------------------------------------------------------------
-   WEATHER HELPERS
------------------------------------------------------------- */
-
 function windDirection(degrees){
-
-  const dirs = [
-    "N","NE","E","SE",
-    "S","SW","W","NW"
-  ];
-
-  return dirs[
-    Math.round(degrees / 45) % 8
-  ];
-
+  const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+  return dirs[Math.round(degrees / 45) % 8];
 }
 
 function weatherIcon(code,isDay){
-
-  if(code === 0)
-    return isDay ? "☀️" : "🌙";
-
-  if([1,2].includes(code))
-    return isDay ? "🌤️" : "☁️";
-
-  if(code === 3)
-    return "☁️";
-
-  if([45,48].includes(code))
-    return "🌫️";
-
-  if([51,53,55,56,57].includes(code))
-    return "🌦️";
-
-  if([61,63,65,66,67,80,81,82].includes(code))
-    return "🌧️";
-
-  if([71,73,75,77,85,86].includes(code))
-    return "🌨️";
-
-  if([95,96,99].includes(code))
-    return "⛈️";
-
+  if(code === 0) return isDay ? "☀️" : "🌙";
+  if([1,2].includes(code)) return isDay ? "🌤️" : "☁️";
+  if(code === 3) return "☁️";
+  if([45,48].includes(code)) return "🌫️";
+  if([51,53,55,56,57].includes(code)) return "🌦️";
+  if([61,63,65,66,67,80,81,82].includes(code)) return "🌧️";
+  if([71,73,75,77,85,86].includes(code)) return "🌨️";
+  if([95,96,99].includes(code)) return "⛈️";
   return "🌤️";
-
 }
 
-/* ------------------------------------------------------------
-   SCENT DRIFT
------------------------------------------------------------- */
-
 function calculateScentLayer(){
-
   if(!map) return;
+  if(scentPolygon) map.removeLayer(scentPolygon);
 
-  if(scentPolygon){
-    map.removeLayer(scentPolygon);
-  }
-
-  /*
-    Meteorological wind direction describes where the wind
-    comes FROM. Deer scent travels approximately DOWNWIND,
-    so we add 180 degrees.
-  */
-
-  const travel =
-    (currentWindDeg + 180) % 360;
-
+  const travel = (currentWindDeg + 180) % 360;
   const width = 28;
   const distanceKm = .65;
 
-  const left =
-    (travel - width / 2) *
-    Math.PI / 180;
+  const left = (travel - width / 2) * Math.PI / 180;
+  const right = (travel + width / 2) * Math.PI / 180;
 
-  const right =
-    (travel + width / 2) *
-    Math.PI / 180;
+  const latFactor = 111;
+  const lngFactor = 111 * Math.cos(currentLat * Math.PI / 180);
 
-  const latFactor =
-    111;
-
-  const lngFactor =
-    111 * Math.cos(
-      currentLat * Math.PI / 180
-    );
-
-  const p1 = [
-    currentLat,
-    currentLng
-  ];
-
+  const p1 = [currentLat, currentLng];
   const p2 = [
-    currentLat +
-      distanceKm / latFactor *
-      Math.cos(left),
-
-    currentLng +
-      distanceKm / lngFactor *
-      Math.sin(left)
+    currentLat + distanceKm / latFactor * Math.cos(left),
+    currentLng + distanceKm / lngFactor * Math.sin(left)
   ];
-
   const p3 = [
-    currentLat +
-      distanceKm / latFactor *
-      Math.cos(right),
-
-    currentLng +
-      distanceKm / lngFactor *
-      Math.sin(right)
+    currentLat + distanceKm / latFactor * Math.cos(right),
+    currentLng + distanceKm / lngFactor * Math.sin(right)
   ];
 
-  scentPolygon =
-    L.polygon(
-      [p1,p2,p3],
-      {
-        color:"#f08a2e",
-        weight:1,
-        dashArray:"5 4",
-        fillColor:"#f08a2e",
-        fillOpacity:.17
-      }
-    ).bindPopup(
-      "<div class='popup-title'>Wind / scent drift</div>" +
-      `<div class='popup-sub'>Wind from ${windDirection(currentWindDeg)} · ${Math.round(currentWindSpeed)} km/h</div>`
-    );
+  scentPolygon = L.polygon([p1,p2,p3], {
+    color:"#f08a2e",
+    weight:1,
+    dashArray:"5 4",
+    fillColor:"#f08a2e",
+    fillOpacity:.17
+  }).bindPopup(
+    "<div class='popup-title'>Wind / scent drift</div>" +
+    `<div class='popup-sub'>Wind from ${windDirection(currentWindDeg)} · ${Math.round(currentWindSpeed)} km/h</div>`
+  );
 
   layers.scent = scentPolygon;
-
   scentPolygon.addTo(map);
-
 }
 
-/* ------------------------------------------------------------
-   SUN / MOON
------------------------------------------------------------- */
-
 function calculateSunMoon(lat,lng){
-
   try{
-
     const now = new Date();
-
-    const sun =
-      SunCalc.getTimes(
-        now,
-        lat,
-        lng
-      );
-
-    const moon =
-      SunCalc.getMoonIllumination(now);
-
-    const moonPercent =
-      Math.round(
-        moon.fraction * 100
-      );
+    const sun = SunCalc.getTimes(now, lat, lng);
+    const moon = SunCalc.getMoonIllumination(now);
+    const moonPercent = Math.round(moon.fraction * 100);
 
     let status = "FIELD";
-
     if(now >= sun.sunrise && now <= sun.sunset){
       status = "DAY";
     }else{
       status = "NIGHT";
     }
 
-    $("status").textContent =
-      status;
-
-    addSystemStatus(
-      `Sun cycle: ${status}. Moon illumination ${moonPercent}%.`
-    );
-
+    $("status").textContent = status;
+    addSystemStatus(`Sun cycle: ${status}. Moon illumination ${moonPercent}%.`);
   }catch(error){
-
     console.error(error);
-
   }
-
 }
 
 function addSystemStatus(text){
-
-  const existing =
-    $("chat-log").querySelector(".initial-solunar");
-
+  const existing = $("chat-log").querySelector(".initial-solunar");
   if(existing) return;
 
-  const div =
-    document.createElement("div");
-
-  div.className =
-    "msg system initial-solunar";
-
-  div.innerHTML =
-    `<div class="msg-label">FIELD DATA</div>${escapeHTML(text)}`;
-
+  const div = document.createElement("div");
+  div.className = "msg system initial-solunar";
+  div.innerHTML = `<div class="msg-label">FIELD DATA</div>${escapeHTML(text)}`;
   $("chat-log").appendChild(div);
-
 }
 
-/* ------------------------------------------------------------
-   WEATHER CHAT
------------------------------------------------------------- */
-
 function updateWeatherMessage(){
+  const existing = $("chat-log").querySelector(".weather-update");
+  if(existing) existing.remove();
 
-  const existing =
-    $("chat-log").querySelector(".weather-update");
-
-  if(existing){
-    existing.remove();
-  }
-
-  const div =
-    document.createElement("div");
-
-  div.className =
-    "msg system weather-update";
-
+  const div = document.createElement("div");
+  div.className = "msg system weather-update";
   div.innerHTML =
     `<div class="msg-label">LIVE WEATHER</div>` +
     `Temperature ${Math.round(currentTemp)}°C. ` +
@@ -1901,454 +1613,187 @@ function updateWeatherMessage(){
     `Pressure ${Math.round(currentPressure)} hPa.`;
 
   $("chat-log").appendChild(div);
-
 }
 
-/* ------------------------------------------------------------
-   FIELD DESK
------------------------------------------------------------- */
-
 function sendQuery(){
-
-  const input =
-    $("chat-input");
-
-  const text =
-    input.value.trim();
-
+  const input = $("chat-input");
+  const text = input.value.trim();
   if(!text) return;
 
   addMessage(text,true);
-
   input.value = "";
 
-  const response =
-    answerFieldQuestion(text);
-
+  const response = answerFieldQuestion(text);
   setTimeout(() => {
-
-    addMessage(
-      response,
-      false
-    );
-
+    addMessage(response,false);
   },150);
-
 }
 
 function addMessage(text,user){
-
-  const log =
-    $("chat-log");
-
-  const div =
-    document.createElement("div");
-
-  div.className =
-    "msg " +
-    (user ? "user" : "system");
-
-  div.innerHTML =
-    `<div class="msg-label">${
-      user ? "YOU" : "FIELD DESK"
-    }</div>` +
-    escapeHTML(text);
-
+  const log = $("chat-log");
+  const div = document.createElement("div");
+  div.className = "msg " + (user ? "user" : "system");
+  div.innerHTML = `<div class="msg-label">${user ? "YOU" : "FIELD DESK"}</div>` + escapeHTML(text);
   log.appendChild(div);
-
-  log.scrollTop =
-    log.scrollHeight;
-
+  log.scrollTop = log.scrollHeight;
 }
 
 function answerFieldQuestion(question){
+  const q = question.toLowerCase();
 
-  const q =
-    question.toLowerCase();
-
-  if(
-    q.includes("wind") ||
-    q.includes("scent") ||
-    q.includes("downwind")
-  ){
-
+  if(q.includes("wind") || q.includes("scent") || q.includes("downwind")){
     return `
 Current live wind: ${Math.round(currentWindSpeed)} km/h from ${windDirection(currentWindDeg)}.
 The orange cone on the map represents the calculated downwind drift direction from the current map position. Wind can shift locally around terrain, so treat the cone as a planning aid rather than a guarantee.
 `;
-
   }
 
-  if(
-    q.includes("weather") ||
-    q.includes("temperature") ||
-    q.includes("temp")
-  ){
-
+  if(q.includes("weather") || q.includes("temperature") || q.includes("temp")){
     if(currentTemp === null){
       return "Live weather has not loaded yet.";
     }
-
     return `
 Live conditions are ${Math.round(currentTemp)}°C with wind ${Math.round(currentWindSpeed)} km/h from ${windDirection(currentWindDeg)} and pressure around ${Math.round(currentPressure)} hPa.
 `;
-
   }
 
-  if(
-    q.includes("location") ||
-    q.includes("where") ||
-    q.includes("coordinate") ||
-    q.includes("coordinates")
-  ){
-
+  if(q.includes("location") || q.includes("where") || q.includes("coordinate") || q.includes("coordinates")){
     return `
 Current map position is ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}.
 `;
-
   }
 
-  if(
-    q.includes("stand") ||
-    q.includes("setup") ||
-    q.includes("position")
-  ){
-
+  if(q.includes("stand") || q.includes("setup") || q.includes("position")){
     return `
 Use the map layers to compare your marked areas with the current wind direction. A practical setup should keep your approach and shooting position from exposing your scent to the area you are watching. Verify wind and terrain conditions in the field.
 `;
-
   }
 
-  if(
-    q.includes("map") ||
-    q.includes("satellite") ||
-    q.includes("topo")
-  ){
-
+  if(q.includes("map") || q.includes("satellite") || q.includes("topo")){
     return `
 Use the ☰ map menu to switch between satellite, topographic, and street maps. You can also toggle field layers and drop your own waypoints.
 `;
-
   }
 
-  if(
-    q.includes("photo") ||
-    q.includes("camera") ||
-    q.includes("trail cam")
-  ){
-
+  if(q.includes("photo") || q.includes("camera") || q.includes("trail cam")){
     return `
 Open PHOTO LOG at the bottom of the screen and add a trail-camera image. BUCKTRACK will record the actual image information locally. No animal identification or antler score is fabricated.
 `;
-
   }
 
   return `
 I can work with the live data available in BUCKTRACK: current weather, wind direction, map position, scent drift, map layers, waypoints, and local photo records. Try asking about wind, weather, position, maps, or photos.
 `;
-
 }
 
-/* ------------------------------------------------------------
-   PHOTO LOG
------------------------------------------------------------- */
-
 function processPhoto(input){
+  if(!input.files || !input.files[0]) return;
 
-  if(!input.files || !input.files[0]){
-    return;
-  }
+  const file = input.files[0];
+  if(!file.type.startsWith("image/")) return;
 
-  const file =
-    input.files[0];
-
-  if(!file.type.startsWith("image/")){
-    return;
-  }
-
-  const preview =
-    $("photo-preview");
-
-  const box =
-    $("preview");
-
-  const info =
-    $("photo-info");
-
-  const analysis =
-    $("photo-analysis");
-
-  const reader =
-    new FileReader();
+  const preview = $("photo-preview");
+  const box = $("preview");
+  const info = $("photo-info");
+  const analysis = $("photo-analysis");
+  const reader = new FileReader();
 
   reader.onload = event => {
-
-    preview.src =
-      event.target.result;
-
+    preview.src = event.target.result;
     box.classList.add("show");
-
-    info.style.display =
-      "grid";
-
+    info.style.display = "grid";
     analysis.classList.add("show");
 
-    $("photo-name").textContent =
-      file.name;
-
-    $("photo-size").textContent =
-      formatBytes(file.size);
-
-    $("photo-date").textContent =
-      new Date(
-        file.lastModified
-      ).toLocaleString();
-
-    $("photo-location").textContent =
-      `Current field position: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
+    $("photo-name").textContent = file.name;
+    $("photo-size").textContent = formatBytes(file.size);
+    $("photo-date").textContent = new Date(file.lastModified).toLocaleString();
+    $("photo-location").textContent = `Current field position: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
 
     preview.onload = () => {
-
-      $("photo-dimensions").textContent =
-        `${preview.naturalWidth} × ${preview.naturalHeight}`;
-
-      const megapixels =
-        (
-          preview.naturalWidth *
-          preview.naturalHeight /
-          1000000
-        ).toFixed(1);
-
-      $("image-summary").textContent =
-        `Image loaded successfully. Resolution ${preview.naturalWidth} × ${preview.naturalHeight} (${megapixels} MP). File size ${formatBytes(file.size)}.`;
-
+      $("photo-dimensions").textContent = `${preview.naturalWidth} × ${preview.naturalHeight}`;
+      const megapixels = (preview.naturalWidth * preview.naturalHeight / 1000000).toFixed(1);
+      $("image-summary").textContent = `Image loaded successfully. Resolution ${preview.naturalWidth} × ${preview.naturalHeight} (${megapixels} MP). File size ${formatBytes(file.size)}.`;
     };
-
   };
 
   reader.readAsDataURL(file);
-
 }
-
-/* ------------------------------------------------------------
-   PHOTO UTILITIES
------------------------------------------------------------- */
 
 function formatBytes(bytes){
-
-  if(bytes === 0){
-    return "0 B";
-  }
-
-  const units =
-    ["B","KB","MB","GB"];
-
-  const i =
-    Math.floor(
-      Math.log(bytes) /
-      Math.log(1024)
-    );
-
-  return (
-    bytes /
-    Math.pow(1024,i)
-  ).toFixed(i ? 1 : 0) +
-    " " +
-    units[i];
-
+  if(bytes === 0) return "0 B";
+  const units = ["B","KB","MB","GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return (bytes / Math.pow(1024,i)).toFixed(i ? 1 : 0) + " " + units[i];
 }
 
-/* ------------------------------------------------------------
-   WAYPOINTS
------------------------------------------------------------- */
-
 function dropWaypoint(){
-
   if(!map) return;
+  const center = map.getCenter();
 
-  const center =
-    map.getCenter();
-
-  const marker =
-    L.marker(
-      [center.lat,center.lng],
-      {
-        icon:createMarkerIcon(
-          "green",
-          "W"
-        )
-      }
-    ).bindPopup(
-      "<div class='popup-title'>BUCKTRACK waypoint</div>" +
-      `<div class='popup-sub'>${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}</div>`
-    ).addTo(map);
+  const marker = L.marker(
+    [center.lat,center.lng],
+    { icon:createMarkerIcon("green","W") }
+  ).bindPopup(
+    "<div class='popup-title'>BUCKTRACK waypoint</div>" +
+    `<div class='popup-sub'>${center.lat.toFixed(5)}, ${center.lng.toFixed(5)}</div>`
+  ).addTo(map);
 
   waypoints.push(marker);
-
 }
 
 function clearWaypoints(){
-
-  waypoints.forEach(marker => {
-
-    map.removeLayer(marker);
-
-  });
-
+  waypoints.forEach(marker => map.removeLayer(marker));
   waypoints = [];
-
 }
 
-/* ------------------------------------------------------------
-   PANEL
------------------------------------------------------------- */
-
 function switchPanel(panel){
-
-  $("chat-tab").classList.toggle(
-    "active",
-    panel === "chat"
-  );
-
-  $("cam-tab").classList.toggle(
-    "active",
-    panel === "cam"
-  );
-
-  $("chat-panel").classList.toggle(
-    "active",
-    panel === "chat"
-  );
-
-  $("cam-panel").classList.toggle(
-    "active",
-    panel === "cam"
-  );
-
+  $("chat-tab").classList.toggle("active", panel === "chat");
+  $("cam-tab").classList.toggle("active", panel === "cam");
+  $("chat-panel").classList.toggle("active", panel === "chat");
+  $("cam-panel").classList.toggle("active", panel === "cam");
 }
 
 function mobileView(view){
+  if(window.innerWidth > 768) return;
 
-  if(window.innerWidth > 768){
-    return;
-  }
-
-  const panel =
-    $("side-panel");
-
-  $("dock-map").classList.toggle(
-    "active",
-    view === "map"
-  );
-
-  $("dock-desk").classList.toggle(
-    "active",
-    view === "desk"
-  );
-
-  $("dock-photo").classList.toggle(
-    "active",
-    view === "photo"
-  );
+  const panel = $("side-panel");
+  $("dock-map").classList.toggle("active", view === "map");
+  $("dock-desk").classList.toggle("active", view === "desk");
+  $("dock-photo").classList.toggle("active", view === "photo");
 
   if(view === "map"){
-
-    panel.classList.remove(
-      "mobile-open"
-    );
-
+    panel.classList.remove("mobile-open");
     return;
-
   }
 
-  panel.classList.add(
-    "mobile-open"
-  );
-
-  if(view === "desk"){
-    switchPanel("chat");
-  }
-
-  if(view === "photo"){
-    switchPanel("cam");
-  }
-
+  panel.classList.add("mobile-open");
+  if(view === "desk") switchPanel("chat");
+  if(view === "photo") switchPanel("cam");
 }
 
 function closeMobilePanel(){
-
-  $("side-panel").classList.remove(
-    "mobile-open"
-  );
-
-  $("dock-map").classList.add(
-    "active"
-  );
-
-  $("dock-desk").classList.remove(
-    "active"
-  );
-
-  $("dock-photo").classList.remove(
-    "active"
-  );
-
+  $("side-panel").classList.remove("mobile-open");
+  $("dock-map").classList.add("active");
+  $("dock-desk").classList.remove("active");
+  $("dock-photo").classList.remove("active");
 }
 
-/* ------------------------------------------------------------
-   ESCAPE HTML
------------------------------------------------------------- */
-
 function escapeHTML(value){
-
   return String(value)
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
-
 }
 
-/* ------------------------------------------------------------
-   RESPONSIVE MAP FIX
------------------------------------------------------------- */
+window.addEventListener("resize", () => {
+  if(map) setTimeout(() => map.invalidateSize(), 150);
+});
 
-window.addEventListener(
-  "resize",
-  () => {
-
-    if(map){
-
-      setTimeout(
-        () => map.invalidateSize(),
-        150
-      );
-
-    }
-
-  }
-);
-
-document.addEventListener(
-  "visibilitychange",
-  () => {
-
-    if(
-      !document.hidden &&
-      map
-    ){
-
-      setTimeout(
-        () => map.invalidateSize(),
-        150
-      );
-
-    }
-
-  }
-);
+document.addEventListener("visibilitychange", () => {
+  if(!document.hidden && map) setTimeout(() => map.invalidateSize(), 150);
+});
 </script>
 
 </body>
