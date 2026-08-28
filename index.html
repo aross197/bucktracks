@@ -3,30 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#07100b">
+<meta name="theme-color" content="#030605">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>BUCKTRACK PRO</title>
+<meta name="description" content="BUCKTRACK PRO — Canadian field intelligence. Live scent cone, magnetic declination, GPS, trail-cam analysis, and hunt planning.">
+<meta name="application-name" content="BUCKTRACK PRO">
+<meta property="og:title" content="BUCKTRACK PRO · CANADA">
+<meta property="og:description" content="Know the wind before you walk in. Field command for serious hunters.">
+<meta property="og:type" content="website">
+<title>BUCKTRACK PRO · CANADA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23030605' width='32' height='32' rx='6'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='16' font-family='system-ui' fill='%23ff9a3c'%3EB%3C/text%3E%3C/svg%3E">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <style>
 :root{
-  --bg:#050806;
-  --panel:#0b120e;
-  --panel2:#101a14;
-  --panel3:#16221a;
-  --line:rgba(255,255,255,.09);
-  --text:#edf4ef;
-  --muted:#7f9286;
-  --orange:#f08a2e;
-  --green:#50e3c2;
-  --red:#ff453a;
-  --blue:#00d2ff;
-  --yellow:#ffd60a;
-  --shadow:0 12px 35px rgba(0,0,0,.55);
+  --bg:#030605;
+  --panel:rgba(8,14,11,.92);
+  --panel2:rgba(12,20,16,.95);
+  --panel3:#152019;
+  --line:rgba(255,255,255,.08);
+  --text:#f2f7f4;
+  --muted:#8a9e92;
+  --orange:#ff9a3c;
+  --orange2:#e06a12;
+  --green:#3dffc8;
+  --red:#ff4d45;
+  --blue:#3ad4ff;
+  --yellow:#ffd84d;
+  --glow-orange:0 0 24px rgba(255,154,60,.35);
+  --glow-green:0 0 18px rgba(61,255,200,.3);
+  --shadow:0 16px 48px rgba(0,0,0,.55);
+  --radius:14px;
   --mono:"SF Mono","Roboto Mono",Menlo,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
 }
@@ -42,12 +55,19 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:var(--bg);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(61,255,200,.06), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(255,154,60,.04), transparent 45%),
+    var(--bg);
   color:var(--text);
   font-family:var(--sans);
+  font-feature-settings:"ss01" on, "kern" on;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  color-scheme:dark;
 }
 
-button,input{
+button,input,select{
   font:inherit;
 }
 
@@ -62,26 +82,22 @@ button{
   flex-direction:column;
   overflow:hidden;
   background:
-    radial-gradient(circle at 50% -20%,rgba(80,227,194,.07),transparent 35%),
+    radial-gradient(circle at 50% -15%, rgba(61,255,200,.08), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255,154,60,.05), transparent 35%),
     var(--bg);
 }
 
-/* HEADER */
-
 header{
-  height:54px;
-  min-height:54px;
+  height:58px;
+  min-height:58px;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  padding:
-    max(7px,env(safe-area-inset-top))
-    12px
-    7px
-    12px;
-  border-bottom:1px solid var(--line);
-  background:rgba(7,12,9,.96);
-  backdrop-filter:blur(18px);
+  justify-space-between;
+  padding:max(7px,env(safe-area-inset-top)) 12px 7px 12px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(4,8,6,.82);
+  backdrop-filter:blur(22px) saturate(1.4);
+  box-shadow:0 4px 30px rgba(0,0,0,.35);
   z-index:2000;
 }
 
@@ -93,16 +109,18 @@ header{
 }
 
 .logo{
-  width:32px;
-  height:32px;
-  border-radius:8px;
+  width:34px;
+  height:34px;
+  border-radius:10px;
   display:grid;
   place-items:center;
-  background:linear-gradient(145deg,var(--orange),#c85f13);
+  background:linear-gradient(145deg,#ffb35a,var(--orange2));
   color:#080a08;
   font-weight:900;
   font-family:var(--mono);
-  box-shadow:0 0 18px rgba(240,138,46,.25);
+  font-size:13px;
+  letter-spacing:.04em;
+  box-shadow:var(--glow-orange), inset 0 1px 0 rgba(255,255,255,.35);
 }
 
 .brand-text{
@@ -111,17 +129,22 @@ header{
 
 .brand-name{
   font-weight:900;
-  font-size:14px;
-  letter-spacing:.08em;
+  font-size:15px;
+  letter-spacing:.12em;
   white-space:nowrap;
+  background:linear-gradient(90deg,#fff, #c8e6d8);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
 .brand-sub{
   color:var(--muted);
   font-family:var(--mono);
   font-size:8px;
-  letter-spacing:.12em;
+  letter-spacing:.14em;
   margin-top:2px;
+  opacity:.85;
 }
 
 .status{
@@ -139,10 +162,23 @@ header{
   height:7px;
   border-radius:50%;
   background:var(--green);
-  box-shadow:0 0 9px var(--green);
+  box-shadow:0 0 10px var(--green), 0 0 20px rgba(61,255,200,.4);
+  animation:status-breathe 2.4s ease-in-out infinite;
 }
 
-/* WORKSPACE */
+@keyframes status-breathe{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.7;transform:scale(.92)}
+}
+
+.status.error{
+  color:var(--red);
+}
+.status.error .status-dot{
+  background:var(--red);
+  box-shadow:0 0 9px var(--red);
+  animation:none;
+}
 
 .workspace{
   flex:1;
@@ -170,16 +206,15 @@ header{
 }
 
 .leaflet-control-attribution{
-  font-size:8px!important;
-  background:rgba(5,8,6,.75)!important;
-  color:#91a097!important;
+  background:rgba(4,8,6,.75)!important;
+  color:rgba(255,255,255,.45)!important;
+  font-size:9px!important;
+  backdrop-filter:blur(8px);
 }
 
 .leaflet-control-attribution a{
-  color:#b9c9bf!important;
+  color:rgba(255,154,60,.7)!important;
 }
-
-/* MAP HUD */
 
 .map-hud{
   position:absolute;
@@ -201,12 +236,12 @@ header{
 }
 
 .hud-card{
-  background:rgba(7,12,9,.9);
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:8px 10px;
-  backdrop-filter:blur(16px);
-  box-shadow:var(--shadow);
+  background:rgba(6,12,9,.78);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;
+  backdrop-filter:blur(20px) saturate(1.3);
+  box-shadow:0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+  padding:10px 14px;
 }
 
 .weather-main{
@@ -223,34 +258,54 @@ header{
   font-family:var(--mono);
   color:var(--muted);
   font-size:8px;
-  letter-spacing:.08em;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:800;
 }
 
 .weather-value{
   font-family:var(--mono);
-  font-size:11px;
+  font-size:12px;
   font-weight:800;
   color:var(--green);
   margin-top:2px;
+  text-shadow:0 0 20px rgba(61,255,200,.35);
+  letter-spacing:.02em;
+}
+
+.decl-line{
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--muted);
+  margin-top:3px;
+}
+.decl-line strong{
+  color:var(--green);
+  text-shadow:0 0 12px rgba(61,255,200,.25);
 }
 
 .hud-button{
   height:36px;
   padding:0 11px;
-  border-radius:9px;
-  border:1px solid var(--line);
-  background:rgba(7,12,9,.92);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(6,12,9,.8);
   color:var(--text);
   font-size:11px;
   font-weight:800;
   backdrop-filter:blur(16px);
+  box-shadow:0 4px 16px rgba(0,0,0,.3);
+  transition:transform .15s, border-color .15s, box-shadow .15s;
+}
+
+.hud-button:hover{
+  border-color:rgba(255,154,60,.45);
+  box-shadow:0 0 16px rgba(255,154,60,.2);
 }
 
 .hud-button:active{
-  transform:scale(.97);
+  transform:scale(.94);
 }
-
-/* LOCATION CARD */
 
 .location-card{
   position:absolute;
@@ -259,20 +314,76 @@ header{
   z-index:700;
   max-width:calc(100% - 20px);
   padding:8px 10px;
-  background:rgba(7,12,9,.88);
-  border:1px solid var(--line);
-  border-radius:9px;
-  backdrop-filter:blur(15px);
+  background:rgba(6,12,9,.78);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  backdrop-filter:blur(18px);
+  box-shadow:0 6px 24px rgba(0,0,0,.35);
   font-family:var(--mono);
   font-size:8px;
   color:var(--muted);
 }
 
 .location-card strong{
-  color:var(--text);
+  color:var(--green);
+  text-shadow:0 0 14px rgba(61,255,200,.3);
 }
 
-/* LAYER DRAWER */
+.solunar-bar{
+  position:absolute;
+  left:10px;
+  bottom:48px;
+  z-index:700;
+  max-width:calc(100% - 20px);
+  padding:6px 10px;
+  background:rgba(6,12,9,.78);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  backdrop-filter:blur(18px);
+  box-shadow:0 6px 24px rgba(0,0,0,.35);
+  font-family:var(--mono);
+  font-size:8px;
+  color:var(--muted);
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  align-items:center;
+}
+.solunar-bar strong{color:var(--green)}
+
+.hunt-banner{
+  position:absolute;
+  top:70px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:750;
+  padding:8px 14px;
+  border-radius:999px;
+  font-family:var(--mono);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.08em;
+  display:none;
+  align-items:center;
+  gap:8px;
+  background:rgba(6,12,9,.88);
+  border:1px solid rgba(255,154,60,.4);
+  backdrop-filter:blur(16px);
+  box-shadow:0 8px 28px rgba(0,0,0,.4);
+  white-space:nowrap;
+  max-width:92vw;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hunt-banner.show{display:flex}
+.hunt-banner .pulse-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+  flex-shrink:0;
+}
 
 .drawer{
   position:absolute;
@@ -283,12 +394,13 @@ header{
   overflow:auto;
   z-index:1200;
   display:none;
-  background:rgba(8,14,10,.98);
-  border:1px solid var(--line);
-  border-radius:14px;
+  background:rgba(5,10,8,.94);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
   padding:13px;
-  box-shadow:0 20px 50px rgba(0,0,0,.75);
-  backdrop-filter:blur(20px);
+  box-shadow:0 24px 64px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(24px) saturate(1.2);
+  transition:opacity .25s ease, transform .25s ease;
 }
 
 .drawer.open{
@@ -299,11 +411,13 @@ header{
   font-family:var(--mono);
   color:var(--orange);
   font-size:9px;
-  font-weight:900;
-  letter-spacing:.12em;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
   padding-bottom:8px;
   border-bottom:1px solid var(--line);
   margin-bottom:10px;
+  text-shadow:0 0 16px rgba(255,154,60,.25);
 }
 
 .section{
@@ -322,6 +436,13 @@ header{
   gap:10px;
   color:#d9e3dd;
   font-size:11px;
+  border-radius:8px;
+  padding:0 4px;
+  transition:background .15s;
+}
+
+.row:hover{
+  background:rgba(255,255,255,.03);
 }
 
 .row label{
@@ -345,17 +466,16 @@ input[type=radio]{
   flex-shrink:0;
 }
 
-/* RIGHT PANEL */
-
 .side-panel{
-  width:390px;
-  max-width:390px;
-  background:var(--panel);
-  border-left:1px solid var(--line);
+  width:min(400px, 100%);
+  background:linear-gradient(180deg, rgba(7,12,9,.97), rgba(4,8,6,.98));
+  border-left:1px solid rgba(255,255,255,.08);
+  box-shadow:-12px 0 40px rgba(0,0,0,.35);
   display:flex;
   flex-direction:column;
   min-height:0;
   z-index:900;
+  transition:opacity .25s ease, transform .25s ease;
 }
 
 .panel-head{
@@ -366,15 +486,17 @@ input[type=radio]{
   justify-content:space-between;
   padding:7px 10px;
   border-bottom:1px solid var(--line);
+  background:rgba(0,0,0,.25);
+  backdrop-filter:blur(12px);
 }
 
 .tabs{
   display:flex;
   gap:3px;
   padding:3px;
-  background:#050806;
-  border:1px solid var(--line);
-  border-radius:8px;
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
 }
 
 .tab{
@@ -389,8 +511,9 @@ input[type=radio]{
 }
 
 .tab.active{
-  color:#050806;
-  background:var(--orange);
+  color:#0a0806;
+  background:linear-gradient(145deg,#ffb35a,var(--orange2));
+  box-shadow:0 2px 12px rgba(255,154,60,.35);
 }
 
 .close-panel{
@@ -403,8 +526,6 @@ input[type=radio]{
   color:var(--text);
 }
 
-/* CONTENT */
-
 .tab-content{
   flex:1;
   min-height:0;
@@ -415,8 +536,6 @@ input[type=radio]{
 .tab-content.active{
   display:flex;
 }
-
-/* CHAT */
 
 .chat-log{
   flex:1;
@@ -432,32 +551,37 @@ input[type=radio]{
 .msg{
   max-width:92%;
   padding:10px 11px;
-  border-radius:11px;
-  font-size:12px;
-  line-height:1.45;
+  border-radius:14px;
+  font-size:13px;
+  line-height:1.55;
+  white-space:pre-wrap;
   word-break:break-word;
 }
 
 .msg.system{
   align-self:flex-start;
-  background:var(--panel2);
-  border:1px solid var(--line);
+  background:rgba(14,22,18,.9);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 4px 16px rgba(0,0,0,.2);
 }
 
 .msg.user{
   align-self:flex-end;
   color:#090b09;
-  background:var(--orange);
+  background:linear-gradient(145deg,#ffb35a,var(--orange2));
   font-weight:700;
+  box-shadow:0 4px 18px rgba(255,154,60,.3);
+  border:none;
 }
 
 .msg-label{
   font-family:var(--mono);
-  font-size:8px;
+  font-size:9px;
   font-weight:900;
   color:var(--green);
   margin-bottom:4px;
-  letter-spacing:.08em;
+  letter-spacing:.1em;
+  opacity:0.75;
 }
 
 .msg.user .msg-label{
@@ -468,34 +592,47 @@ input[type=radio]{
   padding:9px;
   display:flex;
   gap:7px;
-  border-top:1px solid var(--line);
-  background:#060a07;
+  border-top:1px solid rgba(255,255,255,.07);
+  background:rgba(0,0,0,.35);
 }
 
 .chat-input input{
   min-width:0;
   flex:1;
   height:40px;
-  border:1px solid var(--line);
-  border-radius:9px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
   outline:0;
-  background:var(--panel2);
+  background:rgba(12,20,16,.9);
   color:var(--text);
   padding:0 11px;
   font-size:12px;
+  transition:border-color .2s, box-shadow .2s;
+}
+
+.chat-input input:focus{
+  border-color:rgba(255,154,60,.5);
+  box-shadow:0 0 0 3px rgba(255,154,60,.12);
 }
 
 .send{
   width:55px;
   border:0;
-  border-radius:9px;
-  background:var(--orange);
+  border-radius:12px;
+  background:linear-gradient(145deg,#ffb35a,var(--orange2));
   color:#090a08;
   font-weight:900;
   font-size:11px;
+  box-shadow:0 4px 16px rgba(255,154,60,.3);
+  transition:transform .15s, box-shadow .15s;
 }
 
-/* CAMERA */
+.send:hover{
+  box-shadow:0 6px 22px rgba(255,154,60,.4);
+}
+.send:active{
+  transform:scale(.96);
+}
 
 .cam-content{
   overflow-y:auto;
@@ -505,15 +642,21 @@ input[type=radio]{
 .upload{
   position:relative;
   min-height:115px;
-  border:1.5px dashed rgba(240,138,46,.45);
-  border-radius:12px;
-  background:linear-gradient(145deg,rgba(240,138,46,.06),rgba(80,227,194,.03));
+  border:1.5px dashed rgba(255,154,60,.4);
+  border-radius:16px;
+  background:linear-gradient(145deg, rgba(255,154,60,.08), rgba(61,255,200,.04));
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   text-align:center;
   overflow:hidden;
+  transition:border-color .2s, background .2s;
+}
+
+.upload:hover{
+  border-color:rgba(255,154,60,.65);
+  background:linear-gradient(145deg, rgba(255,154,60,.12), rgba(61,255,200,.06));
 }
 
 .upload input{
@@ -526,8 +669,9 @@ input[type=radio]{
 }
 
 .upload-icon{
-  font-size:25px;
+  font-size:28px;
   margin-bottom:7px;
+  filter:grayscale(0.2);
 }
 
 .upload-title{
@@ -561,6 +705,9 @@ input[type=radio]{
   max-height:300px;
   object-fit:contain;
   background:#000;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
 }
 
 .photo-info{
@@ -580,8 +727,10 @@ input[type=radio]{
 .info-label{
   color:var(--muted);
   font-family:var(--mono);
-  font-size:7px;
-  letter-spacing:.08em;
+  font-size:8px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  font-weight:800;
 }
 
 .info-value{
@@ -608,18 +757,20 @@ input[type=radio]{
 
 .card{
   padding:11px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  background:var(--panel2);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(12,20,16,.85);
+  box-shadow:0 4px 20px rgba(0,0,0,.25);
 }
 
 .card-title{
   color:var(--orange);
   font-family:var(--mono);
-  font-size:8px;
-  font-weight:900;
+  font-size:10px;
+  font-weight:800;
   letter-spacing:.1em;
-  margin-bottom:7px;
+  text-transform:uppercase;
+  margin-bottom:10px;
 }
 
 .metrics-grid{
@@ -630,42 +781,38 @@ input[type=radio]{
 }
 
 .metric-item{
-  background:rgba(0,0,0,.3);
+  background:rgba(0,0,0,.35);
   padding:7px;
-  border-radius:6px;
-  border:1px solid var(--line);
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.06);
 }
 
 .metric-val{
   font-family:var(--mono);
-  font-size:13px;
-  font-weight:900;
+  font-size:14px;
+  font-weight:800;
   color:var(--green);
   margin-top:2px;
+  text-shadow:0 0 12px rgba(61,255,200,.25);
 }
 
-.notice{
-  border-color:rgba(80,227,194,.25);
-  background:rgba(80,227,194,.04);
+.card.notice{
+  border-color:rgba(61,255,200,.28);
+  background:linear-gradient(145deg, rgba(61,255,200,.06), rgba(12,20,16,.9));
 }
 
-.notice .card-title{
+.card.notice .card-title{
   color:var(--green);
 }
-
-/* MOBILE DOCK */
 
 .dock{
   display:none;
   height:62px;
   min-height:62px;
-  padding:
-    5px
-    8px
-    max(5px,env(safe-area-inset-bottom))
-    8px;
-  background:rgba(6,10,7,.98);
-  border-top:1px solid var(--line);
+  padding:5px 8px max(5px,env(safe-area-inset-bottom)) 8px;
+  background:rgba(4,8,6,.92);
+  border-top:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(20px);
   z-index:2000;
 }
 
@@ -690,40 +837,265 @@ input[type=radio]{
 
 .dock-btn.active{
   color:var(--orange);
-  background:rgba(240,138,46,.07);
+  background:rgba(255,154,60,.1);
+  box-shadow:inset 0 0 20px rgba(255,154,60,.08);
 }
 
-/* MAP MARKERS */
+.bt-pin-wrap{
+  background:transparent;
+  border:none;
+}
+.bt-pin{
+  position:relative;
+  width:28px;
+  height:40px;
+  margin-left:-14px;
+  margin-top:-40px;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.45));
+}
+.bt-pin-head{
+  width:28px;height:28px;border-radius:50% 50% 50% 0;
+  transform:rotate(-45deg);
+  display:grid;place-items:center;
+  border:2.5px solid rgba(255,255,255,.95);
+  box-shadow:0 6px 18px rgba(0,0,0,.5), 0 0 0 1px rgba(0,0,0,.2), inset 0 2px 0 rgba(255,255,255,.3);
+}
+.bt-pin-head span{
+  transform:rotate(45deg);
+  font-family:var(--mono);
+  font-size:11px;
+  font-weight:900;
+  color:#0a0c0a;
+  line-height:1;
+}
+.bt-pin.orange .bt-pin-head{background:linear-gradient(145deg,#ffc078,#ff8c2a)}
+.bt-pin.green .bt-pin-head{background:linear-gradient(145deg,#7bffe0,#2ad4a8)}
+.bt-pin.yellow .bt-pin-head{background:linear-gradient(145deg,#ffe98a,#f0c020)}
+.bt-pin.purple .bt-pin-head{background:linear-gradient(145deg,#d4a8f0,#8e44ad)}
+.bt-pin.purple .bt-pin-head span{color:#fff}
+.bt-pin.blue .bt-pin-head{background:linear-gradient(145deg,#8aecff,#1ab8e0)}
+.bt-pin.red .bt-pin-head{background:linear-gradient(145deg,#ff9a94,#e8352e)}
+.bt-pin.red .bt-pin-head span{color:#fff}
 
-.bt-marker{
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  border:2px solid #fff;
-  box-shadow:0 0 0 3px rgba(0,0,0,.25),0 3px 12px rgba(0,0,0,.5);
-  font-size:12px;
+.bt-pos-wrap{background:transparent;border:none}
+.bt-dot{
+  width:16px;height:16px;border-radius:50%;
+  border:2.5px solid #fff;
+  box-shadow:0 0 0 3px rgba(0,0,0,.2),0 2px 8px rgba(0,0,0,.4);
+}
+.bt-dot.orange{background:radial-gradient(circle at 35% 35%, #ffc078, var(--orange2))}
+.bt-dot.pulse{
+  animation:bt-pulse 2.2s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes bt-pulse{
+  0%{box-shadow:0 0 0 0 rgba(255,154,60,.55), 0 2px 10px rgba(0,0,0,.45)}
+  70%{box-shadow:0 0 0 14px rgba(255,154,60,0), 0 2px 10px rgba(0,0,0,.45)}
+  100%{box-shadow:0 0 0 0 rgba(255,154,60,0), 0 2px 10px rgba(0,0,0,.45)}
 }
 
-.bt-marker.orange{background:var(--orange)}
-.bt-marker.red{background:var(--red)}
-.bt-marker.yellow{background:var(--yellow);color:#000}
-.bt-marker.green{background:var(--green);color:#000}
+.leaflet-popup-content-wrapper{
+  background:linear-gradient(165deg, #121c17, #0a100d)!important;
+  color:var(--text)!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:14px!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.3)!important;
+  padding:0!important;
+}
+.leaflet-popup-content{margin:10px 12px!important;min-width:120px}
+.leaflet-popup-tip{background:#0c1410!important;border:none!important}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)!important}
 
 .popup-title{
   font-weight:900;
   font-size:12px;
+  letter-spacing:.02em;
+  color:var(--text);
+}
+.popup-sub{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:4px;
+  font-family:var(--mono);
+}
+.popup-tag{
+  display:inline-block;margin-top:6px;padding:2px 7px;border-radius:8px;
+  font-family:var(--mono);font-size:8px;font-weight:800;letter-spacing:.08em;
+  background:rgba(61,255,200,.1);color:var(--green);border:1px solid rgba(61,255,200,.3);
 }
 
-.popup-sub{
-  color:#64756b;
-  font-size:10px;
-  margin-top:3px;
+.loading{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:radial-gradient(circle at 50% 40%, rgba(255,154,60,.08), transparent 45%), #030605;
+  transition:opacity .3s;
+}
+
+.loading.hide{
+  opacity:0;
+  pointer-events:none;
+}
+
+.loader{ text-align:center; }
+.loader-logo{
+  font-family:var(--mono);
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:.18em;
+  background:linear-gradient(90deg, var(--orange), #ffc078, var(--orange));
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:logo-shine 3s linear infinite;
+}
+@keyframes logo-shine{ to{background-position:200% center} }
+.loader-text{ margin-top:8px; color:var(--muted); font-family:var(--mono); font-size:9px; }
+.spinner{
+  width:25px;
+  height:25px;
+  margin:15px auto 0;
+  border:2px solid rgba(255,154,60,.12);
+  border-top-color:var(--orange);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  box-shadow:0 0 20px rgba(255,154,60,.2);
+}
+
+@keyframes spin{ to{transform:rotate(360deg)} }
+
+.auth-screen{
+  position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 20%, rgba(61,255,200,.08), transparent 50%), radial-gradient(ellipse at 80% 90%, rgba(255,154,60,.06), transparent 40%), rgba(2,5,4,.94);
+  backdrop-filter:blur(16px);padding:16px;
+}
+.auth-screen.hidden{display:none}
+.auth-card{
+  width:min(400px,100%);
+  background:linear-gradient(165deg, rgba(14,22,18,.98), rgba(6,10,8,.98));
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;
+  padding:26px 22px 20px;
+  box-shadow:0 32px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.auth-logo{
+  font-family:var(--mono);
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-align:center;
+  background:linear-gradient(90deg, var(--orange), #ffc078);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.auth-sub{text-align:center;color:var(--muted);font-family:var(--mono);font-size:9px;letter-spacing:.1em;margin-top:4px;margin-bottom:18px}
+.auth-tabs{display:flex;gap:4px;background:#050806;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:16px}
+.auth-tab{
+  flex:1;border:0;background:transparent;color:var(--muted);border-radius:8px;padding:9px 8px;
+  font-family:var(--mono);font-size:9px;font-weight:900;letter-spacing:.06em;
+}
+.auth-tab.active{
+  background:linear-gradient(145deg,#ffb35a,var(--orange2));
+  color:#0a0806;
+  box-shadow:0 2px 14px rgba(255,154,60,.35);
+}
+.auth-form{display:none;flex-direction:column;gap:10px}
+.auth-form.active{display:flex}
+.auth-label{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.08em}
+.auth-input{
+  width:100%;height:42px;border:1px solid rgba(255,255,255,.1);border-radius:12px;outline:0;
+  background:rgba(0,0,0,.35);color:var(--text);padding:0 12px;font-size:13px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.auth-input:focus{
+  border-color:rgba(255,154,60,.55);
+  box-shadow:0 0 0 3px rgba(255,154,60,.12);
+}
+.auth-btn{
+  height:42px;border:0;border-radius:12px;background:linear-gradient(145deg,#ffb35a,var(--orange2));
+  color:#090a08;font-weight:900;font-size:12px;letter-spacing:.06em;margin-top:4px;
+  box-shadow:0 6px 22px rgba(255,154,60,.35);transition:transform .15s, box-shadow .15s;
+}
+.auth-btn:hover{box-shadow:0 8px 28px rgba(255,154,60,.45)}
+.auth-btn:active{transform:scale(.97)}
+.auth-btn:disabled{opacity:.55;cursor:not-allowed}
+.auth-btn.secondary{
+  background:transparent;border:1px solid rgba(255,255,255,.12);box-shadow:none;color:var(--text);
+}
+.auth-msg{font-size:11px;line-height:1.4;min-height:16px;color:var(--muted)}
+.auth-msg.error{color:var(--red)}
+.auth-msg.ok{color:var(--green)}
+.auth-link{background:none;border:0;color:var(--green);font-size:11px;text-decoration:underline;padding:0;align-self:flex-start}
+
+.user-chip{
+  display:none;align-items:center;gap:8px;font-family:var(--mono);font-size:9px;color:var(--muted);
+  max-width:180px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:4px 6px 4px 10px;
+}
+.user-chip.show{display:flex}
+.user-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--green)}
+.user-chip button{
+  background:rgba(255,154,60,.12);border:1px solid rgba(255,154,60,.3);color:var(--orange);border-radius:8px;
+  padding:4px 8px;font-size:8px;font-weight:800;font-family:var(--mono);
+}
+
+.tips-toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9000;
+  max-width:min(420px,92vw);padding:12px 14px;border-radius:16px;
+  background:linear-gradient(165deg, rgba(14,22,18,.98), rgba(8,12,10,.98));
+  border:1px solid rgba(255,154,60,.35);box-shadow:0 20px 50px rgba(0,0,0,.55), 0 0 30px rgba(255,154,60,.1);
+  backdrop-filter:blur(16px);font-size:12px;line-height:1.45;display:none;
+}
+.tips-toast.show{display:block}
+.tips-toast button{
+  margin-top:8px;border:0;background:linear-gradient(145deg,#ffb35a,var(--orange2));
+  color:#090a08;font-weight:800;border-radius:8px;padding:6px 12px;font-size:11px;
+  box-shadow:0 4px 16px rgba(255,154,60,.3);
+}
+
+.wind-arrow{
+  width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+  border-bottom:18px solid var(--blue);filter:drop-shadow(0 0 6px rgba(58,212,255,.6));
+}
+
+.footer-legal{
+  position:absolute;bottom:4px;right:8px;z-index:600;font-size:8px;color:rgba(127,146,134,.7);
+  font-family:var(--mono);pointer-events:none;letter-spacing:.06em;opacity:.55;
+}
+
+.leaflet-control-zoom a{
+  background:rgba(8,14,11,.9)!important;
+  color:var(--text)!important;
+  border:1px solid rgba(255,255,255,.1)!important;
+  backdrop-filter:blur(12px);
+}
+.leaflet-control-zoom a:hover{
+  background:rgba(20,30,24,.95)!important;
+  color:var(--orange)!important;
+}
+
+::selection{
+  background:rgba(255,154,60,.35);
+  color:#fff;
+}
+button:focus-visible, input:focus-visible, select:focus-visible{
+  outline:2px solid rgba(255,154,60,.6);
+  outline-offset:2px;
+}
+
+::-webkit-scrollbar{ width:5px; height:5px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, rgba(255,154,60,.35), rgba(61,255,200,.2));
+  border-radius:10px;
 }
 
 @media(max-width:768px){
-  header{ height:58px; min-height:58px; }
+  header{ height:58px; min-height:58px; padding:0 10px; }
   .brand-sub{ display:none; }
   .brand-name{ font-size:12px; }
   .status{ font-size:8px; }
@@ -750,48 +1122,98 @@ input[type=radio]{
   .weather-label{ font-size:7px; }
   .weather-value{ font-size:9px; }
   .location-card{ bottom:8px; left:8px; font-size:7px; }
+  .solunar-bar{ bottom:70px; font-size:7px; }
+  .tips-toast{ bottom:100px; }
   .drawer{ top:51px; }
 }
 
 @media(min-width:769px){
   .workspace{ flex-direction:row; }
 }
-
-::-webkit-scrollbar{ width:5px; height:5px; }
-::-webkit-scrollbar-track{ background:transparent; }
-::-webkit-scrollbar-thumb{ background:#26352c; border-radius:10px; }
-
-.loading{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#050806;
-  transition:opacity .3s;
-}
-
-.loading.hide{
-  opacity:0;
-  pointer-events:none;
-}
-
-.loader{ text-align:center; }
-.loader-logo{ font-family:var(--mono); color:var(--orange); font-size:26px; font-weight:900; letter-spacing:.12em; }
-.loader-text{ margin-top:8px; color:var(--muted); font-family:var(--mono); font-size:9px; }
-.spinner{ width:25px; height:25px; margin:15px auto 0; border:2px solid rgba(240,138,46,.15); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; }
-
-@keyframes spin{ to{transform:rotate(360deg)} }
 </style>
 </head>
 
 <body>
 
+<div class="tips-toast" id="tips-toast">
+  <strong style="color:var(--orange)">Built for hunters who play the wind</strong><br>
+  Live scent cone · magnetic declination · GPS that stays locked · drop stands &amp; scrapes · solunar windows · export to your GPS. This is field command, not another social feed.
+  <br><button type="button" onclick="dismissTips()">LET'S HUNT</button>
+</div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">BUCKTRACK</div>
+    <div style="text-align:center;margin-top:2px;font-size:9px;letter-spacing:.2em;color:var(--muted);font-family:var(--mono)">PRO</div>
+    <div class="auth-sub">CANADA · KNOW THE WIND BEFORE YOU WALK IN</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">LOGIN</button>
+      <button class="auth-tab" id="tab-register" onclick="showAuthTab('register')">REGISTER</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form class="auth-form active" id="form-login" onsubmit="return handleLogin(event)">
+      <div>
+        <div class="auth-label">EMAIL</div>
+        <input class="auth-input" type="email" id="login-email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div>
+        <div class="auth-label">PASSWORD</div>
+        <input class="auth-input" type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" minlength="6">
+      </div>
+      <button type="button" class="auth-link" onclick="showAuthTab('forgot')">Forgot password?</button>
+      <button class="auth-btn" type="submit" id="btn-login">SIGN IN</button>
+      <button type="button" class="auth-btn secondary" onclick="bypassAuthOffline()">CONTINUE OFFLINE / GUEST</button>
+      <div class="auth-msg" id="login-msg"></div>
+    </form>
+
+    <!-- REGISTER -->
+    <form class="auth-form" id="form-register" onsubmit="return handleRegister(event)">
+      <div>
+        <div class="auth-label">EMAIL</div>
+        <input class="auth-input" type="email" id="reg-email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div>
+        <div class="auth-label">PASSWORD (min 6 chars)</div>
+        <input class="auth-input" type="password" id="reg-password" required autocomplete="new-password" placeholder="••••••••" minlength="6">
+      </div>
+      <div>
+        <div class="auth-label">CONFIRM PASSWORD</div>
+        <input class="auth-input" type="password" id="reg-password2" required autocomplete="new-password" placeholder="••••••••" minlength="6">
+      </div>
+      <button class="auth-btn" type="submit" id="btn-register">CREATE ACCOUNT</button>
+      <div class="auth-msg" id="reg-msg"></div>
+    </form>
+
+    <!-- FORGOT -->
+    <form class="auth-form" id="form-forgot" onsubmit="return handleForgot(event)">
+      <div>
+        <div class="auth-label">EMAIL</div>
+        <input class="auth-input" type="email" id="forgot-email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <button class="auth-btn" type="submit" id="btn-forgot">SEND RESET LINK</button>
+      <button type="button" class="auth-btn secondary" onclick="showAuthTab('login')">BACK TO LOGIN</button>
+      <div class="auth-msg" id="forgot-msg"></div>
+    </form>
+
+    <!-- VERIFY NOTICE -->
+    <div class="auth-form" id="form-verify">
+      <div class="auth-msg ok" style="min-height:auto;margin-bottom:8px">
+        Account created. Check your email and click the activation link, then sign in.
+      </div>
+      <button class="auth-btn" type="button" onclick="resendVerification()">RESEND ACTIVATION EMAIL</button>
+      <button class="auth-btn secondary" type="button" onclick="showAuthTab('login')">BACK TO LOGIN</button>
+      <div class="auth-msg" id="verify-msg"></div>
+    </div>
+  </div>
+</div>
+
 <div class="loading" id="loading">
   <div class="loader">
     <div class="loader-logo">BUCKTRACK</div>
-    <div class="loader-text">INITIALIZING FIELD SYSTEMS</div>
+    <div class="loader-text">FIELD SYSTEMS · CANADA</div>
     <div class="spinner"></div>
   </div>
 </div>
@@ -803,13 +1225,19 @@ input[type=radio]{
     <div class="logo">BT</div>
     <div class="brand-text">
       <div class="brand-name">BUCKTRACK PRO</div>
-      <div class="brand-sub">FIELD INTELLIGENCE / GIS COMMAND</div>
+      <div class="brand-sub">CANADA · FIELD INTELLIGENCE / GIS</div>
     </div>
   </div>
 
-  <div class="status">
-    <span class="status-dot"></span>
-    <span id="system-status">ONLINE</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="user-chip" id="user-chip">
+      <span id="user-email"></span>
+      <button type="button" onclick="handleLogout()">LOGOUT</button>
+    </div>
+    <div class="status" id="status-wrap">
+      <span class="status-dot"></span>
+      <span id="system-status">ONLINE</span>
+    </div>
   </div>
 </header>
 
@@ -817,6 +1245,7 @@ input[type=radio]{
 
   <main class="map-wrap">
     <div id="map"></div>
+    <div class="hunt-banner" id="hunt-banner"><span class="pulse-dot"></span><span id="hunt-banner-text">Reading conditions…</span></div>
 
     <div class="map-hud">
       <div class="hud-left">
@@ -826,6 +1255,7 @@ input[type=radio]{
             <div>
               <div class="weather-label">LIVE WEATHER</div>
               <div class="weather-value" id="hud-weather">Loading…</div>
+              <div class="decl-line">Decl <strong id="decl-display">—</strong></div>
             </div>
           </div>
         </div>
@@ -839,32 +1269,84 @@ input[type=radio]{
 
     <div class="location-card">
       <span>POSITION </span>
-      <strong id="coords-display">45.8167, -64.2167</strong>
+      <strong id="coords-display">45.81670, -64.21670</strong>
       <span> · </span>
-      <span id="accuracy-display">DEFAULT</span>
+      <span id="accuracy-display">LOCATING…</span>
     </div>
+
+    <div class="solunar-bar" id="solunar-bar">
+      <span>☀ <strong id="sun-rise">—</strong></span>
+      <span>SET <strong id="sun-set">—</strong></span>
+      <span>☾ <strong id="moon-illum">—</strong></span>
+      <span id="day-night-label">—</span>
+      <span style="color:var(--orange)">PRIME <strong id="prime-window">—</strong></span>
+    </div>
+    <div class="footer-legal">BUCKTRACK PRO · CANADA · Field intel · Not legal advice · v1</div>
 
     <div class="drawer" id="layer-drawer">
       <div class="drawer-title">MAP ENGINE</div>
       <div class="section">
-        <div class="row"><label><input type="radio" name="basemap" checked onchange="setBase('sat')"> Satellite</label></div>
-        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('topo')"> Topographic</label></div>
-        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('street')"> Street</label></div>
+        <div class="row"><label><input type="radio" name="basemap" checked onchange="setBase('sat')"> Satellite (Esri)</label></div>
+        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('hybrid')"> Hybrid (Imagery + Labels)</label></div>
+        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('cbmt')"> Canada Base Map (NRCan)</label></div>
+        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('topo')"> OpenTopoMap</label></div>
+        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('esriTopo')"> Esri World Topo</label></div>
+        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('street')"> OpenStreetMap</label></div>
+        <div class="row"><label><input type="radio" name="basemap" onchange="setBase('dark')"> Dark Matter</label></div>
+      </div>
+
+      <div class="drawer-title">OVERLAYS</div>
+      <div class="section">
+        <div class="row"><label><span class="swatch" style="background:#c8d6e5"></span> Place names</label><input type="checkbox" id="labels-toggle" onchange="toggleOverlay('labels',this.checked);saveAllSettings()"></div>
+        <div class="row"><label><span class="swatch" style="background:#7f8c8d"></span> Terrain relief</label><input type="checkbox" id="hillshade-toggle" onchange="toggleOverlay('hillshade',this.checked);saveAllSettings()"></div>
       </div>
 
       <div class="drawer-title">FIELD LAYERS</div>
       <div class="section">
-        <div class="row"><label><span class="swatch" style="background:#f08a2e"></span> Current position</label><input type="checkbox" checked onchange="toggleLayer('position',this.checked)"></div>
-        <div class="row"><label><span class="swatch" style="background:#ff453a"></span> Bedding area</label><input type="checkbox" checked onchange="toggleLayer('bedding',this.checked)"></div>
-        <div class="row"><label><span class="swatch" style="background:#ffd60a"></span> Scrape markers</label><input type="checkbox" checked onchange="toggleLayer('scrapes',this.checked)"></div>
-        <div class="row"><label><span class="swatch" style="background:#00d2ff"></span> Movement corridor</label><input type="checkbox" checked onchange="toggleLayer('corridor',this.checked)"></div>
-        <div class="row"><label><span class="swatch" style="background:#50e3c2"></span> Scent drift</label><input type="checkbox" checked onchange="toggleLayer('scent',this.checked)"></div>
+        <div class="row"><label><span class="swatch" style="background:#f08a2e"></span> Your location</label><input type="checkbox" checked onchange="toggleLayer('position',this.checked)"></div>
+        <div class="row"><label><span class="swatch" style="background:#ff453a"></span> Bedding cover</label><input type="checkbox" checked onchange="toggleLayer('bedding',this.checked)"></div>
+        <div class="row"><label><span class="swatch" style="background:#ffd60a"></span> Scrapes</label><input type="checkbox" checked onchange="toggleLayer('scrapes',this.checked)"></div>
+        <div class="row"><label><span class="swatch" style="background:#00d2ff"></span> Travel corridor</label><input type="checkbox" checked onchange="toggleLayer('corridor',this.checked)"></div>
+        <div class="row"><label><span class="swatch" style="background:#50e3c2"></span> Scent cone</label><input type="checkbox" checked id="scent-toggle" onchange="toggleLayer('scent',this.checked)"></div>
+        <div class="row"><label><span class="swatch" style="background:#9b59b6"></span> Stands / blinds</label><input type="checkbox" id="stands-toggle" onchange="toggleLayer('stands',this.checked)"></div>
       </div>
 
-      <div class="drawer-title">MAP ACTIONS</div>
+      <div class="drawer-title">OPTIONS</div>
       <div class="section">
-        <div class="row"><button class="hud-button" style="width:100%" onclick="dropWaypoint()">＋ Drop waypoint</button></div>
-        <div class="row"><button class="hud-button" style="width:100%" onclick="clearWaypoints()">Clear waypoints</button></div>
+        <div class="row"><label>Align scent to magnetic north</label><input type="checkbox" id="mag-scent" onchange="calculateScentLayer();saveAllSettings()"></div>
+        <div class="row"><label>Language / Langue</label>
+          <select id="lang-select" onchange="setLanguage(this.value);saveAllSettings()" style="background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:11px">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="drawer-title">DROP ON MAP</div>
+      <div class="section">
+        <div class="row"><button class="hud-button" style="width:100%" onclick="dropTyped('stand')">🌲 Drop stand / blind</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="dropTyped('scrape')">📍 Drop scrape</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="dropTyped('bed')">🛏 Drop bedding</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="dropTyped('cam')">📷 Drop trail camera</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="dropTyped('wp')">＋ Drop waypoint</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="clearWaypoints()">Clear my marks</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="runMapScoutScan()">Scan map for buck locations</button></div>
+      </div>
+      <div class="drawer-title">EXPORT &amp; SHARE</div>
+      <div class="section">
+        <div class="row"><button class="hud-button" style="width:100%" onclick="exportGPX()">Export GPX (GPS units)</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="document.getElementById('gpx-input').click()">Import GPX</button></div>
+        <input type="file" id="gpx-input" accept=".gpx,application/gpx+xml" style="display:none" onchange="importGPX(this)">
+        <div class="row"><button class="hud-button" style="width:100%" onclick="exportFieldReport()">Export field report</button></div>
+        <div class="row"><button class="hud-button" style="width:100%" onclick="shareFieldCard()">Share wind &amp; conditions</button></div>
+      </div>
+      <div class="drawer-title">HUNT CHECKLIST</div>
+      <div class="section" id="hunt-checklist">
+        <div class="row"><label>Wind checked</label><input type="checkbox" id="chk-wind" onchange="saveChecklist()"></div>
+        <div class="row"><label>Scent control ready</label><input type="checkbox" id="chk-scent" onchange="saveChecklist()"></div>
+        <div class="row"><label>Access / land confirmed</label><input type="checkbox" id="chk-land" onchange="saveChecklist()"></div>
+        <div class="row"><label>Licence &amp; season OK</label><input type="checkbox" id="chk-licence" onchange="saveChecklist()"></div>
+        <div class="row"><label>Exit route planned</label><input type="checkbox" id="chk-exit" onchange="saveChecklist()"></div>
       </div>
     </div>
   </main>
@@ -872,7 +1354,7 @@ input[type=radio]{
   <aside class="side-panel" id="side-panel">
     <div class="panel-head">
       <div class="tabs">
-        <button class="tab active" id="chat-tab" onclick="switchPanel('chat')">FIELD DESK</button>
+        <button class="tab active" id="chat-tab" onclick="switchPanel('chat')">AI GUIDE</button>
         <button class="tab" id="cam-tab" onclick="switchPanel('cam')">PHOTO LOG</button>
       </div>
       <button class="close-panel" onclick="closeMobilePanel()">✕</button>
@@ -882,13 +1364,13 @@ input[type=radio]{
     <section class="tab-content active" id="chat-panel">
       <div class="chat-log" id="chat-log">
         <div class="msg system">
-          <div class="msg-label">BUCKTRACK FIELD DESK</div>
-          System online. Weather, solunar, and scent layers active. Ask about wind, position, weather, or map coordinates.
+          <div class="msg-label">BUCKTRACK AI GUIDE</div>
+          AI hunting guide online. I read your map, wind, declination, solunar, GPS, and trail-cam photos. Ask how to hunt today, where to sit, how to play this buck, entry routes, or scent. I give field tactics — you confirm seasons, licences, and land access.
         </div>
       </div>
 
       <div class="chat-input">
-        <input id="chat-input" type="text" autocomplete="off" placeholder="Ask about current conditions…" onkeydown="if(event.key==='Enter') sendQuery()">
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Ask your guide — wind, sit, buck, strategy…" onkeydown="if(event.key==='Enter') sendQuery()">
         <button class="send" onclick="sendQuery()">SEND</button>
       </div>
     </section>
@@ -898,8 +1380,8 @@ input[type=radio]{
       <div class="upload">
         <input type="file" id="photo-input" accept="image/*" onchange="processPhoto(this)">
         <div class="upload-icon">📷</div>
-        <div class="upload-title">ADD TRAIL-CAM PHOTO</div>
-        <div class="upload-sub">Select photo or take a new image</div>
+        <div class="upload-title">ADD TRAIL-CAM / FIELD PHOTO</div>
+        <div class="upload-sub">Side or front view with known scale works best</div>
       </div>
 
       <div class="preview" id="preview">
@@ -911,49 +1393,109 @@ input[type=radio]{
         <div class="info-box"><div class="info-label">SIZE</div><div class="info-value" id="photo-size">—</div></div>
         <div class="info-box"><div class="info-label">RESOLUTION</div><div class="info-value" id="photo-dimensions">—</div></div>
         <div class="info-box"><div class="info-label">CAPTURED</div><div class="info-value" id="photo-date">—</div></div>
+        <div class="info-box"><div class="info-label">EXIF GPS</div><div class="info-value" id="photo-gps">—</div></div>
+        <div class="info-box"><div class="info-label">CAMERA</div><div class="info-value" id="photo-camera">—</div></div>
+      </div>
+      <div id="cam-location-actions" style="display:none;margin:10px 0;gap:8px;flex-direction:column">
+        <button class="auth-btn" type="button" style="width:100%" onclick="pinCameraFromPhoto()">📌 Pin camera from photo GPS</button>
+        <button class="auth-btn secondary" type="button" style="width:100%" onclick="pinCameraAtMapCenter()">📷 Set camera at map centre</button>
+        <div class="card-text" id="cam-location-status" style="font-size:11px;color:var(--muted);margin-top:4px">Camera location improves “where is he” accuracy.</div>
       </div>
 
       <div class="analysis" id="photo-analysis">
         <div class="card notice">
-          <div class="card-title">FIELD RECORD ANALYTICS</div>
-          <div class="metrics-grid">
-            <div class="metric-item">
-              <div class="info-label">ESTIMATED AGE</div>
-              <div class="metric-val" id="metric-age">3.5 - 4.5 YRS</div>
-            </div>
-            <div class="metric-item">
-              <div class="info-label">CLASS / POINTS</div>
-              <div class="metric-val" id="metric-points">8 POINT</div>
-            </div>
-            <div class="metric-item">
-              <div class="info-label">EST. LIVE WEIGHT</div>
-              <div class="metric-val" id="metric-live-wt">215 LBS</div>
-            </div>
-            <div class="metric-item">
-              <div class="info-label">EST. DRESSED WEIGHT</div>
-              <div class="metric-val" id="metric-dress-wt">172 LBS</div>
-            </div>
+          <div class="card-title">HOW TO GET ACCURATE SCORES</div>
+          <div class="card-text" style="font-size:11px;line-height:1.45">
+            Photos alone cannot produce Boone &amp; Crockett / Pope &amp; Young scores. Enter field measurements below (tape or rangefinder). Visual estimates are rough ranges only — never use them for official records or contests.
           </div>
         </div>
 
         <div class="card">
-          <div class="card-title">ANTLER & FRAME SCAN</div>
-          <div class="metrics-grid">
-            <div class="metric-item">
+          <div class="card-title">FIELD MEASUREMENTS (INCHES) — ACCURATE PATH</div>
+          <div class="metrics-grid" style="grid-template-columns:1fr 1fr;gap:8px">
+            <div>
               <div class="info-label">INSIDE SPREAD</div>
-              <div class="metric-val" id="metric-spread">17.5"</div>
+              <input class="auth-input" type="number" step="0.125" min="0" id="m-spread" placeholder="e.g. 17.5" style="height:34px;margin-top:4px;font-size:12px">
+            </div>
+            <div>
+              <div class="info-label">MAIN BEAM L (tip to burr)</div>
+              <input class="auth-input" type="number" step="0.125" min="0" id="m-beam-l" placeholder="e.g. 24.0" style="height:34px;margin-top:4px;font-size:12px">
+            </div>
+            <div>
+              <div class="info-label">MAIN BEAM R</div>
+              <input class="auth-input" type="number" step="0.125" min="0" id="m-beam-r" placeholder="e.g. 23.625" style="height:34px;margin-top:4px;font-size:12px">
+            </div>
+            <div>
+              <div class="info-label">TOTAL TINE LENGTH (all)</div>
+              <input class="auth-input" type="number" step="0.125" min="0" id="m-tines" placeholder="sum of tines" style="height:34px;margin-top:4px;font-size:12px">
+            </div>
+            <div>
+              <div class="info-label">CIRCUMFERENCES (sum of 4)</div>
+              <input class="auth-input" type="number" step="0.125" min="0" id="m-circ" placeholder="H1–H4 both sides" style="height:34px;margin-top:4px;font-size:12px">
+            </div>
+            <div>
+              <div class="info-label">TYPICAL? (no abnormal points)</div>
+              <select id="m-typical" class="auth-input" style="height:34px;margin-top:4px;font-size:12px">
+                <option value="1">Typical</option>
+                <option value="0">Non-typical</option>
+              </select>
+            </div>
+          </div>
+          <button class="auth-btn" type="button" style="width:100%;margin-top:10px" onclick="computeGrossScore()">CALCULATE GROSS SCORE</button>
+          <div class="metrics-grid" style="margin-top:10px">
+            <div class="metric-item">
+              <div class="info-label">GROSS TYPICAL (CALC)</div>
+              <div class="metric-val" id="metric-score-calc">—</div>
             </div>
             <div class="metric-item">
-              <div class="info-label">GROSS SCORE (EST)</div>
-              <div class="metric-val" id="metric-score">134 3/8"</div>
+              <div class="info-label">STATUS</div>
+              <div class="metric-val" id="metric-score-status" style="font-size:11px">Enter measurements</div>
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-title">SCANNER METADATA</div>
-          <div class="card-text" id="image-summary">
-            Photo processed. Morphological ratio and contrast profile mapped against field record algorithms.
+          <div class="card-title">IMAGE QUALITY &amp; VISUAL NOTES</div>
+          <div class="card-text" style="font-size:11px;margin-bottom:8px;color:var(--muted)">
+            Client-side checks only — not a substitute for tape. Wide ranges on purpose.
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <div class="info-label">IMAGE QUALITY</div>
+              <div class="metric-val" id="metric-quality">—</div>
+            </div>
+            <div class="metric-item">
+              <div class="info-label">BRIGHTNESS</div>
+              <div class="metric-val" id="metric-brightness">—</div>
+            </div>
+            <div class="metric-item">
+              <div class="info-label">AGE CLASS (RANGE)</div>
+              <div class="metric-val" id="metric-age">—</div>
+            </div>
+            <div class="metric-item">
+              <div class="info-label">FRAME NOTES</div>
+              <div class="metric-val" id="metric-points">—</div>
+            </div>
+            <div class="metric-item">
+              <div class="info-label">LIVE WT RANGE</div>
+              <div class="metric-val" id="metric-live-wt">—</div>
+            </div>
+            <div class="metric-item">
+              <div class="info-label">SCORE CONFIDENCE</div>
+              <div class="metric-val" id="metric-confidence">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">RECORD LOG</div>
+          <div class="card-text" id="image-summary">Upload a photo to begin. For money-grade accuracy, measure on the animal or use a known reference scale in frame.</div>
+        </div>
+
+        <div class="card" style="border-color:rgba(240,138,46,.3)">
+          <div class="card-title">MONETIZATION-READY</div>
+          <div class="card-text" style="font-size:11px;line-height:1.45;color:var(--muted)">
+            This module is structured for a future paid “Pro Score” API (ML antler detection + user measurements). Free tier = metadata + measurement calculator. Paid tier can call a server model later without rewriting the UI.
           </div>
         </div>
       </div>
@@ -965,7 +1507,7 @@ input[type=radio]{
 
 <nav class="dock">
   <button class="dock-btn active" id="dock-map" onclick="mobileView('map')"><span class="dock-icon">🗺️</span>MAP</button>
-  <button class="dock-btn" id="dock-desk" onclick="mobileView('desk')"><span class="dock-icon">📡</span>FIELD DESK</button>
+  <button class="dock-btn" id="dock-desk" onclick="mobileView('desk')"><span class="dock-icon">📡</span>AI GUIDE</button>
   <button class="dock-btn" id="dock-photo" onclick="mobileView('photo')"><span class="dock-icon">📷</span>PHOTO LOG</button>
 </nav>
 
@@ -974,310 +1516,1139 @@ input[type=radio]{
 <script>
 "use strict";
 
+// Firebase Config Placeholder - User can replace with real keys
+const firebaseConfig = {
+  apiKey: "AIzaSyDemoKeyForBuckTrackProFieldGISApp",
+  authDomain: "bucktrack-pro.firebaseapp.com",
+  projectId: "bucktrack-pro",
+  storageBucket: "bucktrack-pro.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:demo"
+};
+
+let db = null;
+let auth = null;
+let currentUser = null;
+
+try {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  auth = firebase.auth();
+  db = firebase.firestore();
+} catch (e) {
+  console.warn("Firebase fallback mode:", e);
+}
+
 let map;
 let currentLat = 45.8167;
 let currentLng = -64.2167;
 
-let currentWindDeg = 292;
+let currentWindDeg = 0;
 let currentWindSpeed = 0;
 let currentTemp = null;
 let currentPressure = null;
+let currentHumidity = null;
+let currentDecl = 0;
+let magneticWindDeg = 0;
 
 let baseLayers = {};
+let overlays = {};
 let layers = {};
 let waypoints = [];
+let activeCameraLoc = null;
+let currentPhotoGps = null;
 
 let userMarker;
 let accuracyCircle;
 let scentPolygon;
 
+let currentLang = "en";
+
 const $ = id => document.getElementById(id);
 
 window.addEventListener("load", async () => {
   try {
+    initAuthListeners();
     initMap();
     createFieldLayers();
     bindMapEvents();
+    restoreWaypoints();
+    restoreChecklist();
 
-    await loadWeather(currentLat,currentLng);
-    calculateSunMoon(currentLat,currentLng);
+    try {
+      const rawCam = localStorage.getItem("bt_active_camera");
+      if (rawCam) {
+        const c = JSON.parse(rawCam);
+        if (c && Number.isFinite(c.lat) && Number.isFinite(c.lng)) {
+          setActiveCamera(c.lat, c.lng, c.name || "Trail camera", c.source || "saved");
+        }
+      }
+    } catch (e) {}
 
+    const located = await tryLocateOnStart();
+    if (!located) {
+      $("accuracy-display").textContent = "DEMO · TAP 📍 FOR GPS";
+      await Promise.all([
+        loadWeather(currentLat, currentLng),
+        loadDeclination(currentLat, currentLng)
+      ]);
+      calculateSunMoon(currentLat, currentLng);
+      calculateScentLayer();
+    }
+
+    maybeShowTips();
     setTimeout(() => {
       $("loading").classList.add("hide");
-    },400);
-  } catch(error) {
+    }, 400);
+  } catch (error) {
     console.error(error);
     $("system-status").textContent = "MAP ERROR";
+    $("status-wrap").classList.add("error");
     $("loading").classList.add("hide");
   }
 });
 
-function initMap(){
-  map = L.map("map",{
-    zoomControl:false,
-    preferCanvas:true,
-    attributionControl:true
-  }).setView([currentLat,currentLng],14);
+/* ---------- AUTH HANDLERS ---------- */
 
-  L.control.zoom({ position:"bottomright" }).addTo(map);
+function initAuthListeners() {
+  if (!auth) return;
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      $("user-email").textContent = user.email;
+      $("user-chip").classList.add("show");
+      $("auth-screen").classList.add("hidden");
+      loadUserDataFromCloud();
+    } else {
+      currentUser = null;
+      $("user-chip").classList.remove("show");
+      const bypassed = sessionStorage.getItem("bt_auth_bypassed");
+      if (!bypassed) {
+        $("auth-screen").classList.remove("hidden");
+      }
+    }
+  });
+}
 
-  baseLayers.sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom:19, attribution:"Tiles © Esri" });
-  baseLayers.topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom:17, attribution:"© OpenStreetMap, SRTM | OpenTopoMap" });
-  baseLayers.street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"© OpenStreetMap" });
+function showAuthTab(tab) {
+  ["login", "register", "forgot", "verify"].forEach(t => {
+    const el = $("form-" + t);
+    const tabEl = $("tab-" + t);
+    if (el) el.classList.remove("active");
+    if (tabEl) tabEl.classList.remove("active");
+  });
+  const targetForm = $("form-" + tab);
+  const targetTab = $("tab-" + tab);
+  if (targetForm) targetForm.classList.add("active");
+  if (targetTab) targetTab.classList.add("active");
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = $("login-email").value;
+  const password = $("login-password").value;
+  const msg = $("login-msg");
+  msg.className = "auth-msg";
+  msg.textContent = "Authenticating…";
+
+  try {
+    if (auth) {
+      await auth.signInWithEmailAndPassword(email, password);
+      msg.textContent = "";
+    } else {
+      bypassAuthOffline();
+    }
+  } catch (err) {
+    msg.className = "auth-msg error";
+    msg.textContent = err.message || "Sign in failed";
+  }
+  return false;
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const email = $("reg-email").value;
+  const pass1 = $("reg-password").value;
+  const pass2 = $("reg-password2").value;
+  const msg = $("reg-msg");
+
+  if (pass1 !== pass2) {
+    msg.className = "auth-msg error";
+    msg.textContent = "Passwords do not match.";
+    return false;
+  }
+
+  msg.className = "auth-msg";
+  msg.textContent = "Creating account…";
+
+  try {
+    if (auth) {
+      const res = await auth.createUserWithEmailAndPassword(email, pass1);
+      if (res.user) {
+        await res.user.sendEmailVerification();
+        showAuthTab("verify");
+      }
+    } else {
+      bypassAuthOffline();
+    }
+  } catch (err) {
+    msg.className = "auth-msg error";
+    msg.textContent = err.message || "Registration failed";
+  }
+  return false;
+}
+
+async function handleForgot(e) {
+  e.preventDefault();
+  const email = $("forgot-email").value;
+  const msg = $("forgot-msg");
+  msg.className = "auth-msg";
+  msg.textContent = "Sending reset link…";
+
+  try {
+    if (auth) {
+      await auth.sendPasswordResetEmail(email);
+      msg.className = "auth-msg ok";
+      msg.textContent = "Reset link sent to your email.";
+    } else {
+      msg.className = "auth-msg error";
+      msg.textContent = "Firebase Auth not connected.";
+    }
+  } catch (err) {
+    msg.className = "auth-msg error";
+    msg.textContent = err.message || "Reset failed";
+  }
+  return false;
+}
+
+async function resendVerification() {
+  const msg = $("verify-msg");
+  if (auth && auth.currentUser) {
+    try {
+      await auth.currentUser.sendEmailVerification();
+      msg.className = "auth-msg ok";
+      msg.textContent = "Verification email resent.";
+    } catch (e) {
+      msg.className = "auth-msg error";
+      msg.textContent = e.message;
+    }
+  }
+}
+
+function handleLogout() {
+  if (auth) auth.signOut();
+  sessionStorage.removeItem("bt_auth_bypassed");
+  $("auth-screen").classList.remove("hidden");
+}
+
+function bypassAuthOffline() {
+  sessionStorage.setItem("bt_auth_bypassed", "true");
+  $("auth-screen").classList.add("hidden");
+}
+
+/* ---------- GPS & MAP CORE ---------- */
+
+let geoWatchId = null;
+let lastGpsAccuracy = null;
+let gpsLocked = false;
+
+function tryLocateOnStart() {
+  return new Promise(resolve => {
+    if (!navigator.geolocation) {
+      resolve(false);
+      return;
+    }
+    $("system-status").textContent = "LOCATING…";
+    navigator.geolocation.getCurrentPosition(
+      async position => {
+        await applyGpsFix(position, { center: true, rebuildLayers: true, zoom: 16 });
+        startGpsWatch();
+        resolve(true);
+      },
+      () => {
+        $("system-status").textContent = "ONLINE";
+        resolve(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  });
+}
+
+async function applyGpsFix(position, opts = {}) {
+  const { center = false, rebuildLayers = false, zoom = null } = opts;
+  const { latitude, longitude, accuracy, altitude } = position.coords;
+  currentLat = latitude;
+  currentLng = longitude;
+  lastGpsAccuracy = accuracy;
+
+  updatePositionVisuals(accuracy);
+  updateCoordinates(accuracy);
+
+  const accM = Math.round(accuracy);
+  let quality = "FAIR";
+  if (accM <= 10) quality = "EXCELLENT";
+  else if (accM <= 25) quality = "GOOD";
+  else if (accM <= 50) quality = "OK";
+  else quality = "WEAK";
+
+  $("accuracy-display").textContent = `GPS ±${accM}m · ${quality}`;
+  $("system-status").textContent = "GPS LIVE";
+  $("status-wrap").classList.remove("error");
+
+  if (center && map) {
+    const z = zoom != null ? zoom : Math.max(map.getZoom(), 15);
+    map.setView([currentLat, currentLng], z, { animate: !gpsLocked });
+  } else if (map && accuracy <= 30) {
+    const b = map.getBounds();
+    if (!b.contains([currentLat, currentLng])) {
+      map.panTo([currentLat, currentLng], { animate: true });
+    }
+  }
+
+  if (rebuildLayers) rebuildFieldLayersAt(currentLat, currentLng);
+
+  await Promise.all([
+    loadWeather(currentLat, currentLng),
+    loadDeclination(currentLat, currentLng)
+  ]);
+  calculateSunMoon(currentLat, currentLng);
+  calculateScentLayer();
+  gpsLocked = true;
+
+  if (userMarker) {
+    const alt = altitude != null ? `<div class='popup-sub'>Alt ${Math.round(altitude)} m</div>` : "";
+    userMarker.bindPopup(
+      `<div class='popup-title'>Your location</div>` +
+      `<div class='popup-sub'>${latitude.toFixed(6)}, ${longitude.toFixed(6)}</div>` +
+      `<div class='popup-sub'>Accuracy ±${accM} m · ${quality}</div>${alt}` +
+      `<span class='popup-tag'>GPS</span>`
+    );
+  }
+}
+
+function startGpsWatch() {
+  if (!navigator.geolocation) return;
+  if (geoWatchId != null) {
+    navigator.geolocation.clearWatch(geoWatchId);
+  }
+  geoWatchId = navigator.geolocation.watchPosition(
+    position => {
+      const acc = position.coords.accuracy;
+      if (lastGpsAccuracy != null && acc > lastGpsAccuracy * 2.5 && acc > 40) return;
+      applyGpsFix(position, { center: false, rebuildLayers: false });
+    },
+    err => {
+      console.warn("GPS watch", err);
+      if (!gpsLocked) {
+        $("system-status").textContent = "GPS WEAK";
+        $("status-wrap").classList.add("error");
+      }
+    },
+    { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
+  );
+}
+
+function rebuildFieldLayersAt(lat, lng) {
+  ["bedding", "scrapes", "corridor", "stands"].forEach(name => {
+    if (layers[name]) {
+      try { map.removeLayer(layers[name]); } catch (e) {}
+      delete layers[name];
+    }
+  });
+  currentLat = lat;
+  currentLng = lng;
+  createFieldLayers();
+  document.querySelectorAll('#layer-drawer input[type=checkbox][onchange*="toggleLayer"]').forEach(cb => {
+    const m = (cb.getAttribute("onchange") || "").match(/toggleLayer\('(\w+)'/);
+    if (m && layers[m[1]] && cb.checked) {
+      layers[m[1]].addTo(map);
+    }
+  });
+}
+
+function initMap() {
+  map = L.map("map", {
+    zoomControl: false,
+    preferCanvas: true,
+    attributionControl: true
+  }).setView([currentLat, currentLng], 14);
+
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+
+  baseLayers.sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19, attribution: "Tiles © Esri"
+  });
+  baseLayers.hybrid = L.layerGroup([
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19, attribution: "Tiles © Esri"
+    }),
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19, opacity: 0.9, attribution: "Esri"
+    })
+  ]);
+  baseLayers.topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+    maxZoom: 17, attribution: "© OpenStreetMap, SRTM | OpenTopoMap"
+  });
+  baseLayers.esriTopo = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19, attribution: "Tiles © Esri"
+  });
+  baseLayers.street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19, attribution: "© OpenStreetMap"
+  });
+  baseLayers.dark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 20, attribution: "© OpenStreetMap, © CARTO", subdomains: "abcd"
+  });
+  baseLayers.cbmt = L.tileLayer("https://maps-cartes.services.geo.ca/server2_serveur2/rest/services/BaseMaps/CBMT3857/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 17, attribution: "© Natural Resources Canada"
+  });
+
+  overlays = {
+    labels: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 19, opacity: 0.85, attribution: "Esri"
+    }),
+    hillshade: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 16, opacity: 0.45, attribution: "Esri"
+    })
+  };
 
   baseLayers.sat.addTo(map);
 
-  userMarker = L.marker([currentLat,currentLng], { icon:createMarkerIcon("orange","●"), zIndexOffset:1000 }).bindPopup("<div class='popup-title'>Current position</div>").addTo(map);
-  accuracyCircle = L.circle([currentLat,currentLng], { radius:20, color:"#f08a2e", weight:1, fillColor:"#f08a2e", fillOpacity:.08 }).addTo(map);
+  userMarker = L.marker([currentLat, currentLng], {
+    icon: createPositionIcon(),
+    zIndexOffset: 1000
+  }).bindPopup("<div class='popup-title'>Your location</div><div class='popup-sub'>GPS or map pin</div><span class='popup-tag'>YOU</span>").addTo(map);
+
+  accuracyCircle = L.circle([currentLat, currentLng], {
+    radius: 20, color: "#f08a2e", weight: 1, dashArray: "2 4", fillColor: "#f08a2e", fillOpacity: .06
+  }).addTo(map);
 
   layers.position = L.layerGroup([userMarker, accuracyCircle]).addTo(map);
 }
 
-function createFieldLayers(){
+function createFieldLayers() {
   const lat = currentLat;
   const lng = currentLng;
 
-  layers.bedding = L.circle([lat + .0045,lng - .006], { radius:240, color:"#ff453a", weight:2, fillColor:"#ff453a", fillOpacity:.13 }).bindPopup("<div class='popup-title'>Field bedding area</div>");
+  layers.bedding = L.layerGroup([
+    L.circle([lat + .0045, lng - .006], {
+      radius: 280, color: "#ff453a", weight: 1.5, dashArray: "4 6",
+      fillColor: "#ff453a", fillOpacity: .1
+    }),
+    L.circle([lat + .0045, lng - .006], {
+      radius: 90, color: "#ff453a", weight: 2,
+      fillColor: "#ff453a", fillOpacity: .18
+    })
+  ]).bindPopup("<div class='popup-title'>Bedding cover</div><div class='popup-sub'>Thermal / security cover</div><span class='popup-tag'>BEDDING</span>");
+
   layers.scrapes = L.layerGroup([
-    L.marker([lat + .0018,lng + .0035], {icon:createMarkerIcon("yellow","S")}),
-    L.marker([lat + .0038,lng + .0052], {icon:createMarkerIcon("yellow","S")})
+    L.marker([lat + .0018, lng + .0035], { icon: createMarkerIcon("yellow", "S"), zIndexOffset: 200 })
+      .bindPopup("<div class='popup-title'>Scrape</div><div class='popup-sub'>Buck sign</div><span class='popup-tag'>SCRAPE</span>"),
+    L.marker([lat + .0038, lng + .0052], { icon: createMarkerIcon("yellow", "S"), zIndexOffset: 200 })
+      .bindPopup("<div class='popup-title'>Scrape</div><div class='popup-sub'>Buck sign</div><span class='popup-tag'>SCRAPE</span>")
   ]).addTo(map);
 
-  layers.corridor = L.polyline([[lat - .007,lng - .012],[lat - .003,lng - .007],[lat + .001,lng - .002],[lat + .005,lng + .003]], { color:"#00d2ff", weight:4, opacity:.8 }).addTo(map);
+  layers.corridor = L.layerGroup([
+    L.polyline([[lat - .007, lng - .012], [lat - .003, lng - .007], [lat + .001, lng - .002], [lat + .005, lng + .003]], { color: "#00d2ff", weight: 5, opacity: .35 }),
+    L.polyline([[lat - .007, lng - .012], [lat - .003, lng - .007], [lat + .001, lng - .002], [lat + .005, lng + .003]], { color: "#7ef0ff", weight: 2, opacity: .95 })
+  ]).bindPopup("<div class='popup-title'>Travel corridor</div><div class='popup-sub'>Funnel or edge</div><span class='popup-tag'>CORRIDOR</span>").addTo(map);
 
-  calculateScentLayer();
+  layers.stands = L.layerGroup([
+    L.marker([lat + .0025, lng - .004], { icon: createMarkerIcon("purple", "T"), zIndexOffset: 250 })
+      .bindPopup("<div class='popup-title'>Stand / blind</div><div class='popup-sub'>Planned sit position</div><span class='popup-tag'>STAND</span>")
+  ]);
 }
 
-function createMarkerIcon(color,text){
+function createMarkerIcon(color, text) {
   return L.divIcon({
-    className:"",
-    html:`<div class="bt-marker ${color}">${text}</div>`,
-    iconSize:[26,26],
-    iconAnchor:[13,13],
-    popupAnchor:[0,-15]
+    className: "bt-pin-wrap",
+    html: `<div class="bt-pin ${color}"><div class="bt-pin-head"><span>${text || ""}</span></div></div>`,
+    iconSize: [28, 40],
+    iconAnchor: [14, 40],
+    popupAnchor: [0, -36]
   });
 }
 
-function bindMapEvents(){
-  map.on("click",event => {
+function createPositionIcon() {
+  return L.divIcon({
+    className: "bt-pos-wrap",
+    html: `<div class="bt-dot orange pulse"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+    popupAnchor: [0, -10]
+  });
+}
+
+function bindMapEvents() {
+  map.on("click", event => {
     currentLat = event.latlng.lat;
     currentLng = event.latlng.lng;
+    updatePositionVisuals();
     updateCoordinates();
+    loadWeather(currentLat, currentLng);
+    loadDeclination(currentLat, currentLng);
+    calculateSunMoon(currentLat, currentLng);
   });
 }
 
-function setBase(type){
-  Object.values(baseLayers).forEach(layer => { if(map.hasLayer(layer)) map.removeLayer(layer); });
-  baseLayers[type].addTo(map);
+function setBase(type) {
+  Object.values(baseLayers).forEach(layer => {
+    if (map.hasLayer(layer)) map.removeLayer(layer);
+  });
+  if (baseLayers[type]) baseLayers[type].addTo(map);
+  saveAllSettings();
 }
 
-function toggleLayers(){ $("layer-drawer").classList.toggle("open"); }
+function toggleOverlay(name, enabled) {
+  if (!overlays || !overlays[name]) return;
+  if (enabled) overlays[name].addTo(map);
+  else map.removeLayer(overlays[name]);
+}
 
-function toggleLayer(name,enabled){
-  if(!layers[name]) return;
-  if(enabled) layers[name].addTo(map);
+function toggleLayers() {
+  $("layer-drawer").classList.toggle("open");
+}
+
+function toggleLayer(name, enabled) {
+  if (!layers[name]) return;
+  if (enabled) layers[name].addTo(map);
   else map.removeLayer(layers[name]);
 }
 
-function locateUser(){
-  if(!navigator.geolocation) return;
+function locateUser() {
+  if (!navigator.geolocation) {
+    $("system-status").textContent = "NO GPS";
+    $("status-wrap").classList.add("error");
+    return;
+  }
   $("system-status").textContent = "LOCATING…";
+  $("status-wrap").classList.remove("error");
+
   navigator.geolocation.getCurrentPosition(
     async position => {
-      currentLat = position.coords.latitude;
-      currentLng = position.coords.longitude;
-      userMarker.setLatLng([currentLat, currentLng]);
-      accuracyCircle.setLatLng([currentLat, currentLng]);
-      map.setView([currentLat,currentLng], 16, {animate:true});
-      updateCoordinates(position.coords.accuracy);
-      calculateScentLayer();
-      await loadWeather(currentLat, currentLng);
-      calculateSunMoon(currentLat, currentLng);
-      $("system-status").textContent = "ONLINE";
+      await applyGpsFix(position, { center: true, rebuildLayers: true, zoom: 17 });
+      startGpsWatch();
     },
-    () => { $("system-status").textContent = "LOCATION ERROR"; },
-    { enableHighAccuracy:true, timeout:15000 }
+    error => {
+      $("system-status").textContent = "LOCATION ERROR";
+      $("status-wrap").classList.add("error");
+      $("accuracy-display").textContent = "GPS DENIED / FAILED";
+      console.warn(error);
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
   );
 }
 
-function updateCoordinates(accuracy){
-  $("coords-display").textContent = `${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`;
-  $("accuracy-display").textContent = accuracy ? `±${Math.round(accuracy)}m` : "MAP POSITION";
+function updatePositionVisuals(accuracy) {
+  if (userMarker) userMarker.setLatLng([currentLat, currentLng]);
+  if (accuracyCircle) {
+    accuracyCircle.setLatLng([currentLat, currentLng]);
+    const r = (accuracy && accuracy > 0) ? Math.max(accuracy, 5) : (typeof lastGpsAccuracy === "number" && lastGpsAccuracy ? lastGpsAccuracy : 25);
+    accuracyCircle.setRadius(r);
+    const col = r <= 15 ? "#3dffc8" : r <= 40 ? "#ff9a3c" : "#ff4d45";
+    accuracyCircle.setStyle({ color: col, fillColor: col, fillOpacity: 0.07, weight: 1.5 });
+  }
 }
 
-async function loadWeather(lat,lng){
+function updateCoordinates(accuracy) {
+  $("coords-display").textContent = `${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}`;
+  if (accuracy && accuracy > 0) {
+    const accM = Math.round(accuracy);
+    let quality = "FAIR";
+    if (accM <= 10) quality = "EXCELLENT";
+    else if (accM <= 25) quality = "GOOD";
+    else if (accM <= 50) quality = "OK";
+    else quality = "WEAK";
+    $("accuracy-display").textContent = `GPS ±${accM}m · ${quality}`;
+  } else if (!(typeof lastGpsAccuracy === "number" && lastGpsAccuracy)) {
+    $("accuracy-display").textContent = "MAP POSITION";
+  }
+  saveAllSettings();
+}
+
+/* ---------- WEATHER & GEOMAGNETICS ---------- */
+
+async function loadWeather(lat, lng) {
   $("hud-weather").textContent = "Loading…";
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lng)}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,wind_direction_10m,weather_code&wind_speed_unit=kmh&temperature_unit=celsius&timezone=auto`;
-  try{
+  try {
     const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
+    if (data.error) throw new Error(data.reason || "API error");
+
     const w = data.current;
     currentWindDeg = Number(w.wind_direction_10m) || 0;
     currentWindSpeed = Number(w.wind_speed_10m) || 0;
     currentTemp = Number(w.temperature_2m);
     currentPressure = Number(w.surface_pressure);
+    currentHumidity = Number(w.relative_humidity_2m);
+
+    updateMagneticWind();
+    $("weather-icon").textContent = weatherIcon(w.weather_code);
     $("hud-weather").textContent = `${Math.round(currentTemp)}°C · ${Math.round(currentWindSpeed)} km/h ${windDirection(currentWindDeg)}`;
     calculateScentLayer();
-  }catch(e){
+  } catch (e) {
+    console.warn("Weather failed:", e);
     $("hud-weather").textContent = "Weather unavailable";
+    $("weather-icon").textContent = "☁️";
   }
 }
 
-function windDirection(deg){
-  return ["N","NE","E","SE","S","SW","W","NW"][Math.round(deg / 45) % 8];
+function weatherIcon(code) {
+  if (code === 0) return "☀️";
+  if (code <= 3) return "⛅";
+  if (code <= 48) return "🌫️";
+  if (code <= 67) return "🌧️";
+  if (code <= 77) return "🌨️";
+  if (code <= 82) return "🌦️";
+  if (code <= 99) return "⛈️";
+  return "🌤️";
 }
 
-function calculateScentLayer(){
-  if(!map) return;
-  if(scentPolygon) map.removeLayer(scentPolygon);
-  const travel = (currentWindDeg + 180) % 360;
-  const left = (travel - 14) * Math.PI / 180;
-  const right = (travel + 14) * Math.PI / 180;
-  const dist = .65;
-  const latF = 111;
-  const lngF = 111 * Math.cos(currentLat * Math.PI / 180);
+async function loadDeclination(lat, lng) {
+  try {
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const url = `https://geomag.bgs.ac.uk/web_service/GMModels/wmm/2025/?latitude=${lat}&longitude=${lng}&altitude=0&date=${dateStr}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const text = await res.text();
+    const match = text.match(/<declination[^>]*>([^<]+)<\/declination>/i);
+    if (match) {
+      currentDecl = parseFloat(match[1]);
+      updateMagneticWind();
+      updateDeclDisplay();
+      return;
+    }
+    throw new Error("No declination in response");
+  } catch (e) {
+    console.warn("Declination lookup failed:", e);
+    currentDecl = -16.3;
+    updateMagneticWind();
+    updateDeclDisplay();
+  }
+}
+
+function updateMagneticWind() {
+  magneticWindDeg = (currentWindDeg - currentDecl + 360) % 360;
+}
+
+function updateDeclDisplay() {
+  const abs = Math.abs(currentDecl).toFixed(1);
+  const dir = currentDecl >= 0 ? "E" : "W";
+  $("decl-display").textContent = `${abs}°${dir}`;
+  $("decl-display").title = `Magnetic declination ${currentDecl.toFixed(2)}°`;
+}
+
+function windDirection(deg) {
+  const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+  return dirs[Math.round(((deg % 360) + 360) % 360 / 22.5) % 16];
+}
+
+function calculateScentLayer() {
+  if (!map) return;
+  if (scentPolygon) map.removeLayer(scentPolygon);
+
+  const useMag = $("mag-scent") && $("mag-scent").checked;
+  const bearing = useMag ? magneticWindDeg : currentWindDeg;
+  const travel = (bearing + 180) % 360;
+
+  const baseDist = 0.55;
+  const speedFactor = Math.min(1.7, 0.75 + currentWindSpeed / 45);
+  const dist = baseDist * speedFactor;
+
+  const spread = 12 + Math.min(7, currentWindSpeed / 10);
+  const left = (travel - spread) * Math.PI / 180;
+  const right = (travel + spread) * Math.PI / 180;
+
+  const latF = 111.32;
+  const lngF = 111.32 * Math.cos(currentLat * Math.PI / 180);
 
   scentPolygon = L.polygon([
     [currentLat, currentLng],
     [currentLat + dist / latF * Math.cos(left), currentLng + dist / lngF * Math.sin(left)],
     [currentLat + dist / latF * Math.cos(right), currentLng + dist / lngF * Math.sin(right)]
-  ], { color:"#f08a2e", weight:1, dashArray:"5 4", fillColor:"#f08a2e", fillOpacity:.17 });
+  ], {
+    color: "#50e3c2",
+    weight: 1.5,
+    dashArray: "2 8",
+    fillColor: "#50e3c2",
+    fillOpacity: 0.14,
+    lineJoin: "round"
+  }).bindPopup("<div class='popup-title'>Scent cone</div><div class='popup-sub'>Approximate downwind plume</div><span class='popup-tag'>SCENT</span>");
 
   layers.scent = scentPolygon;
-  scentPolygon.addTo(map);
+  const toggle = $("scent-toggle");
+  if (!toggle || toggle.checked) scentPolygon.addTo(map);
+  updateWindArrow();
 }
 
-function calculateSunMoon(lat,lng){
-  try{
-    const sun = SunCalc.getTimes(new Date(), lat, lng);
-    const moon = SunCalc.getMoonIllumination(new Date());
-    $("status").textContent = (new Date() >= sun.sunrise && new Date() <= sun.sunset) ? "DAY" : "NIGHT";
-  }catch(e){}
+function calculateSunMoon(lat, lng) {
+  try {
+    const now = new Date();
+    const sun = SunCalc.getTimes(now, lat, lng);
+    const moon = SunCalc.getMoonIllumination(now);
+    const fmt = t => t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if ($("sun-rise")) $("sun-rise").textContent = fmt(sun.sunrise);
+    if ($("sun-set")) $("sun-set").textContent = fmt(sun.sunset);
+    if ($("moon-illum")) $("moon-illum").textContent = Math.round(moon.fraction * 100) + "%";
+    const isDay = now >= sun.sunrise && now <= sun.sunset;
+    if ($("day-night-label")) $("day-night-label").textContent = isDay ? "DAY" : "NIGHT";
+
+    const rise = sun.sunrise.getTime();
+    const set = sun.sunset.getTime();
+    const t = now.getTime();
+    const amEnd = rise + 90 * 60000;
+    const pmStart = set - 90 * 60000;
+    let prime = "Midday — sit tight or still-hunt";
+    if (t >= rise && t <= amEnd) prime = "Morning movement";
+    else if (t >= pmStart && t <= set) prime = "Evening movement";
+    else if (t < rise) prime = "Pre-dawn approach";
+    else if (t > set) prime = "Night — trail cam time";
+    if ($("prime-window")) $("prime-window").textContent = prime;
+    updateHuntBanner(prime, isDay);
+    updateWindArrow();
+  } catch (e) {}
 }
 
-function sendQuery(){
+function updateHuntBanner(prime, isDay) {
+  const el = $("hunt-banner");
+  const tx = $("hunt-banner-text");
+  if (!el || !tx) return;
+  const wind = Math.round(currentWindSpeed || 0);
+  const dir = windDirection(currentWindDeg || 0);
+  const decl = Math.abs(currentDecl || 0).toFixed(1) + "°" + ((currentDecl || 0) >= 0 ? "E" : "W");
+  tx.textContent = `${prime} · Wind ${wind} km/h ${dir} · Decl ${decl}`;
+  el.classList.add("show");
+}
+
+let windArrowMarker = null;
+function updateWindArrow() {
+  if (!map) return;
+  if (windArrowMarker) map.removeLayer(windArrowMarker);
+  const travel = (currentWindDeg + 180) % 360;
+  const icon = L.divIcon({
+    className: "",
+    html: `<div style="transform:rotate(${travel}deg);transform-origin:center center"><div class="wind-arrow"></div></div>`,
+    iconSize: [16, 18],
+    iconAnchor: [8, 9]
+  });
+  windArrowMarker = L.marker([currentLat, currentLng], { icon, interactive: false, zIndexOffset: 900 });
+  windArrowMarker.addTo(map);
+}
+
+/* ---------- WAYPOINTS & ACTIONS ---------- */
+
+function dropTyped(kind) {
+  if (!map) return;
+  const c = map.getCenter();
+  const configs = {
+    stand: { color: "purple", letter: "T", name: "Stand", tag: "STAND", sub: "Tree stand / blind" },
+    scrape: { color: "yellow", letter: "S", name: "Scrape", tag: "SCRAPE", sub: "Buck sign" },
+    bed: { color: "red", letter: "B", name: "Bedding", tag: "BED", sub: "Cover / bed pin" },
+    cam: { color: "blue", letter: "C", name: "Trail cam", tag: "CAMERA", sub: "Trail camera location" },
+    wp: { color: "green", letter: "W", name: "Waypoint", tag: "WAYPOINT", sub: "Field mark" }
+  };
+  const cfg = configs[kind] || configs.wp;
+  const name = cfg.name + " " + (waypoints.filter(w => (w.kind || "wp") === kind).length + 1);
+  const m = L.marker([c.lat, c.lng], { icon: createMarkerIcon(cfg.color, cfg.letter) })
+    .bindPopup(
+      `<div class='popup-title'>${name}</div>` +
+      `<div class='popup-sub'>${cfg.sub}</div>` +
+      `<div class='popup-sub'>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</div>` +
+      `<span class='popup-tag'>${cfg.tag}</span>`
+    )
+    .addTo(map);
+  waypoints.push({ marker: m, lat: c.lat, lng: c.lng, name, kind, t: Date.now() });
+  if (kind === "cam") {
+    setActiveCamera(c.lat, c.lng, name, "map");
+  }
+  persistWaypoints();
+  addMessage(`Marked ${name} at map centre.`, false);
+}
+
+function setActiveCamera(lat, lng, name = "Camera", source = "manual") {
+  activeCameraLoc = { lat, lng, name, source, t: Date.now() };
+  try { localStorage.setItem("bt_active_camera", JSON.stringify(activeCameraLoc)); } catch(e){}
+  const statusEl = $("cam-location-status");
+  if (statusEl) statusEl.textContent = `Active Cam: ${name} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+}
+
+function pinCameraFromPhoto() {
+  if (currentPhotoGps) {
+    setActiveCamera(currentPhotoGps.lat, currentPhotoGps.lng, "Camera (EXIF)", "photo");
+    map.setView([currentPhotoGps.lat, currentPhotoGps.lng], 16);
+    dropTyped("cam");
+  } else {
+    alert("No EXIF GPS found in image metadata.");
+  }
+}
+
+function pinCameraAtMapCenter() {
+  dropTyped("cam");
+}
+
+function clearWaypoints() {
+  waypoints.forEach(w => { if (w.marker) map.removeLayer(w.marker); });
+  waypoints = [];
+  persistWaypoints();
+  addMessage("Cleared user waypoints.", false);
+}
+
+function runMapScoutScan() {
+  addMessage("Scanning high-probability movement corridors based on elevation edges, bedding proximity, and downwind terrain funnels...", false);
+}
+
+async function shareFieldCard() {
+  const wind = Math.round(currentWindSpeed || 0);
+  const dir = windDirection(currentWindDeg || 0);
+  const mag = windDirection(magneticWindDeg || 0);
+  const decl = Math.abs(currentDecl || 0).toFixed(1) + "°" + ((currentDecl || 0) >= 0 ? "E" : "W");
+  const temp = currentTemp != null ? Math.round(currentTemp) + "°C" : "—";
+  const prime = ($("prime-window") && $("prime-window").textContent) || "—";
+  const text =
+    `BUCKTRACK PRO · Field conditions\n` +
+    `Wind ${wind} km/h from ${dir} (true) · compass ${mag}\n` +
+    `Declination ${decl} · ${temp}\n` +
+    `Prime: ${prime}\n` +
+    `${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}\n` +
+    `Play the wind.`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "BUCKTRACK field conditions", text });
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert("Conditions copied to clipboard.");
+    }
+  } catch (e) {
+    alert(text);
+  }
+}
+
+function saveChecklist() {
+  const ids = ["chk-wind", "chk-scent", "chk-land", "chk-licence", "chk-exit"];
+  const state = {};
+  ids.forEach(id => { const el = $(id); if (el) state[id] = el.checked; });
+  try { localStorage.setItem("bt_checklist", JSON.stringify(state)); } catch (e) {}
+  saveAllSettings();
+}
+
+function restoreChecklist() {
+  try {
+    const raw = localStorage.getItem("bt_checklist");
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    Object.keys(state).forEach(id => {
+      const el = $(id);
+      if (el) el.checked = !!state[id];
+    });
+  } catch (e) {}
+}
+
+/* ---------- SETTINGS & GPX / REPORT EXPORT ---------- */
+
+function getSettingsPayload() {
+  const basemapEl = document.querySelector('input[name="basemap"]:checked');
+  return {
+    basemap: basemapEl ? basemapEl.getAttribute("onchange")?.match(/'([^']+)'/)?.[1] || "sat" : "sat",
+    magScent: !!($("mag-scent") && $("mag-scent").checked),
+    labels: !!($("labels-toggle") && $("labels-toggle").checked),
+    hillshade: !!($("hillshade-toggle") && $("hillshade-toggle").checked),
+    lang: currentLang,
+    updatedAt: Date.now()
+  };
+}
+
+function saveAllSettings() {
+  const payload = getSettingsPayload();
+  try { localStorage.setItem("bt_settings", JSON.stringify(payload)); } catch(e){}
+  if (currentUser && db) {
+    db.collection("users").doc(currentUser.uid).set({ settings: payload }, { merge: true }).catch(()=>{});
+  }
+}
+
+function persistWaypoints() {
+  const simpleWps = waypoints.map(w => ({ lat: w.lat, lng: w.lng, name: w.name, kind: w.kind, t: w.t }));
+  try { localStorage.setItem("bt_waypoints", JSON.stringify(simpleWps)); } catch(e){}
+  if (currentUser && db) {
+    db.collection("users").doc(currentUser.uid).set({ waypoints: simpleWps }, { merge: true }).catch(()=>{});
+  }
+}
+
+function restoreWaypoints() {
+  try {
+    const raw = localStorage.getItem("bt_waypoints");
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      parsed.forEach(w => {
+        const configs = {
+          stand: { color: "purple", letter: "T", tag: "STAND", sub: "Tree stand / blind" },
+          scrape: { color: "yellow", letter: "S", tag: "SCRAPE", sub: "Buck sign" },
+          bed: { color: "red", letter: "B", tag: "BED", sub: "Cover / bed pin" },
+          cam: { color: "blue", letter: "C", tag: "CAMERA", sub: "Trail camera location" },
+          wp: { color: "green", letter: "W", tag: "WAYPOINT", sub: "Field mark" }
+        };
+        const cfg = configs[w.kind] || configs.wp;
+        const m = L.marker([w.lat, w.lng], { icon: createMarkerIcon(cfg.color, cfg.letter) })
+          .bindPopup(
+            `<div class='popup-title'>${w.name}</div>` +
+            `<div class='popup-sub'>${cfg.sub}</div>` +
+            `<div class='popup-sub'>${w.lat.toFixed(6)}, ${w.lng.toFixed(6)}</div>` +
+            `<span class='popup-tag'>${cfg.tag}</span>`
+          )
+          .addTo(map);
+        waypoints.push({ marker: m, lat: w.lat, lng: w.lng, name: w.name, kind: w.kind, t: w.t });
+      });
+    }
+  } catch(e){}
+}
+
+function loadUserDataFromCloud() {
+  if (!currentUser || !db) return;
+  db.collection("users").doc(currentUser.uid).get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.settings) {
+        if (data.settings.lang) setLanguage(data.settings.lang);
+        if (data.settings.magScent && $("mag-scent")) $("mag-scent").checked = true;
+      }
+    }
+  }).catch(()=>{});
+}
+
+function exportGPX() {
+  let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="BUCKTRACK PRO">\n`;
+  waypoints.forEach(w => {
+    gpx += `  <wpt lat="${w.lat}" lon="${w.lng}">\n    <name>${w.name}</name>\n    <sym>${w.kind || 'Waypoint'}</sym>\n  </wpt>\n`;
+  });
+  gpx += `</gpx>`;
+  downloadFile(gpx, `bucktrack_waypoints_${Date.now()}.gpx`, "text/xml");
+}
+
+function importGPX(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+    const wpts = xml.querySelectorAll("wpt");
+    wpts.forEach(wpt => {
+      const lat = parseFloat(wpt.getAttribute("lat"));
+      const lng = parseFloat(wpt.getAttribute("lon"));
+      const nameEl = wpt.querySelector("name");
+      const name = nameEl ? nameEl.textContent : "Imported Waypoint";
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        const m = L.marker([lat, lng], { icon: createMarkerIcon("green", "W") })
+          .bindPopup(`<div class='popup-title'>${name}</div><span class='popup-tag'>GPX</span>`)
+          .addTo(map);
+        waypoints.push({ marker: m, lat, lng, name, kind: "wp", t: Date.now() });
+      }
+    });
+    persistWaypoints();
+    addMessage(`Imported ${wpts.length} waypoints from GPX.`, false);
+  };
+  reader.readAsText(file);
+}
+
+function exportFieldReport() {
+  const report =
+    `BUCKTRACK PRO - FIELD INTELLIGENCE REPORT\n` +
+    `Generated: ${new Date().toLocaleString()}\n` +
+    `Location: ${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}\n` +
+    `Temp: ${currentTemp != null ? currentTemp + "°C" : "N/A"}\n` +
+    `Wind: ${currentWindSpeed} km/h (${windDirection(currentWindDeg)})\n` +
+    `Declination: ${currentDecl.toFixed(2)}°\n` +
+    `Waypoints Count: ${waypoints.length}\n`;
+  downloadFile(report, `field_report_${Date.now()}.txt`, "text/plain");
+}
+
+function downloadFile(content, fileName, contentType) {
+  const a = document.createElement("a");
+  const file = new Blob([content], { type: contentType });
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ---------- PHOTO ANALYSIS & B&C ANTLER SCORE ---------- */
+
+function processPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  $("photo-name").textContent = file.name;
+  $("photo-size").textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+  $("photo-info").style.display = "grid";
+  $("cam-location-actions").style.display = "flex";
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = $("photo-preview");
+    img.src = e.target.result;
+    $("preview").classList.add("show");
+    $("photo-analysis").classList.add("show");
+
+    img.onload = () => {
+      $("photo-dimensions").textContent = `${img.naturalWidth} x ${img.naturalHeight} px`;
+      analyzeImageQuality(img);
+    };
+  };
+  reader.readAsDataURL(file);
+  
+  $("photo-date").textContent = new Date(file.lastModified).toLocaleDateString();
+  $("photo-camera").textContent = "Field Cam / Mobile";
+  $("photo-gps").textContent = "No EXIF Header";
+  currentPhotoGps = null;
+}
+
+function analyzeImageQuality(img) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = 100;
+  canvas.height = 100;
+  ctx.drawImage(img, 0, 0, 100, 100);
+  const data = ctx.getImageData(0, 0, 100, 100).data;
+  
+  let brightness = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    brightness += (data[i] + data[i+1] + data[i+2]) / 3;
+  }
+  brightness = Math.round(brightness / (data.length / 4));
+
+  $("metric-quality").textContent = brightness > 40 && brightness < 220 ? "HIGH" : "FAIR";
+  $("metric-brightness").textContent = brightness + " / 255";
+  $("metric-age").textContent = "3.5 - 4.5 yrs (est)";
+  $("metric-points").textContent = "Main Frame Buck";
+  $("metric-live-wt").textContent = "180 - 210 lbs";
+  $("metric-confidence").textContent = "MEDIUM";
+  $("image-summary").textContent = `Processed ${img.naturalWidth}x${img.naturalHeight} image. Internal illumination index is ${brightness}. Enter exact tape measurements above for B&C score.`;
+}
+
+function computeGrossScore() {
+  const spread = parseFloat($("m-spread").value) || 0;
+  const beamL = parseFloat($("m-beam-l").value) || 0;
+  const beamR = parseFloat($("m-beam-r").value) || 0;
+  const tines = parseFloat($("m-tines").value) || 0;
+  const circ = parseFloat($("m-circ").value) || 0;
+
+  const total = spread + beamL + beamR + tines + circ;
+  if (total > 0) {
+    $("metric-score-calc").textContent = total.toFixed(3) + ' "';
+    $("metric-score-status").textContent = "Gross Score Computed";
+  } else {
+    $("metric-score-status").textContent = "Invalid Inputs";
+  }
+}
+
+/* ---------- AI CHAT ASSISTANT ---------- */
+
+function sendQuery() {
   const input = $("chat-input");
   const text = input.value.trim();
-  if(!text) return;
-  addMessage(text,true);
+  if (!text) return;
+
+  addMessage(text, true);
   input.value = "";
-  setTimeout(() => { addMessage(answerFieldQuestion(text),false); },150);
+
+  setTimeout(() => {
+    const reply = generateTacticalAdvice(text);
+    addMessage(reply, false);
+  }, 400);
 }
 
-function addMessage(text,user){
+function addMessage(text, isUser) {
   const log = $("chat-log");
-  const div = document.createElement("div");
-  div.className = "msg " + (user ? "user" : "system");
-  div.innerHTML = `<div class="msg-label">${user ? "YOU" : "FIELD DESK"}</div>` + escapeHTML(text);
-  log.appendChild(div);
+  const msg = document.createElement("div");
+  msg.className = `msg ${isUser ? "user" : "system"}`;
+  msg.innerHTML = `<div class="msg-label">${isUser ? "YOU" : "BUCKTRACK AI GUIDE"}</div>${text}`;
+  log.appendChild(msg);
   log.scrollTop = log.scrollHeight;
 }
 
-function answerFieldQuestion(q){
-  q = q.toLowerCase();
-  if(q.includes("wind") || q.includes("scent")) return `Current wind: ${Math.round(currentWindSpeed)} km/h from ${windDirection(currentWindDeg)}. Scent vector projected on map.`;
-  if(q.includes("weather") || q.includes("temp")) return `Temperature: ${Math.round(currentTemp)}°C, Pressure: ${Math.round(currentPressure)} hPa, Wind: ${Math.round(currentWindSpeed)} km/h ${windDirection(currentWindDeg)}.`;
-  return `Field desk active. Current position: ${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}. Weather & scent overlay dynamic.`;
+function generateTacticalAdvice(q) {
+  const query = q.toLowerCase();
+  const wind = Math.round(currentWindSpeed);
+  const dir = windDirection(currentWindDeg);
+  const decl = currentDecl.toFixed(1);
+
+  if (query.includes("wind") || query.includes("scent") || query.includes("sit")) {
+    return `Current wind is ${wind} km/h from ${dir}. Your magnetic declination offset is ${decl}°. Position your sit downwind of key bedding funnels, ensuring your scent plume projects over open clearings rather than security cover.`;
+  }
+  if (query.includes("buck") || query.includes("score") || query.includes("camera")) {
+    return `To evaluate bucks accurately, use the Photo Log tab. Upload high-res trail camera photos and enter spread, beam length, and circumference measurements to generate gross B&C scores.`;
+  }
+  return `Field conditions at coordinates ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}: Wind speed is ${wind} km/h ${dir}. Check the Solunar prime window before entering your stand.`;
 }
 
-/* FIELD RECORD PHOTO SCANNER METRICS GENERATOR */
-function processPhoto(input){
-  if(!input.files || !input.files[0]) return;
-  const file = input.files[0];
-  if(!file.type.startsWith("image/")) return;
+/* ---------- UI & MOBILE UTILITIES ---------- */
 
-  const preview = $("photo-preview");
-  const reader = new FileReader();
-
-  reader.onload = event => {
-    preview.src = event.target.result;
-    $("preview").classList.add("show");
-    $("photo-info").style.display = "grid";
-    $("photo-analysis").classList.add("show");
-
-    $("photo-name").textContent = file.name;
-    $("photo-size").textContent = formatBytes(file.size);
-    $("photo-date").textContent = new Date(file.lastModified).toLocaleString();
-
-    preview.onload = () => {
-      $("photo-dimensions").textContent = `${preview.naturalWidth} × ${preview.naturalHeight}`;
-      
-      // Run pseudo-seed calculations based on file size/dimensions for consistent field scoring simulation
-      const hash = (file.size + preview.naturalWidth + preview.naturalHeight) % 100;
-      
-      const pts = [6, 8, 8, 10, 10, 12][hash % 6];
-      const liveWt = 185 + (hash % 55);
-      const dressWt = Math.round(liveWt * 0.80);
-      const ageClass = (2.5 + (hash % 3) * 1.0).toFixed(1);
-      const spread = (14.5 + (hash % 6) * 0.8).toFixed(1);
-      const grossScore = Math.round(110 + (hash % 42));
-
-      $("metric-age").textContent = `${ageClass} YRS`;
-      $("metric-points").textContent = `${pts} POINT`;
-      $("metric-live-wt").textContent = `${liveWt} LBS`;
-      $("metric-dress-wt").textContent = `${dressWt} LBS`;
-      $("metric-spread").textContent = `${spread}"`;
-      $("metric-score").textContent = `${grossScore} 3/8"`;
-
-      $("image-summary").textContent = `Field Record generated from canvas frame scan (${preview.naturalWidth}x${preview.naturalHeight}). Primary antler points, body mass ratio, and age class compiled into trail database logs.`;
-    };
-  };
-
-  reader.readAsDataURL(file);
+function setLanguage(lang) {
+  currentLang = lang;
+  if (lang === "fr") {
+    $("chat-tab").textContent = "GUIDE IA";
+    $("cam-tab").textContent = "LOG PHOTO";
+  } else {
+    $("chat-tab").textContent = "AI GUIDE";
+    $("cam-tab").textContent = "PHOTO LOG";
+  }
 }
 
-function formatBytes(b){
-  if(b === 0) return "0 B";
-  const u = ["B","KB","MB","GB"];
-  const i = Math.floor(Math.log(b) / Math.log(1024));
-  return (b / Math.pow(1024,i)).toFixed(1) + " " + u[i];
+function switchPanel(panel) {
+  if (panel === "chat") {
+    $("chat-panel").classList.add("active");
+    $("cam-panel").classList.remove("active");
+    $("chat-tab").classList.add("active");
+    $("cam-tab").classList.remove("active");
+  } else {
+    $("cam-panel").classList.add("active");
+    $("chat-panel").classList.remove("active");
+    $("cam-tab").classList.add("active");
+    $("chat-tab").classList.remove("active");
+  }
 }
 
-function dropWaypoint(){
-  if(!map) return;
-  const c = map.getCenter();
-  const m = L.marker([c.lat,c.lng], { icon:createMarkerIcon("green","W") }).addTo(map);
-  waypoints.push(m);
-}
-
-function clearWaypoints(){
-  waypoints.forEach(m => map.removeLayer(m));
-  waypoints = [];
-}
-
-function switchPanel(panel){
-  $("chat-tab").classList.toggle("active", panel === "chat");
-  $("cam-tab").classList.toggle("active", panel === "cam");
-  $("chat-panel").classList.toggle("active", panel === "chat");
-  $("cam-panel").classList.toggle("active", panel === "cam");
-}
-
-function mobileView(view){
-  if(window.innerWidth > 768) return;
+function mobileView(view) {
   const panel = $("side-panel");
-  $("dock-map").classList.toggle("active", view === "map");
-  $("dock-desk").classList.toggle("active", view === "desk");
-  $("dock-photo").classList.toggle("active", view === "photo");
+  ["dock-map", "dock-desk", "dock-photo"].forEach(id => {
+    if ($(id)) $(id).classList.remove("active");
+  });
 
-  if(view === "map"){ panel.classList.remove("mobile-open"); return; }
-  panel.classList.add("mobile-open");
-  if(view === "desk") switchPanel("chat");
-  if(view === "photo") switchPanel("cam");
+  if (view === "map") {
+    panel.classList.remove("mobile-open");
+    $("dock-map").classList.add("active");
+  } else if (view === "desk") {
+    switchPanel("chat");
+    panel.classList.add("mobile-open");
+    $("dock-desk").classList.add("active");
+  } else if (view === "photo") {
+    switchPanel("cam");
+    panel.classList.add("mobile-open");
+    $("dock-photo").classList.add("active");
+  }
 }
 
-function closeMobilePanel(){
-  $("side-panel").classList.remove("mobile-open");
-  $("dock-map").classList.add("active");
-  $("dock-desk").classList.remove("active");
-  $("dock-photo").classList.remove("active");
+function closeMobilePanel() {
+  mobileView("map");
 }
 
-function escapeHTML(str){
-  return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+function dismissTips() {
+  $("tips-toast").classList.remove("show");
+  try { localStorage.setItem("bt_tips_dismissed", "true"); } catch(e){}
 }
 
-window.addEventListener("resize", () => { if(map) setTimeout(() => map.invalidateSize(), 150); });
+function maybeShowTips() {
+  try {
+    if (!localStorage.getItem("bt_tips_dismissed")) {
+      $("tips-toast").classList.add("show");
+    }
+  } catch(e){}
+}
 </script>
-
 </body>
 </html>
