@@ -3,109 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#121612" />
-  <title>BUCKTRACK - Big Game Intelligence & Shot Coach</title>
+  <title>BUCKTRACK - Automated Pattern Analytics</title>
 
-  <!-- Leaflet CSS & JS -->
+  <!-- Leaflet & EXIF JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 
   <style>
     :root {
-      --bg: #121612;
-      --card: #1c221c;
-      --card-alt: #242c24;
-      --border: #2f3a2f;
-      --line: #3d4c3d;
-      --text: #e2e8e2;
-      --muted: #8fa38f;
-      --primary: #5b8c5a;
-      --primary-bright: #76b375;
-      --accent: #d97736;
-      --danger: #c94a4a;
-      --radius: 12px;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --bg: #0f120f;
+      --card: #182018;
+      --card-alt: #202b20;
+      --border: #2a382a;
+      --line: #374a37;
+      --text: #e1e8e1;
+      --muted: #7d947d;
+      --primary: #4e804d;
+      --primary-bright: #6ebd6c;
+      --accent: #d9702e;
+      --radius: 10px;
+      --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
     body, html { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); overflow: hidden; }
 
-    /* Layout Structure */
     #app { display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; position: relative; }
-    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; }
-    .brand { font-family: var(--font-mono); font-weight: 900; letter-spacing: 1.5px; color: var(--primary-bright); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; }
+    .brand { font-family: var(--font-mono); font-weight: 900; letter-spacing: 1.5px; color: var(--primary-bright); font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
     .brand span { color: var(--text); }
     
     main { flex: 1; position: relative; overflow: hidden; }
-    .screen { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; padding: 16px; padding-bottom: 90px; }
+    .screen { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; padding: 14px; padding-bottom: 80px; }
     .screen.active { display: flex; }
     .screen#mapScreen { padding: 0; }
 
-    /* Bottom Navigation */
-    nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
-    .navBtn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); background: none; border: none; font-size: 0.65rem; font-family: var(--font-mono); font-weight: 700; width: 18%; cursor: pointer; }
+    nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-around: space-around; align-items: center; z-index: 1000; }
+    .navBtn { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); background: none; border: none; font-size: 0.65rem; font-family: var(--font-mono); font-weight: 700; width: 19%; cursor: pointer; }
     .navBtn svg { width: 20px; height: 20px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .navBtn.active { color: var(--primary-bright); }
     .navBtn.active svg { stroke: var(--primary-bright); }
 
-    /* UI Cards & Layout Elements */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
-    .cardTitle { font-size: 0.75rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--muted); margin-bottom: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .kpi { background: var(--card-alt); padding: 10px; border-radius: 8px; border: 1px solid var(--line); text-align: center; }
-    .kpi span { font-size: 0.65rem; color: var(--muted); display: block; text-transform: uppercase; font-family: var(--font-mono); }
-    .kpi strong { font-size: 1.1rem; font-weight: 800; color: var(--text); font-family: var(--font-mono); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+    .cardTitle { font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .kpi { background: var(--card-alt); padding: 8px; border-radius: 6px; border: 1px solid var(--line); text-align: center; }
+    .kpi span { font-size: 0.6rem; color: var(--muted); display: block; text-transform: uppercase; font-family: var(--font-mono); }
+    .kpi strong { font-size: 0.95rem; font-weight: 800; color: var(--text); font-family: var(--font-mono); }
 
-    /* Controls & Buttons */
-    .actionBtn { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .actionBtn { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 10px; border-radius: 6px; font-weight: 700; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .actionBtn.primary { background: var(--primary); border-color: var(--primary-bright); color: #fff; }
-    .actionBtn.accent { background: var(--accent); border-color: #e88948; color: #fff; }
-    .actionBtn.danger { background: var(--danger); border-color: #d95f5f; color: #fff; }
-    .actionBtn.full { margin-bottom: 8px; }
 
-    /* Forms & Inputs */
-    .formGroup { margin-bottom: 12px; }
-    .formGroup label { display: block; font-size: 0.7rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
-    input, select, textarea { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 10px; border-radius: 6px; font-size: 0.9rem; font-family: var(--font-sans); }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-bright); }
-    textarea { resize: vertical; min-height: 70px; }
-
-    /* Map Interface */
+    .formGroup { margin-bottom: 10px; }
+    .formGroup label { display: block; font-size: 0.65rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
+    input, select, textarea { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 8px; border-radius: 5px; font-size: 0.85rem; font-family: var(--font-sans); }
+    
     #map { width: 100%; height: 100%; background: #111; z-index: 1; }
-    .mapOverlay { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; gap: 8px; }
-    .mapOverlay .actionBtn { flex: 1; background: rgba(28, 34, 28, 0.9); backdrop-filter: blur(8px); }
+    .mapOverlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 500; display: flex; gap: 6px; }
+    .mapOverlay .actionBtn { flex: 1; background: rgba(24, 32, 24, 0.92); backdrop-filter: blur(6px); font-size: 0.7rem; padding: 8px; }
 
-    /* Gallery Grid */
     .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .photo { aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--card-alt); border: 1px solid var(--line); position: relative; cursor: pointer; }
+    .photo { aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--card-alt); border: 1px solid var(--line); position: relative; }
     .photo img { width: 100%; height: 100%; object-fit: cover; }
-    .photo span { position: absolute; bottom: 0; inset-x: 0; background: rgba(0,0,0,0.75); font-size: 0.6rem; font-family: var(--font-mono); padding: 2px 4px; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+    .photo span { position: absolute; bottom: 0; inset-x: 0; background: rgba(0,0,0,0.85); font-size: 0.55rem; font-family: var(--font-mono); padding: 2px 4px; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
-    /* Modals & Dialogs */
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 14px; }
     .modal.hidden { display: none; }
-    .modalContent { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 16px; }
+    .modalContent { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; padding: 14px; }
 
-    /* Toggles & Utility */
-    .switch { width: 44px; height: 24px; background: var(--card-alt); border: 1px solid var(--line); border-radius: 12px; position: relative; cursor: pointer; transition: 0.2s; }
-    .switch i { width: 18px; height: 18px; background: var(--muted); border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s; }
-    .switch.on { background: var(--primary); border-color: var(--primary-bright); }
-    .switch.on i { left: 22px; background: #fff; }
     .row { display: flex; gap: 8px; align-items: center; }
     .row.spread { justify-content: space-between; }
-    .hidden { display: none !important; }
-    .empty { text-align: center; color: var(--muted); font-size: 0.8rem; font-family: var(--font-mono); padding: 24px 12px; border: 1px dashed var(--line); border-radius: 8px; }
-    .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--primary-bright); color: #121612; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; font-family: var(--font-mono); z-index: 3000; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+    .toast { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); background: var(--primary-bright); color: #0f120f; padding: 6px 14px; border-radius: 16px; font-weight: 800; font-size: 0.75rem; font-family: var(--font-mono); z-index: 3000; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
     .toast.show { opacity: 1; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; }
+    .badge-success { background: rgba(110, 189, 108, 0.2); color: var(--primary-bright); border: 1px solid var(--primary-bright); }
+    .badge-accent { background: rgba(217, 112, 46, 0.2); color: var(--accent); border: 1px solid var(--accent); }
   </style>
 </head>
 <body>
 
-  <div id="toast" class="toast">System Ready</div>
+  <div id="toast" class="toast">System Active</div>
 
   <div id="modal" class="modal hidden">
     <div class="modalContent" id="modalContent"></div>
@@ -114,124 +94,77 @@
   <div id="app">
     <header>
       <div class="brand">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
         BUCK<span>TRACK</span>
       </div>
-      <button class="actionBtn" id="quickAddBtn" style="width:auto; padding: 6px 12px;">＋ QUICK ADD</button>
+      <button class="actionBtn" id="quickAddBtn" style="width:auto; padding: 4px 10px; font-size: 0.7rem;">＋ QUICK LOG</button>
     </header>
 
     <main>
-      <!-- 1. Command Center -->
+      <!-- 1. Command Dashboard -->
       <section class="screen active" id="commandScreen">
         <div class="card">
           <div class="cardTitle">
-            <span>TARGET PROFILE INTEL</span>
-            <span id="commandDate"></span>
+            <span>LIVE ENVIRONMENTAL TELEMETRY</span>
+            <span id="weatherStatus" class="badge badge-success">FETCHING...</span>
           </div>
-          <div style="margin: 4px 0 12px 0;">
-            <h3 id="targetName" style="font-family:var(--font-mono); font-size:1.1rem; color:var(--primary-bright)">NO TARGET SELECTED</h3>
-            <p id="targetSub" style="font-size:0.75rem; color:var(--muted)">Select or create a buck profile to calculate activity intel.</p>
+          <div class="grid2">
+            <div class="kpi"><span>PRESSURE / TREND</span><strong id="envBaro">-- hPa</strong></div>
+            <div class="kpi"><span>WIND VELOCITY</span><strong id="envWind">-- km/h</strong></div>
+            <div class="kpi"><span>TEMPERATURE</span><strong id="envTemp">-- °C</strong></div>
+            <div class="kpi"><span>MOON PHASE</span><strong id="envMoon">--</strong></div>
           </div>
         </div>
 
-        <div class="grid4" style="margin-bottom:12px">
+        <div class="card">
+          <div class="cardTitle">TARGET BUCK PATTERN SUMMARY</div>
+          <div style="margin: 2px 0 8px 0;">
+            <h3 id="targetName" style="font-family:var(--font-mono); font-size:1rem; color:var(--primary-bright)">NO TARGET SELECTED</h3>
+            <p id="targetSub" style="font-size:0.75rem; color:var(--muted)">Select a profile in Roster to view automated pattern intelligence.</p>
+          </div>
+          <div class="grid2" style="margin-top:8px">
+            <div class="kpi"><span>PEAK TIME</span><strong id="targetPeak">--</strong></div>
+            <div class="kpi"><span>NOCTURNAL %</span><strong id="targetNoct">--</strong></div>
+          </div>
+        </div>
+
+        <div class="grid4" style="margin-bottom:10px">
           <div class="kpi"><span>BUCKS</span><strong id="statBucks">0</strong></div>
           <div class="kpi"><span>SIGHTINGS</span><strong id="statSightings">0</strong></div>
           <div class="kpi"><span>PHOTOS</span><strong id="statPhotos">0</strong></div>
           <div class="kpi"><span>WAYPOINTS</span><strong id="statWaypoints">0</strong></div>
         </div>
-
-        <div class="card">
-          <div class="cardTitle">
-            <span>TACTICAL ENVIRONMENTAL INDEX</span>
-            <span id="weatherStatus" style="color:var(--primary-bright)">ONLINE</span>
-          </div>
-          <div class="grid2">
-            <div class="kpi"><span>PRESSURE</span><strong id="envBaro">1018 hPa</strong></div>
-            <div class="kpi"><span>WIND</span><strong id="envWind">12 km/h NW</strong></div>
-            <div class="kpi"><span>TEMP</span><strong id="envTemp">14°C</strong></div>
-            <div class="kpi"><span>MOON PHASE</span><strong id="envMoon">Waxing</strong></div>
-          </div>
-        </div>
       </section>
 
-      <!-- 2. Buck Roster -->
+      <!-- 2. Buck Profiles & Pattern Intelligence -->
       <section class="screen" id="bucksScreen">
-        <div class="row spread" style="margin-bottom:12px">
-          <h2 style="font-family:var(--font-mono); font-size:1rem">BUCK PROFILES</h2>
-          <button class="actionBtn primary" style="width:auto; padding:8px 14px;" onclick="openBuckForm()">＋ NEW BUCK</button>
+        <div class="row spread" style="margin-bottom:10px">
+          <h2 style="font-family:var(--font-mono); font-size:0.9rem">BUCK ROSTER & PATTERNS</h2>
+          <button class="actionBtn primary" style="width:auto; padding:6px 12px; font-size:0.75rem;" onclick="openBuckForm()">＋ NEW BUCK</button>
         </div>
-        <div id="buckList">
-          <div class="empty">No buck profiles configured.</div>
-        </div>
+        <div id="buckList"><div class="card"><p style="text-align:center; color:var(--muted); font-size:0.8rem">Loading profiles...</p></div></div>
       </section>
 
       <!-- 3. Field Map & GIS -->
       <section class="screen" id="mapScreen">
         <div class="mapOverlay">
-          <button class="actionBtn" onclick="beginMapAdd('waypoint')">📍 MARK WAYPOINT</button>
-          <button class="actionBtn" onclick="beginMapAdd('sighting')">👁 RECORD SIGHTING</button>
+          <button class="actionBtn" onclick="beginMapAdd('waypoint')">📍 WAYPOINT</button>
+          <button class="actionBtn" onclick="beginMapAdd('sighting')">👁 SIGHTING</button>
           <button class="actionBtn" onclick="locateUser()">🎯 GPS LOCATE</button>
         </div>
         <div id="map"></div>
       </section>
 
-      <!-- 4. Shot Placement & Ballistics Coach -->
-      <section class="screen" id="coachScreen">
-        <div class="card">
-          <div class="cardTitle">TACTICAL SHOT PLACEMENT COACH</div>
-          <div class="formGroup">
-            <label>Weapon / Weapon Class</label>
-            <select id="coachWeapon">
-              <option value="rifle">Centerfire Rifle (.270, .30-06, .308)</option>
-              <option value="bow">Compound Bow / Archery</option>
-              <option value="crossbow">High-Velocity Crossbow</option>
-            </select>
-          </div>
-          <div class="grid2">
-            <div class="formGroup">
-              <label>Distance (Yards)</label>
-              <input type="number" id="coachDist" value="125" step="5">
-            </div>
-            <div class="formGroup">
-              <label>Target Angle / Facing</label>
-              <select id="coachAngle">
-                <option value="broadside">Broadside (90°)</option>
-                <option value="quartering_away">Quartering Away</option>
-                <option value="quartering_toward">Quartering Toward</option>
-                <option value="head_on">Head On / Facing</option>
-              </select>
-            </div>
-          </div>
-          <button class="actionBtn primary" onclick="calculateShot()">🎯 COMPUTE OPTIMAL PLACEMENT</button>
-        </div>
-
-        <div class="card" id="coachOutput">
-          <div class="cardTitle">TACTICAL PLACEMENT GUIDANCE</div>
-          <div class="kpi" style="margin-bottom:10px">
-            <span>RECOMMENDED AIM POINT</span>
-            <strong id="coachAimPoint" style="color:var(--primary-bright); font-size:1.2rem">--</strong>
-          </div>
-          <div class="kpi" style="margin-bottom:10px">
-            <span>BALLISTIC CALCULATION / CORRECTION</span>
-            <strong id="coachBallistics" style="font-size:0.95rem">--</strong>
-          </div>
-          <p id="coachAdvice" style="font-size:0.8rem; color:var(--muted); line-height:1.4">Configure target distance, angle, and gear configuration above to run shot trajectory modeling.</p>
-        </div>
-      </section>
-
-      <!-- 5. Media Intake & Gallery -->
+      <!-- 4. Media Ingestion & Auto Pattern Extraction -->
       <section class="screen" id="dataScreen">
         <div class="card">
-          <div class="cardTitle">TRAIL CAMERA MEDIA INTAKE</div>
+          <div class="cardTitle">PHOTO PATTERN INGESTION</div>
           <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
-          <button class="actionBtn primary full" id="photoPick">📷 IMPORT TRAIL CAM PHOTOS</button>
-          <div class="row spread" style="margin-top:8px; margin-bottom:12px">
-            <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--muted)" id="photoCountLabel">0 images</span>
+          <button class="actionBtn primary" id="photoPick" style="margin-bottom:8px">📷 UPLOAD TRAIL CAM PHOTOS</button>
+          <div class="row spread" style="margin-bottom:8px">
+            <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--muted)" id="photoCountLabel">0 images</span>
           </div>
-          <div class="gallery" id="gallery">
-            <div class="empty" style="grid-column: 1 / -1">No images imported.</div>
-          </div>
+          <div class="gallery" id="gallery"></div>
         </div>
       </section>
     </main>
@@ -249,10 +182,6 @@
         <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
         MAP
       </button>
-      <button class="navBtn" onclick="showScreen('coachScreen')">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
-        COACH
-      </button>
       <button class="navBtn" onclick="showScreen('dataScreen')">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         PHOTOS
@@ -261,15 +190,13 @@
   </div>
 
 <script>
-/* =========================================================
-   DATABASE & STATE ENGINE
-   ========================================================= */
-const DB_NAME = "BUCKTRACK_DB";
+/* DATABASE & STATE ENGINE */
+const DB_NAME = "BUCKTRACK_LIVE_DB";
 const DB_VERSION = 1;
 let db = null;
 let map = null;
 let mapMarkers = [];
-let currentLocation = { lat: 45.8, lng: -64.2 };
+let currentLocation = { lat: 45.82, lng: -64.21 };
 let pendingMapMode = null;
 
 const $ = id => document.getElementById(id);
@@ -282,13 +209,13 @@ function showToast(msg) {
   const t = $("toast");
   t.textContent = msg;
   t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2500);
+  setTimeout(() => t.classList.remove("show"), 2200);
 }
 
 function openModal(title, html) {
   $("modalContent").innerHTML = `
-    <div class="row spread" style="margin-bottom:14px; border-bottom:1px solid var(--line); padding-bottom:8px">
-      <h3 style="font-family:var(--font-mono); font-size:0.9rem; text-transform:uppercase">${title}</h3>
+    <div class="row spread" style="margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:6px">
+      <h3 style="font-family:var(--font-mono); font-size:0.85rem; text-transform:uppercase">${title}</h3>
       <button onclick="closeModal()" style="background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer">&times;</button>
     </div>
     ${html}
@@ -323,13 +250,6 @@ function dbPut(storeName, item) {
     req.onerror = () => reject(req.error);
   });
 }
-function dbGet(storeName, id) {
-  return new Promise((resolve, reject) => {
-    const req = dbTx(storeName).get(id);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
 function dbGetAll(storeName) {
   return new Promise((resolve, reject) => {
     const req = dbTx(storeName).getAll();
@@ -337,304 +257,150 @@ function dbGetAll(storeName) {
     req.onerror = () => reject(req.error);
   });
 }
-function dbDelete(storeName, id) {
-  return new Promise((resolve, reject) => {
-    const req = dbTx(storeName, "readwrite").delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
 
-/* =========================================================
-   NAVIGATION & MAP
-   ========================================================= */
-function showScreen(screenId) {
-  $$(".screen").forEach(s => s.classList.remove("active"));
-  $(screenId).classList.add("active");
+/* PATTERN ANALYTICS ENGINE */
+function calculateBuckPattern(sightings) {
+  if (!sightings.length) return { peakTime: "No Data", nocturnalPct: "0%", totalHits: 0 };
 
-  $$(".navBtn").forEach(btn => {
-    btn.classList.toggle("active", btn.getAttribute("onclick").includes(screenId));
-  });
-
-  if (screenId === "mapScreen" && map) {
-    setTimeout(() => map.invalidateSize(), 150);
-  }
-  if (screenId === "dataScreen") renderGallery();
-  if (screenId === "bucksScreen") renderBucks();
-  if (screenId === "commandScreen") refreshAll();
-}
-
-function initMap() {
-  if (map) return;
-  map = L.map('map', { zoomControl: false }).setView([currentLocation.lat, currentLocation.lng], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
-  map.on('click', onMapClick);
-}
-
-function locateUser() {
-  if (!navigator.geolocation) { showToast("GPS unavailable."); return; }
-  navigator.geolocation.getCurrentPosition(pos => {
-    currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    if (map) {
-      map.setView([currentLocation.lat, currentLocation.lng], 14);
-      L.circleMarker([currentLocation.lat, currentLocation.lng], { radius: 8, fillColor: "#76b375", color: "#fff", weight: 2, fillOpacity: 0.9 }).addTo(map).bindPopup("Current Position");
-    }
-    showToast("GPS position acquired.");
-  }, () => showToast("GPS position lock failed."));
-}
-
-function beginMapAdd(type) {
-  pendingMapMode = type;
-  showToast(`Tap map location to drop ${type}.`);
-  showScreen('mapScreen');
-}
-
-async function onMapClick(e) {
-  if (!pendingMapMode) return;
-  const lat = e.latlng.lat;
-  const lng = e.latlng.lng;
-  const mode = pendingMapMode;
-  pendingMapMode = null;
-
-  if (mode === 'waypoint') {
-    openModal("PLACE WAYPOINT", `
-      <div class="formGroup">
-        <label>Waypoint Designation / Name</label>
-        <input type="text" id="wpName" placeholder="e.g. Oak Stand, Feeding Trail" required>
-      </div>
-      <div class="formGroup">
-        <label>Type</label>
-        <select id="wpType">
-          <option value="Stand">Tree Stand / Blind</option>
-          <option value="Trail Cam">Trail Camera</option>
-          <option value="Feed">Feed Site / Salt Lick</option>
-          <option value="Rub">Rub / Scrape Line</option>
-        </select>
-      </div>
-      <div class="row">
-        <button class="actionBtn" onclick="closeModal()">CANCEL</button>
-        <button class="actionBtn primary" id="saveWpBtn">SAVE WAYPOINT</button>
-      </div>
-    `);
-
-    $("saveWpBtn").onclick = async () => {
-      await dbPut("waypoints", { id: uid("wp"), name: $("wpName").value || "Waypoint", type: $("wpType").value, lat, lng, createdAt: now() });
-      closeModal();
-      await renderMapMarkers();
-      await refreshAll();
-      showToast("Waypoint plotted.");
-    };
-  } else if (mode === 'sighting') {
-    addSighting(lat, lng);
-  }
-}
-
-async function renderMapMarkers() {
-  if (!map) return;
-  mapMarkers.forEach(m => map.removeLayer(m));
-  mapMarkers = [];
-
-  const waypoints = await dbGetAll("waypoints");
-  const sightings = await dbGetAll("sightings");
-
-  waypoints.forEach(wp => {
-    const marker = L.marker([wp.lat, wp.lng]).addTo(map).bindPopup(`<strong>${esc(wp.name)}</strong><br><small>${wp.type}</small>`);
-    mapMarkers.push(marker);
-  });
+  let hours = Array(24).fill(0);
+  let nocturnalCount = 0;
 
   sightings.forEach(s => {
-    if (s.lat && s.lng) {
-      const circle = L.circleMarker([s.lat, s.lng], { radius: 7, fillColor: "#d97736", color: "#ffffff", weight: 1.5, fillOpacity: 0.9 }).addTo(map);
-      circle.bindPopup(`<strong>Sighting: ${esc(s.buckName || 'Buck')}</strong><br><p>${esc(s.note || '')}</p>`);
-      mapMarkers.push(circle);
+    const date = new Date(s.date);
+    if (!isNaN(date.getTime())) {
+      const h = date.getHours();
+      hours[h]++;
+      if (h < 6 || h >= 21) nocturnalCount++; // Night timeframe definition
     }
   });
+
+  let maxHits = -1, peakHour = 0;
+  hours.forEach((count, h) => {
+    if (count > maxHits) { maxHits = count; peakHour = h; }
+  });
+
+  const peakFormatted = `${peakHour.toString().padStart(2, '0')}:00 - ${(peakHour + 1).toString().padStart(2, '0')}:00`;
+  const nocturnalPct = `${Math.round((nocturnalCount / sightings.length) * 100)}%`;
+
+  return { peakTime: peakFormatted, nocturnalPct, totalHits: sightings.length };
 }
 
-/* =========================================================
-   SHOT COACH & BALLISTIC MODULE
-   ========================================================= */
-function calculateShot() {
-  const weapon = $("coachWeapon").value;
-  const dist = parseInt($("coachDist").value) || 100;
-  const angle = $("coachAngle").value;
-
-  let aimPoint = "";
-  let ballistics = "";
-  let advice = "";
-
-  // Aim point determination based on target angle
-  if (angle === "broadside") {
-    aimPoint = "CENTER VITAL ZONE (BEHIND SHOULDER)";
-    advice = "Aim directly behind the front shoulder, one-third up from the bottom line of the chest cavity to pass through both lungs and the upper heart.";
-  } else if (angle === "quartering_away") {
-    aimPoint = "AIM BEHIND RIB CAGE TOWARD OPPOSITE SHOULDER";
-    advice = "Target the back edge of the ribcage. The projectile trajectory must pass through the vitals toward the off-side shoulder.";
-  } else if (angle === "quartering_toward") {
-    aimPoint = "FRONT SHOULDER / CHEST JUNCTION";
-    advice = "High-risk shot. Aim at the junction of the forward chest cavity and front neck base. Wait for broadside if using archery.";
-  } else {
-    aimPoint = "CENTER CHEST CAVITY (WAIT FOR TURN)";
-    advice = "Narrow target window. Highly recommended to hold off until the deer turns broadside or quartering away.";
-  }
-
-  // Ballistics adjustment by weapon
-  if (weapon === "rifle") {
-    if (dist <= 150) {
-      ballistics = "HOLD DEAD CENTER (0 TO -0.5 INCH DROP)";
-    } else if (dist <= 250) {
-      ballistics = `HOLD 2.5 INCHES HIGH (${dist} YDS)`;
-    } else {
-      ballistics = `HOLD 7.0 INCHES HIGH (${dist} YDS) — COMPENSATE FOR WIND DRIFT`;
-    }
-  } else if (weapon === "bow") {
-    if (dist > 40) {
-      ballistics = `WARNING: ${dist} YDS EXCEEDS OPTIMAL ARCHERY RANGE`;
-      advice += " High probability of string jump. Reduce distance before release.";
-    } else {
-      ballistics = `USE ${dist}-YARD PIN DIRECTLY ON VITAL ZONE`;
-    }
-  } else { // Crossbow
-    if (dist > 60) {
-      ballistics = `WARNING: ${dist} YDS — SIGNIFICANT VELOCITY DROP`;
-    } else {
-      ballistics = `USE ${dist}-YARD RETICLE CROSSHAIR`;
-    }
-  }
-
-  $("coachAimPoint").textContent = aimPoint;
-  $("coachBallistics").textContent = ballistics;
-  $("coachAdvice").textContent = advice;
-  showToast("Shot computation updated.");
-}
-
-/* =========================================================
-   BUCKS & SIGHTINGS
-   ========================================================= */
-async function renderBucks() {
-  const bucks = await dbGetAll("bucks");
-  if (!bucks.length) {
-    $("buckList").innerHTML = `<div class="empty">No buck profiles created. Click "+ NEW BUCK" to create one.</div>`;
-    return;
-  }
-  $("buckList").innerHTML = bucks.map(b => `
-    <div class="card">
-      <div class="row spread">
-        <strong style="font-family:var(--font-mono); font-size:1rem">${esc(b.name)}</strong>
-        ${b.target ? `<span style="background:var(--accent); color:#fff; font-size:0.6rem; padding:2px 6px; border-radius:4px; font-weight:700;">TARGET</span>` : ''}
-      </div>
-      <div style="font-size:0.8rem; color:var(--muted); margin-top:6px">Points: ${esc(b.points || '--')} | Age: ${esc(b.age || '--')}</div>
-    </div>
-  `).join("");
-}
-
-async function openBuckForm() {
-  openModal("CREATE BUCK PROFILE", `
-    <div class="formGroup">
-      <label>Name / Designation</label>
-      <input type="text" id="bName" placeholder="e.g. Split Brow, Ghost" required>
-    </div>
-    <div class="grid2">
-      <div class="formGroup">
-        <label>Points</label>
-        <input type="text" id="bPoints" placeholder="8 pt">
-      </div>
-      <div class="formGroup">
-        <label>Estimated Age</label>
-        <input type="text" id="bAge" placeholder="3.5 yrs">
-      </div>
-    </div>
-    <div class="row">
-      <button class="actionBtn" onclick="closeModal()">CANCEL</button>
-      <button class="actionBtn primary" id="saveBuckBtn">SAVE BUCK</button>
-    </div>
-  `);
-
-  $("saveBuckBtn").onclick = async () => {
-    const name = $("bName").value.trim();
-    if (!name) return;
-    await dbPut("bucks", { id: uid("buck"), name, points: $("bPoints").value, age: $("bAge").value, target: true, createdAt: now() });
-    closeModal();
-    await renderBucks();
-    await refreshAll();
-    showToast("Buck profile saved.");
-  };
-}
-
-async function addSighting(lat = null, lng = null) {
-  const bucks = await dbGetAll("bucks");
-  openModal("RECORD SIGHTING", `
-    <div class="formGroup">
-      <label>Select Buck</label>
-      <select id="sightBuck">
-        ${bucks.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join("")}
-      </select>
-    </div>
-    <div class="formGroup">
-      <label>Field Observation</label>
-      <textarea id="sightNote" placeholder="Sighting details..."></textarea>
-    </div>
-    <div class="row">
-      <button class="actionBtn" onclick="closeModal()">CANCEL</button>
-      <button class="actionBtn primary" id="saveSightBtn">SAVE LOG</button>
-    </div>
-  `);
-
-  $("saveSightBtn").onclick = async () => {
-    const buckId = $("sightBuck").value;
-    const buck = bucks.find(b => b.id === buckId);
-    await dbPut("sightings", {
-      id: uid("sight"),
-      buckId,
-      buckName: buck ? buck.name : "Buck",
-      note: $("sightNote").value,
-      lat: lat || currentLocation.lat,
-      lng: lng || currentLocation.lng,
-      date: now()
-    });
-    closeModal();
-    await renderMapMarkers();
-    await refreshAll();
-    showToast("Sighting recorded.");
-  };
-}
-
-/* =========================================================
-   MEDIA & GALLERY
-   ========================================================= */
+/* AUTOMATED PHOTO & EXIF INGESTION */
 $("photoPick").onclick = () => $("photoInput").click();
 $("photoInput").onchange = async e => {
   const files = [...(e.target.files || [])];
-  for (const file of files) {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      await dbPut("photos", { id: uid("photo"), filename: file.name, dataUrl: reader.result, timestamp: now() });
-      await renderGallery();
-      await refreshAll();
-    };
-    reader.readAsDataURL(file);
+  const bucks = await dbGetAll("bucks");
+
+  if (!bucks.length) {
+    showToast("Create a Buck Profile first to assign photos.");
+    openBuckForm();
+    return;
   }
-  showToast(`Imported ${files.length} photo(s).`);
+
+  openModal("ASSIGN PHOTO BATCH TO BUCK", `
+    <div class="formGroup">
+      <label>Target Buck in Photos</label>
+      <select id="assignBuckId">
+        ${bucks.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join("")}
+      </select>
+    </div>
+    <button class="actionBtn primary" id="confirmAssignBtn">PROCESS & EXTRACT TIMESTAMPS</button>
+  `);
+
+  $("confirmAssignBtn").onclick = async () => {
+    const buckId = $("assignBuckId").value;
+    const selectedBuck = bucks.find(b => b.id === buckId);
+    closeModal();
+
+    for (const file of files) {
+      await new Promise(resolve => {
+        EXIF.getData(file, function() {
+          let timestamp = now();
+          const exifDate = EXIF.getTag(this, "DateTimeOriginal");
+          
+          if (exifDate) {
+            // Convert EXIF "YYYY:MM:DD HH:MM:SS" to ISO format
+            const parts = exifDate.split(" ");
+            if (parts.length === 2) {
+              const dParts = parts[0].split(":");
+              timestamp = new Date(`${dParts[0]}-${dParts[1]}-${dParts[2]}T${parts[1]}`).toISOString();
+            }
+          }
+
+          const reader = new FileReader();
+          reader.onload = async () => {
+            // Save photo
+            await dbPut("photos", { id: uid("photo"), buckId, filename: file.name, dataUrl: reader.result, timestamp });
+            // Automatically record pattern sighting point from timestamp
+            await dbPut("sightings", {
+              id: uid("sight"),
+              buckId,
+              buckName: selectedBuck ? selectedBuck.name : "Buck",
+              note: `Auto-extracted from photo EXIF (${file.name})`,
+              lat: currentLocation.lat,
+              lng: currentLocation.lng,
+              date: timestamp
+            });
+            resolve();
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+
+    await renderGallery();
+    await renderBucks();
+    await refreshAll();
+    showToast(`Processed ${files.length} photos with timestamps.`);
+  };
 };
+
+/* BUCK ROSTER WITH PATTERN CARDS */
+async function renderBucks() {
+  const bucks = await dbGetAll("bucks");
+  const sightings = await dbGetAll("sightings");
+
+  if (!bucks.length) {
+    $("buckList").innerHTML = `<div class="card"><p style="text-align:center; color:var(--muted); font-size:0.8rem">No profiles saved. Tap "+ NEW BUCK" to add one.</p></div>`;
+    return;
+  }
+
+  $("buckList").innerHTML = bucks.map(b => {
+    const buckSightings = sightings.filter(s => s.buckId === b.id);
+    const pattern = calculateBuckPattern(buckSightings);
+
+    return `
+      <div class="card">
+        <div class="row spread">
+          <strong style="font-family:var(--font-mono); font-size:0.95rem">${esc(b.name)}</strong>
+          <span class="badge badge-success">${b.points || 'Unk'} PT</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--muted); margin: 4px 0 8px 0;">Age: ${esc(b.age || 'Unknown')}</div>
+        <div class="grid2">
+          <div class="kpi"><span>PEAK ACTIVITY</span><strong>${pattern.peakTime}</strong></div>
+          <div class="kpi"><span>NIGHT MOVEMENT</span><strong>${pattern.nocturnalPct}</strong></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
 
 async function renderGallery() {
   const photos = await dbGetAll("photos");
-  $("photoCountLabel").textContent = `${photos.length} images`;
+  $("photoCountLabel").textContent = `${photos.length} image(s) registered`;
   if (!photos.length) {
-    $("gallery").innerHTML = `<div class="empty" style="grid-column:1/-1">No photos loaded.</div>`;
+    $("gallery").innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--muted); font-size:0.8rem; padding:12px;">No images loaded.</p>`;
     return;
   }
   $("gallery").innerHTML = photos.map(p => `
     <div class="photo">
       <img src="${p.dataUrl}" alt="${esc(p.filename)}">
-      <span>${esc(p.filename)}</span>
+      <span>${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
     </div>
   `).join("");
 }
 
-/* =========================================================
-   REFRESH ALL & INIT
-   ========================================================= */
+/* UI UTILITIES & INITIALIZATION */
 async function refreshAll() {
   const bucks = await dbGetAll("bucks");
   const sightings = await dbGetAll("sightings");
@@ -646,28 +412,75 @@ async function refreshAll() {
   $("statPhotos").textContent = photos.length;
   $("statWaypoints").textContent = waypoints.length;
 
-  const target = bucks.find(b => b.target) || bucks[0];
+  const target = bucks[0];
   if (target) {
+    const targetSightings = sightings.filter(s => s.buckId === target.id);
+    const pattern = calculateBuckPattern(targetSightings);
     $("targetName").textContent = target.name.toUpperCase();
-    $("targetSub").textContent = `${target.points || "Unk"} points • ${target.age || "Unk"} age • ${sightings.filter(s => s.buckId === target.id).length} sightings`;
+    $("targetSub").textContent = `${target.points || "?"} pts • ${targetSightings.length} total hits logged`;
+    $("targetPeak").textContent = pattern.peakTime;
+    $("targetNoct").textContent = pattern.nocturnalPct;
   }
 }
 
-$("quickAddBtn").onclick = () => {
-  openModal("QUICK ENTRY", `
-    <button class="actionBtn primary full" onclick="closeModal();openBuckForm();">＋ NEW BUCK PROFILE</button>
-    <button class="actionBtn full" onclick="closeModal();addSighting();">👁 RECORD SIGHTING</button>
-    <button class="actionBtn full" onclick="closeModal();$('photoInput').click();">📷 IMPORT PHOTOS</button>
-    <button class="actionBtn full" onclick="closeModal();beginMapAdd('waypoint');">📍 MARK WAYPOINT</button>
+function showScreen(screenId) {
+  $$(".screen").forEach(s => s.classList.remove("active"));
+  $(screenId).classList.add("active");
+  $$(".navBtn").forEach(btn => btn.classList.toggle("active", btn.getAttribute("onclick").includes(screenId)));
+  if (screenId === "mapScreen" && !map) initMap();
+  if (screenId === "dataScreen") renderGallery();
+  if (screenId === "bucksScreen") renderBucks();
+  if (screenId === "commandScreen") refreshAll();
+}
+
+function initMap() {
+  map = L.map('map', { zoomControl: false }).setView([currentLocation.lat, currentLocation.lng], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+}
+
+function locateUser() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if (map) map.setView([currentLocation.lat, currentLocation.lng], 13);
+    });
+  }
+}
+
+async function openBuckForm() {
+  openModal("CREATE BUCK PROFILE", `
+    <div class="formGroup">
+      <label>Buck Designation / Name</label>
+      <input type="text" id="bName" placeholder="e.g. Split Brow, Ghost" required>
+    </div>
+    <div class="grid2">
+      <div class="formGroup">
+        <label>Points</label>
+        <input type="text" id="bPoints" placeholder="8">
+      </div>
+      <div class="formGroup">
+        <label>Age</label>
+        <input type="text" id="bAge" placeholder="3.5 yrs">
+      </div>
+    </div>
+    <button class="actionBtn primary" id="saveBuckBtn">SAVE PROFILE</button>
   `);
-};
+
+  $("saveBuckBtn").onclick = async () => {
+    const name = $("bName").value.trim();
+    if (!name) return;
+    await dbPut("bucks", { id: uid("buck"), name, points: $("bPoints").value, age: $("bAge").value, createdAt: now() });
+    closeModal();
+    await renderBucks();
+    await refreshAll();
+    showToast("Profile saved.");
+  };
+}
 
 window.addEventListener("DOMContentLoaded", async () => {
   await openDB();
-  initMap();
   locateUser();
   await refreshAll();
-  $("commandDate").textContent = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }).toUpperCase();
 });
 </script>
 </body>
