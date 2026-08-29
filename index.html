@@ -1,2704 +1,1368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#07110c">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BUCKTRACK">
-<meta name="description" content="BUCKTRACK Tactical Deer Intelligence">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#121612" />
+  <title>BUCKTRACK - Big Game Intelligence</title>
 
-<title>BUCKTRACK // Tactical Deer Intelligence</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      --bg: #121612;
+      --card: #1c221c;
+      --card-alt: #242c24;
+      --border: #2f3a2f;
+      --line: #3d4c3d;
+      --text: #e2e8e2;
+      --muted: #8fa38f;
+      --primary: #5b8c5a;
+      --primary-bright: #76b375;
+      --accent: #d97736;
+      --danger: #c94a4a;
+      --radius: 12px;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-<style>
-:root{
-  --bg:#050806;
-  --panel:#0b120e;
-  --panel2:#101a14;
-  --panel3:#142219;
-  --line:#233329;
-  --line2:#314639;
-  --text:#e9f2eb;
-  --muted:#8d9e92;
-  --green:#72e69a;
-  --green2:#2bc66c;
-  --amber:#f5bd55;
-  --red:#ff6767;
-  --blue:#62b9ff;
-  --purple:#a78bfa;
-  --shadow:0 16px 40px rgba(0,0,0,.35);
-  --radius:18px;
-  --nav:78px;
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body, html { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); overflow: hidden; }
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-body{overflow:hidden}
-button,input,select,textarea{font:inherit}
-button{border:0;color:inherit;cursor:pointer}
-input,select,textarea{
-  width:100%;
-  background:#07100b;
-  color:var(--text);
-  border:1px solid var(--line2);
-  border-radius:12px;
-  padding:12px;
-  outline:none;
-}
-input:focus,select:focus,textarea:focus{border-color:var(--green)}
-textarea{resize:vertical;min-height:90px}
-.hidden{display:none!important}
+    /* Layout Structure */
+    #app { display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; position: relative; }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; }
+    .brand { font-family: var(--font-mono); font-weight: 900; letter-spacing: 1.5px; color: var(--primary-bright); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .brand span { color: var(--text); }
+    
+    main { flex: 1; position: relative; overflow: hidden; }
+    .screen { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; padding: 16px; padding-bottom: 90px; }
+    .screen.active { display: flex; }
+    .screen#mapScreen { padding: 0; }
 
-#app{
-  height:100dvh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  background:
-    radial-gradient(circle at 85% 0%,rgba(40,120,65,.12),transparent 35%),
-    linear-gradient(180deg,#07100b,#050806);
-}
+    /* Bottom Navigation */
+    nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+    .navBtn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); background: none; border: none; font-size: 0.7rem; font-family: var(--font-mono); font-weight: 700; width: 20%; cursor: pointer; }
+    .navBtn svg { width: 22px; height: 22px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .navBtn.active { color: var(--primary-bright); }
+    .navBtn.active svg { stroke: var(--primary-bright); }
 
-.topbar{
-  flex:none;
-  height:76px;
-  padding:env(safe-area-inset-top) 14px 0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:rgba(5,8,6,.9);
-  border-bottom:1px solid var(--line);
-  backdrop-filter:blur(18px);
-  z-index:1000;
-}
+    /* UI Cards & Layout Elements */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; }
+    .cardTitle { font-size: 0.75rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--muted); margin-bottom: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .kpi { background: var(--card-alt); padding: 10px; border-radius: 8px; border: 1px solid var(--line); text-align: center; }
+    .kpi span { font-size: 0.65rem; color: var(--muted); display: block; text-transform: uppercase; font-family: var(--font-mono); }
+    .kpi strong { font-size: 1.2rem; font-weight: 800; color: var(--text); font-family: var(--font-mono); }
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.brandMark{
-  width:42px;height:42px;border-radius:13px;
-  display:grid;place-items:center;
-  background:linear-gradient(145deg,#173a24,#0c1b12);
-  border:1px solid #31563d;
-  box-shadow:inset 0 0 20px rgba(114,230,154,.08);
-}
-.brandMark svg{width:27px;height:27px;fill:none;stroke:var(--green);stroke-width:1.7}
-.brandText strong{
-  display:block;font-size:16px;letter-spacing:2px;
-}
-.brandText span{
-  display:block;color:var(--muted);font-size:9px;letter-spacing:1.6px;margin-top:2px;
-}
+    /* Target Ring Meter */
+    .targetWrapper { display: flex; align-items: center; gap: 16px; margin: 8px 0; }
+    .targetRing { width: 70px; height: 70px; border-radius: 50%; background: conic-gradient(var(--primary-bright) calc(var(--score) * 1%), var(--card-alt) 0deg); display: flex; align-items: center; justify-content: center; position: relative; }
+    .targetRing::after { content: ''; position: absolute; inset: 6px; background: var(--card); border-radius: 50%; }
+    .targetRingText { position: relative; z-index: 1; font-family: var(--font-mono); font-weight: 900; font-size: 1.1rem; }
+    .progressBar { width: 100%; height: 6px; background: var(--card-alt); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+    .progressFill { height: 100%; background: var(--primary-bright); width: 0%; transition: width 0.3s; }
 
-.topActions{display:flex;gap:7px}
-.iconBtn{
-  width:42px;height:42px;border-radius:13px;
-  background:#0c1510;border:1px solid var(--line);
-  display:grid;place-items:center;
-}
-.iconBtn:active,.navBtn:active,.actionBtn:active{transform:scale(.96)}
-.iconBtn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7}
+    /* Controls & Buttons */
+    .actionBtn { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 12px; border-radius: 8px; font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .actionBtn.primary { background: var(--primary); border-color: var(--primary-bright); color: #fff; }
+    .actionBtn.accent { background: var(--accent); border-color: #e88948; color: #fff; }
+    .actionBtn.danger { background: var(--danger); border-color: #d95f5f; color: #fff; }
+    .actionBtn.full { margin-bottom: 8px; }
 
-#main{
-  flex:1;
-  min-height:0;
-  overflow:hidden;
-  position:relative;
-}
+    /* Forms & Inputs */
+    .formGroup { margin-bottom: 12px; }
+    .formGroup label { display: block; font-size: 0.7rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+    input, select, textarea { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 10px; border-radius: 6px; font-size: 0.9rem; font-family: var(--font-sans); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-bright); }
+    textarea { resize: vertical; min-height: 70px; }
 
-.screen{
-  display:none;
-  height:100%;
-  overflow:auto;
-  padding:14px 14px calc(var(--nav) + 24px);
-  -webkit-overflow-scrolling:touch;
-}
-.screen.active{display:block}
+    /* Map Interface */
+    #map { width: 100%; height: 100%; background: #111; }
+    .mapOverlay { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; gap: 8px; }
+    .mapOverlay .actionBtn { flex: 1; background: rgba(28, 34, 28, 0.9); backdrop-filter: blur(8px); }
 
-.screenTitle{
-  font-size:26px;
-  font-weight:800;
-  letter-spacing:-.6px;
-  margin:5px 0 3px;
-}
-.screenSub{font-size:12px;color:var(--muted);margin-bottom:16px}
+    /* Gallery Grid */
+    .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .photo { aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--card-alt); border: 1px solid var(--line); position: relative; cursor: pointer; }
+    .photo img { width: 100%; height: 100%; object-fit: cover; }
+    .photo span { position: absolute; bottom: 0; inset-x: 0; background: rgba(0,0,0,0.75); font-size: 0.6rem; font-family: var(--font-mono); padding: 2px 4px; text-align: center; white-width: 100%; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 
-.grid{
-  display:grid;
-  gap:10px;
-}
-.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    /* Modals & Dialogs */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .modal.hidden { display: none; }
+    .modalContent { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 16px; }
 
-.card{
-  background:linear-gradient(145deg,rgba(16,26,20,.97),rgba(8,14,10,.97));
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:15px;
-  box-shadow:var(--shadow);
-}
-.cardTitle{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:12px;
-}
-.cardTitle strong{font-size:13px;letter-spacing:.5px}
-.cardTitle small{font-size:10px;color:var(--muted)}
+    /* Tabs & Toggles */
+    .tabBar { display: flex; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+    .tab { flex: 1; text-align: center; padding: 8px; font-size: 0.75rem; font-family: var(--font-mono); color: var(--muted); border-bottom: 2px solid transparent; cursor: pointer; }
+    .tab.active { color: var(--primary-bright); border-bottom-color: var(--primary-bright); font-weight: 700; }
+    .switch { width: 44px; height: 24px; background: var(--card-alt); border: 1px solid var(--line); border-radius: 12px; position: relative; cursor: pointer; transition: 0.2s; }
+    .switch i { width: 18px; height: 18px; background: var(--muted); border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s; }
+    .switch.on { background: var(--primary); border-color: var(--primary-bright); }
+    .switch.on i { left: 22px; background: #fff; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row.spread { justify-content: space-between; }
 
-.metric{
-  padding:14px;
-  background:#09110c;
-  border:1px solid var(--line);
-  border-radius:15px;
-}
-.metric .label{
-  color:var(--muted);
-  font-size:9px;
-  text-transform:uppercase;
-  letter-spacing:1.1px;
-}
-.metric .value{
-  margin-top:5px;
-  font-size:22px;
-  font-weight:800;
-}
-.metric .sub{font-size:10px;color:var(--muted);margin-top:2px}
-
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  padding:5px 8px;
-  border-radius:999px;
-  font-size:9px;
-  font-weight:800;
-  letter-spacing:.7px;
-  text-transform:uppercase;
-  border:1px solid var(--line2);
-  background:#0b150f;
-}
-.badge.green{color:var(--green);border-color:#245a37;background:#0c1d12}
-.badge.amber{color:var(--amber);border-color:#5a4723;background:#1d170b}
-.badge.red{color:var(--red);border-color:#5b2929;background:#1d0c0c}
-.badge.blue{color:var(--blue);border-color:#254c67;background:#0b1720}
-
-.actionBtn{
-  min-height:44px;
-  border-radius:13px;
-  padding:0 14px;
-  display:inline-flex;
-  justify-content:center;
-  align-items:center;
-  gap:8px;
-  background:#102018;
-  border:1px solid #294535;
-  font-weight:700;
-  font-size:12px;
-}
-.actionBtn.primary{
-  background:linear-gradient(135deg,#2a9d55,#17753a);
-  border-color:#48bd71;
-  color:#fff;
-}
-.actionBtn.amber{
-  background:linear-gradient(135deg,#6e4e1d,#48330f);
-  border-color:#8d6b2c;
-}
-.actionBtn.danger{
-  background:#2a1111;
-  border-color:#642727;
-  color:#ff9a9a;
-}
-.actionBtn.full{width:100%}
-
-.row{display:flex;gap:9px;align-items:center}
-.row>*{min-width:0}
-.spread{justify-content:space-between}
-
-.progress{
-  height:7px;background:#07100b;border-radius:99px;overflow:hidden;
-  border:1px solid var(--line);
-}
-.progress>div{
-  height:100%;border-radius:99px;
-  background:linear-gradient(90deg,var(--green2),var(--green));
-}
-
-.list{display:flex;flex-direction:column;gap:8px}
-.listItem{
-  background:#09120d;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-}
-.listItem:active{background:#0d1911}
-
-.empty{
-  text-align:center;
-  color:var(--muted);
-  padding:30px 12px;
-  font-size:12px;
-}
-
-.hero{
-  padding:18px;
-  border-radius:22px;
-  border:1px solid #284332;
-  background:
-    radial-gradient(circle at 90% 0%,rgba(77,176,100,.15),transparent 42%),
-    linear-gradient(145deg,#101e15,#09100c);
-  margin-bottom:10px;
-}
-.hero .eyebrow{
-  color:var(--green);
-  font-size:9px;
-  font-weight:800;
-  letter-spacing:1.5px;
-  text-transform:uppercase;
-}
-.hero h1{
-  font-size:30px;margin:5px 0 4px;letter-spacing:-1px;
-}
-.hero p{color:var(--muted);font-size:12px;margin:0}
-
-.scoreRing{
-  width:74px;height:74px;border-radius:50%;
-  display:grid;place-items:center;
-  background:conic-gradient(var(--green) var(--score,75%),#16251b 0);
-  position:relative;
-}
-.scoreRing:after{
-  content:"";position:absolute;inset:6px;
-  background:#0a130d;border-radius:50%;
-}
-.scoreRing span{position:relative;z-index:1;font-size:18px;font-weight:900}
-
-.condition{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 0;
-  border-bottom:1px solid var(--line);
-}
-.condition:last-child{border-bottom:0}
-.conditionIcon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#101d15}
-.conditionIcon svg{width:18px;height:18px;stroke:var(--green);fill:none;stroke-width:1.7}
-.condition strong{font-size:12px}
-.condition small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
-
-#mapScreen{
-  padding:0;
-  position:relative;
-  overflow:hidden;
-}
-#map{
-  position:absolute;
-  inset:0;
-  z-index:1;
-  background:#17211b;
-}
-.leaflet-container{font-family:inherit;background:#17211b}
-.leaflet-control-zoom a{
-  background:#0b120e!important;color:#e9f2eb!important;border-color:#26362b!important;
-}
-.leaflet-control-attribution{
-  background:rgba(5,8,6,.72)!important;color:#87958b!important;font-size:8px;
-}
-.leaflet-control-attribution a{color:#91b69e!important}
-
-.mapOverlay{
-  position:absolute;
-  z-index:500;
-  left:12px;right:12px;
-  pointer-events:none;
-}
-.mapTop{top:12px}
-.mapBottom{bottom:12px}
-.mapPanel{
-  pointer-events:auto;
-  background:rgba(7,13,9,.9);
-  backdrop-filter:blur(16px);
-  border:1px solid var(--line2);
-  border-radius:15px;
-  box-shadow:var(--shadow);
-  padding:10px;
-}
-.mapTools{
-  display:flex;gap:7px;overflow:auto;
-}
-.mapTools button{
-  flex:0 0 auto;
-  width:42px;height:42px;border-radius:12px;
-  background:#0c1610;border:1px solid var(--line);
-}
-.mapTools button.active{border-color:var(--green);color:var(--green)}
-.mapStatus{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:8px;font-size:10px;
-}
-.mapLegend{
-  display:flex;gap:8px;overflow:auto;margin-top:8px;
-}
-.legend{
-  font-size:9px;white-space:nowrap;color:#bdc9bf;
-}
-.dot{
-  display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;
-}
-.dot.green{background:var(--green)}
-.dot.amber{background:var(--amber)}
-.dot.red{background:var(--red)}
-.dot.blue{background:var(--blue)}
-.dot.purple{background:var(--purple)}
-
-.customMarker{
-  width:32px;height:32px;border-radius:50%;
-  display:grid;place-items:center;
-  background:#0b160f;
-  border:2px solid var(--green);
-  box-shadow:0 0 0 4px rgba(114,230,154,.12),0 5px 15px rgba(0,0,0,.45);
-  color:var(--green);
-  font-size:14px;font-weight:900;
-}
-.customMarker.buck{border-color:var(--amber);color:var(--amber)}
-.customMarker.bed{border-color:var(--blue);color:var(--blue)}
-.customMarker.stand{border-color:var(--purple);color:var(--purple)}
-
-.bottomNav{
-  position:fixed;
-  left:0;right:0;bottom:0;
-  height:calc(var(--nav) + env(safe-area-inset-bottom));
-  padding:7px 7px env(safe-area-inset-bottom);
-  background:rgba(5,8,6,.94);
-  backdrop-filter:blur(20px);
-  border-top:1px solid var(--line);
-  display:grid;
-  grid-template-columns:repeat(6,1fr);
-  z-index:2000;
-}
-.navBtn{
-  background:transparent;
-  border-radius:13px;
-  color:#718077;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;font-size:8px;font-weight:700;
-  letter-spacing:.4px;text-transform:uppercase;
-}
-.navBtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
-.navBtn.active{
-  color:var(--green);
-  background:#0b1710;
-}
-
-.modal{
-  position:fixed;inset:0;z-index:5000;
-  background:rgba(0,0,0,.72);
-  backdrop-filter:blur(10px);
-  display:none;
-  align-items:flex-end;
-}
-.modal.open{display:flex}
-.modalBox{
-  width:100%;
-  max-height:92dvh;
-  overflow:auto;
-  background:#0a120d;
-  border:1px solid var(--line2);
-  border-radius:24px 24px 0 0;
-  padding:18px 15px calc(18px + env(safe-area-inset-bottom));
-  box-shadow:0 -20px 70px rgba(0,0,0,.55);
-}
-.modalHead{
-  display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;
-}
-.modalHead h2{margin:0;font-size:18px}
-.close{
-  width:38px;height:38px;border-radius:11px;background:#111c15;border:1px solid var(--line);
-}
-.formGroup{margin-bottom:12px}
-.formGroup label{
-  display:block;font-size:10px;color:var(--muted);
-  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
-}
-
-.toast{
-  position:fixed;
-  left:14px;right:14px;
-  bottom:calc(var(--nav) + 14px + env(safe-area-inset-bottom));
-  z-index:9000;
-  background:#102017;
-  border:1px solid #31523b;
-  border-radius:14px;
-  padding:13px;
-  box-shadow:var(--shadow);
-  font-size:12px;
-  transform:translateY(30px);
-  opacity:0;
-  pointer-events:none;
-  transition:.25s ease;
-}
-.toast.show{transform:translateY(0);opacity:1}
-
-#auth{
-  position:fixed;inset:0;z-index:10000;
-  background:
-    radial-gradient(circle at 50% 20%,rgba(56,155,84,.15),transparent 40%),
-    #050806;
-  display:flex;align-items:center;justify-content:center;
-  padding:18px;
-}
-.authBox{
-  width:min(440px,100%);
-  padding:24px;
-  border-radius:25px;
-  background:rgba(11,18,14,.96);
-  border:1px solid #294333;
-  box-shadow:0 30px 100px rgba(0,0,0,.55);
-}
-.authLogo{
-  width:66px;height:66px;border-radius:20px;
-  margin:0 auto 14px;
-  display:grid;place-items:center;
-  background:#0e2114;border:1px solid #315a3d;
-}
-.authLogo svg{width:40px;height:40px;stroke:var(--green);fill:none;stroke-width:1.4}
-.authBox h1{text-align:center;margin:0;font-size:25px;letter-spacing:2px}
-.authBox p{text-align:center;color:var(--muted);font-size:11px;margin:7px 0 22px}
-.authTabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:15px}
-.authTab{padding:10px;border-radius:10px;background:#09110c;color:var(--muted)}
-.authTab.active{background:#16301f;color:var(--green)}
-
-.gallery{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:6px;
-}
-.photo{
-  aspect-ratio:1;
-  border-radius:12px;
-  overflow:hidden;
-  position:relative;
-  background:#0b130e;
-  border:1px solid var(--line);
-}
-.photo img{width:100%;height:100%;object-fit:cover}
-.photo span{
-  position:absolute;left:5px;bottom:5px;
-  background:rgba(0,0,0,.65);border-radius:6px;
-  padding:3px 5px;font-size:8px;
-}
-
-.range{
-  width:100%;
-  accent-color:var(--green);
-}
-
-.timeline{
-  position:relative;
-  padding-left:20px;
-}
-.timeline:before{
-  content:"";position:absolute;left:5px;top:4px;bottom:4px;
-  width:1px;background:#294234;
-}
-.timelineItem{position:relative;padding:0 0 14px}
-.timelineItem:before{
-  content:"";position:absolute;left:-18px;top:4px;
-  width:8px;height:8px;border-radius:50%;
-  background:var(--green);box-shadow:0 0 0 4px #102018;
-}
-.timelineItem strong{font-size:11px}
-.timelineItem small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
-
-.kpi{
-  display:flex;justify-content:space-between;align-items:center;
-  gap:10px;padding:9px 0;border-bottom:1px solid var(--line);
-}
-.kpi:last-child{border-bottom:0}
-.kpi span{color:var(--muted);font-size:10px}
-.kpi strong{font-size:11px}
-
-.switch{
-  width:48px;height:27px;border-radius:99px;
-  background:#1a281f;border:1px solid var(--line2);
-  padding:2px;
-}
-.switch i{
-  display:block;width:21px;height:21px;border-radius:50%;
-  background:#7d8b81;transition:.2s;
-}
-.switch.on{background:#1b5b32;border-color:#398154}
-.switch.on i{transform:translateX(20px);background:var(--green)}
-
-.windArrow{
-  width:72px;height:72px;border-radius:50%;
-  border:1px solid #294334;
-  display:grid;place-items:center;
-  position:relative;
-  background:radial-gradient(circle,#102017,#09100c);
-}
-.windArrow:before{
-  content:"";position:absolute;
-  width:2px;height:28px;background:var(--green);
-  transform:rotate(var(--winddeg,0deg));
-  transform-origin:50% 90%;
-}
-.windArrow:after{
-  content:"";position:absolute;
-  width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
-  border-bottom:10px solid var(--green);
-  transform:rotate(var(--winddeg,0deg)) translateY(-12px);
-}
-
-.weatherBig{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:8px 0 14px;
-}
-.temp{font-size:42px;font-weight:900;letter-spacing:-2px}
-.weatherIcon{font-size:42px}
-
-.tabBar{
-  display:flex;gap:6px;overflow:auto;margin-bottom:12px;
-}
-.tab{
-  white-space:nowrap;
-  padding:9px 12px;border-radius:10px;
-  background:#09110c;border:1px solid var(--line);
-  color:var(--muted);font-size:10px;font-weight:700;
-}
-.tab.active{color:var(--green);border-color:#2d6140;background:#102016}
-
-.footerNote{
-  color:#5f7065;font-size:9px;text-align:center;padding:16px 5px;
-}
-
-@media(min-width:700px){
-  .screen{padding-left:24px;padding-right:24px}
-  .bottomNav{left:50%;right:auto;width:min(700px,100%);transform:translateX(-50%);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0}
-  .mapOverlay{left:24px;right:24px}
-}
-</style>
+    /* Utility Helpers */
+    .hidden { display: none !important; }
+    .empty { text-align: center; color: var(--muted); font-size: 0.8rem; font-family: var(--font-mono); padding: 24px 12px; border: 1px dashed var(--line); border-radius: 8px; }
+    .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--primary-bright); color: #121612; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.8rem; font-family: var(--font-mono); z-index: 3000; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+    .toast.show { opacity: 1; }
+    
+    /* Timeline Items */
+    .timelineItem { border-left: 2px solid var(--line); padding-left: 10px; margin-bottom: 10px; position: relative; }
+    .timelineItem::before { content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-bright); }
+    .timelineItem strong { font-size: 0.8rem; display: block; font-family: var(--font-mono); }
+    .timelineItem small { font-size: 0.7rem; color: var(--muted); }
+  </style>
 </head>
-
 <body>
 
-<div id="auth">
-  <div class="authBox">
-    <div class="authLogo">
-      <svg viewBox="0 0 48 48">
-        <path d="M24 40V22"/>
-        <path d="M24 24c-6-8-12-8-16-3 5 0 9 3 11 7"/>
-        <path d="M24 24c6-8 12-8 16-3-5 0-9 3-11 7"/>
-        <path d="M24 22c-3-5-2-10 1-14 3 4 4 9 1 14"/>
-      </svg>
-    </div>
-    <h1>BUCKTRACK</h1>
-    <p>TACTICAL DEER INTELLIGENCE // LOCAL COMMAND SYSTEM</p>
+  <!-- Toast Container -->
+  <div id="toast" class="toast">Action Complete</div>
 
-    <div class="authTabs">
-      <button class="authTab active" id="loginTab">LOGIN</button>
-      <button class="authTab" id="registerTab">REGISTER</button>
-    </div>
+  <!-- Modal Container -->
+  <div id="modal" class="modal hidden">
+    <div class="modalContent" id="modalContent"></div>
+  </div>
 
-    <form id="authForm">
-      <div class="formGroup">
-        <label>Username</label>
-        <input id="authUser" autocomplete="username" required>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
+        BUCK<span>TRACK</span>
       </div>
-      <div class="formGroup">
-        <label>Password</label>
-        <input id="authPass" type="password" autocomplete="current-password" required minlength="4">
-      </div>
-      <button class="actionBtn primary full" type="submit" id="authSubmit">ENTER COMMAND</button>
-    </form>
-
-    <div class="footerNote">All operational data is stored locally on this device.</div>
-  </div>
-</div>
-
-<div id="app" class="hidden">
-
-<header class="topbar">
-  <div class="brand">
-    <div class="brandMark">
-      <svg viewBox="0 0 48 48">
-        <path d="M24 40V22"/>
-        <path d="M24 24c-6-8-12-8-16-3 5 0 9 3 11 7"/>
-        <path d="M24 24c6-8 12-8 16-3-5 0-9 3-11 7"/>
-        <path d="M24 22c-3-5-2-10 1-14 3 4 4 9 1 14"/>
-      </svg>
-    </div>
-    <div class="brandText">
-      <strong>BUCKTRACK</strong>
-      <span id="topStatus">LOCAL COMMAND // READY</span>
-    </div>
-  </div>
-  <div class="topActions">
-    <button class="iconBtn" id="locBtn" title="Locate">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-    </button>
-    <button class="iconBtn" id="quickAddBtn" title="Add">
-      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
-  </div>
-</header>
-
-<main id="main">
-
-<section class="screen active" id="screen-command">
-  <div class="screenTitle">COMMAND</div>
-  <div class="screenSub" id="commandDate">INITIALIZING LOCAL INTELLIGENCE…</div>
-
-  <div class="hero">
-    <div class="eyebrow">Primary Objective</div>
-    <div class="row spread">
-      <div>
-        <h1 id="targetName">NO TARGET SELECTED</h1>
-        <p id="targetSub">Create a buck profile to begin target intelligence.</p>
-      </div>
-      <div class="scoreRing" id="targetRing" style="--score:0%">
-        <span id="targetScore">0</span>
-      </div>
-    </div>
-    <div style="margin-top:15px" class="progress"><div id="targetProgress" style="width:0%"></div></div>
-    <div class="row spread" style="margin-top:8px">
-      <small style="color:var(--muted);font-size:9px">TARGET CONFIDENCE</small>
-      <small id="targetConfidence" style="color:var(--green);font-size:9px">NO DATA</small>
-    </div>
-  </div>
-
-  <div class="grid grid2">
-    <div class="metric">
-      <div class="label">Temperature</div>
-      <div class="value" id="dashTemp">--</div>
-      <div class="sub" id="dashFeels">Waiting for location</div>
-    </div>
-    <div class="metric">
-      <div class="label">Wind</div>
-      <div class="value" id="dashWind">--</div>
-      <div class="sub" id="dashWindDir">--</div>
-    </div>
-    <div class="metric">
-      <div class="label">Pressure</div>
-      <div class="value" id="dashPressure">--</div>
-      <div class="sub" id="dashPressureTrend">--</div>
-    </div>
-    <div class="metric">
-      <div class="label">Movement</div>
-      <div class="value" id="dashMovement">--</div>
-      <div class="sub" id="dashMovementReason">Analyzing conditions</div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:10px">
-    <div class="cardTitle">
-      <strong>HUNT READINESS</strong>
-      <span class="badge green" id="readinessBadge">CALCULATING</span>
-    </div>
-    <div id="readinessRows"></div>
-  </div>
-
-  <div class="card" style="margin-top:10px">
-    <div class="cardTitle">
-      <strong>FIELD INTELLIGENCE</strong>
-      <small id="intelCount">0 observations</small>
-    </div>
-    <div class="grid grid2">
-      <div class="metric"><div class="label">Bucks</div><div class="value" id="statBucks">0</div></div>
-      <div class="metric"><div class="label">Sightings</div><div class="value" id="statSightings">0</div></div>
-      <div class="metric"><div class="label">Photos</div><div class="value" id="statPhotos">0</div></div>
-      <div class="metric"><div class="label">Waypoints</div><div class="value" id="statWaypoints">0</div></div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:10px">
-    <div class="cardTitle">
-      <strong>RECENT ACTIVITY</strong>
-      <small>LOCAL DATABASE</small>
-    </div>
-    <div id="recentActivity" class="timeline"></div>
-  </div>
-</section>
-
-<section class="screen" id="screen-map">
-  <div id="mapScreen">
-    <div id="map"></div>
-
-    <div class="mapOverlay mapTop">
-      <div class="mapPanel">
-        <div class="mapStatus">
-          <span><span class="dot green"></span><span id="mapCoord">LOCATION SEARCHING</span></span>
-          <span class="badge green" id="mapGps">GPS</span>
-        </div>
-        <div class="mapLegend">
-          <span class="legend"><span class="dot amber"></span>Buck</span>
-          <span class="legend"><span class="dot blue"></span>Bedding</span>
-          <span class="legend"><span class="dot purple"></span>Stand</span>
-          <span class="legend"><span class="dot green"></span>Waypoint</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="mapOverlay mapBottom">
-      <div class="mapPanel">
-        <div class="mapTools">
-          <button id="mapLocate" title="Locate">⌖</button>
-          <button id="addBuckMap" title="Buck">🦌</button>
-          <button id="addBedMap" title="Bedding">⌂</button>
-          <button id="addStandMap" title="Stand">⌖</button>
-          <button id="addWaypointMap" title="Waypoint">＋</button>
-          <button id="clearMapSelection" title="Clear">×</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="screen" id="screen-bucks">
-  <div class="screenTitle">BUCKS</div>
-  <div class="screenSub">Target profiles, sightings and movement history.</div>
-
-  <div class="row" style="margin-bottom:12px">
-    <button class="actionBtn primary" id="newBuckBtn">＋ NEW BUCK</button>
-    <button class="actionBtn" id="newSightingBtn">＋ SIGHTING</button>
-  </div>
-
-  <div id="buckList" class="list"></div>
-</section>
-
-<section class="screen" id="screen-camera">
-  <div class="screenTitle">CAMERA</div>
-  <div class="screenSub">Trail-camera photo intake and field evidence.</div>
-
-  <div class="card">
-    <div class="cardTitle">
-      <strong>PHOTO INTAKE</strong>
-      <span class="badge green">LOCAL</span>
-    </div>
-    <input type="file" id="photoInput" accept="image/*" multiple class="hidden">
-    <button class="actionBtn primary full" id="photoPick">＋ IMPORT TRAIL CAMERA PHOTOS</button>
-    <p style="font-size:10px;color:var(--muted);line-height:1.5;margin:10px 0 0">
-      Photos are stored in the browser database. Metadata such as filename, date and available GPS information is retained.
-    </p>
-  </div>
-
-  <div class="card" style="margin-top:10px">
-    <div class="cardTitle">
-      <strong>PHOTO ALBUM</strong>
-      <small id="photoCountLabel">0 images</small>
-    </div>
-    <div id="gallery" class="gallery"></div>
-  </div>
-</section>
-
-<section class="screen" id="screen-intel">
-  <div class="screenTitle">INTELLIGENCE</div>
-  <div class="screenSub">Weather, wind, pressure and movement analysis.</div>
-
-  <div class="tabBar">
-    <button class="tab active" data-intel="conditions">CONDITIONS</button>
-    <button class="tab" data-intel="snow">SNOWSTORM</button>
-    <button class="tab" data-intel="movement">MOVEMENT</button>
-  </div>
-
-  <div id="intelConditions">
-    <div class="card">
-      <div class="weatherBig">
-        <div>
-          <div class="temp" id="weatherTemp">--°</div>
-          <div style="font-size:11px;color:var(--muted)" id="weatherDesc">Awaiting weather</div>
-        </div>
-        <div class="weatherIcon" id="weatherIcon">🌲</div>
-      </div>
-      <div class="grid grid2">
-        <div class="metric"><div class="label">Humidity</div><div class="value" id="weatherHumidity">--</div></div>
-        <div class="metric"><div class="label">Precipitation</div><div class="value" id="weatherPrecip">--</div></div>
-        <div class="metric"><div class="label">Wind</div><div class="value" id="weatherWind">--</div></div>
-        <div class="metric"><div class="label">Pressure</div><div class="value" id="weatherPressure">--</div></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:10px">
-      <div class="cardTitle"><strong>WIND VECTOR</strong><small id="windLocation">--</small></div>
-      <div class="row">
-        <div class="windArrow" id="windArrow"></div>
-        <div>
-          <div style="font-size:20px;font-weight:800" id="windSpeedLarge">--</div>
-          <div style="font-size:10px;color:var(--muted)" id="windDirectionLarge">--</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:6px">Scent movement should be evaluated against terrain and thermals.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:10px">
-      <div class="cardTitle"><strong>FORECAST WINDOW</strong><small>24 HOURS</small></div>
-      <div id="forecastList"></div>
-    </div>
-  </div>
-
-  <div id="intelSnow" class="hidden">
-    <div class="hero">
-      <div class="eyebrow">Special Operations</div>
-      <h1>❄️ SNOWSTORM MODE</h1>
-      <p>Identify changing conditions and potential movement windows.</p>
-    </div>
-    <div class="card">
-      <div class="cardTitle"><strong>STORM SIGNAL</strong><span class="badge" id="stormBadge">SCANNING</span></div>
-      <div id="stormAnalysis"></div>
-    </div>
-    <div class="card" style="margin-top:10px">
-      <div class="cardTitle"><strong>MOVEMENT WINDOWS</strong><small>ESTIMATED</small></div>
-      <div id="stormWindows"></div>
-    </div>
-  </div>
-
-  <div id="intelMovement" class="hidden">
-    <div class="card">
-      <div class="cardTitle"><strong>MOVEMENT MODEL</strong><span class="badge green" id="movementScoreBadge">--</span></div>
-      <div class="metric">
-        <div class="label">Current movement score</div>
-        <div class="value" id="movementScore">--</div>
-        <div class="sub" id="movementExplanation">Waiting for weather and buck data.</div>
-      </div>
-      <div style="margin-top:12px" id="movementFactors"></div>
-    </div>
-    <div class="card" style="margin-top:10px">
-      <div class="cardTitle"><strong>FIELD LOGIC</strong></div>
-      <div id="movementAdvice" style="font-size:11px;line-height:1.65;color:#b8c5bb"></div>
-    </div>
-  </div>
-</section>
-
-<section class="screen" id="screen-data">
-  <div class="screenTitle">DATA</div>
-  <div class="screenSub">Manage your local BUCKTRACK command database.</div>
-
-  <div class="card">
-    <div class="cardTitle"><strong>DATABASE</strong><span class="badge green">INDEXEDDB</span></div>
-    <div class="kpi"><span>Signed in as</span><strong id="dataUser">--</strong></div>
-    <div class="kpi"><span>Bucks</span><strong id="dataBucks">0</strong></div>
-    <div class="kpi"><span>Photos</span><strong id="dataPhotos">0</strong></div>
-    <div class="kpi"><span>Waypoints</span><strong id="dataWaypoints">0</strong></div>
-    <div class="kpi"><span>Sightings</span><strong id="dataSightings">0</strong></div>
-  </div>
-
-  <div class="card" style="margin-top:10px">
-    <div class="cardTitle"><strong>BACKUP / RESTORE</strong></div>
-    <div class="grid grid2">
-      <button class="actionBtn primary" id="exportBtn">EXPORT DATABASE</button>
-      <button class="actionBtn" id="importBtn">RESTORE DATABASE</button>
-    </div>
-    <input type="file" id="restoreInput" accept=".json" class="hidden">
-    <p style="font-size:10px;color:var(--muted);line-height:1.5">
-      Export creates a portable JSON backup of your BUCKTRACK records. Photos are included as compressed data URLs.
-    </p>
-  </div>
-
-  <div class="card" style="margin-top:10px">
-    <div class="cardTitle"><strong>APP SETTINGS</strong></div>
-    <div class="kpi">
-      <span>Use metric units</span>
-      <button class="switch" id="metricSwitch"><i></i></button>
-    </div>
-    <div class="kpi">
-      <span>Auto-refresh weather</span>
-      <button class="switch on" id="weatherSwitch"><i></i></button>
-    </div>
-    <div class="kpi">
-      <span>Map follow location</span>
-      <button class="switch" id="followSwitch"><i></i></button>
-    </div>
-  </div>
-
-  <button class="actionBtn danger full" style="margin-top:10px" id="logoutBtn">SIGN OUT</button>
-</section>
-
-</main>
-
-<nav class="bottomNav">
-  <button class="navBtn active" data-screen="command">
-    <svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-8M22 19V3"/></svg>
-    Command
-  </button>
-  <button class="navBtn" data-screen="map">
-    <svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>
-    Map
-  </button>
-  <button class="navBtn" data-screen="bucks">
-    <svg viewBox="0 0 24 24"><path d="M12 21V11"/><path d="M12 12C8 7 4 7 2 10c3 0 6 2 8 5"/><path d="M12 12c4-5 8-5 10-2-3 0-6 2-8 5"/></svg>
-    Bucks
-  </button>
-  <button class="navBtn" data-screen="camera">
-    <svg viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="4"/></svg>
-    Camera
-  </button>
-  <button class="navBtn" data-screen="intel">
-    <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="7"/></svg>
-    Intel
-  </button>
-  <button class="navBtn" data-screen="data">
-    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v7c0 2 4 3 8 3s8-1 8-3V5M4 12v7c0 2 4 3 8 3s8-1 8-3v-7"/></svg>
-    Data
-  </button>
-</nav>
-
-</div>
-
-<div class="modal" id="modal">
-  <div class="modalBox">
-    <div class="modalHead">
-      <h2 id="modalTitle">Add</h2>
-      <button class="close" id="modalClose">×</button>
-    </div>
-    <div id="modalBody"></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-"use strict";
-
-/* =========================================================
-   BUCKTRACK PRO
-   Single-file local tactical deer intelligence system
-   ========================================================= */
-
-const DB_NAME = "BUCKTRACK_PRO_DB";
-const DB_VERSION = 4;
-
-let db = null;
-let currentUser = null;
-let map = null;
-let userMarker = null;
-let userCircle = null;
-let mapMarkers = [];
-let currentLocation = null;
-let weather = null;
-let weatherTimer = null;
-let authMode = "login";
-let metricUnits = false;
-let followLocation = false;
-let weatherAuto = true;
-
-const $ = id => document.getElementById(id);
-const $$ = sel => [...document.querySelectorAll(sel)];
-
-function esc(v){
-  return String(v ?? "").replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-
-function uid(prefix="id"){
-  return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,9);
-}
-
-function now(){
-  return new Date().toISOString();
-}
-
-function fmtDate(value){
-  if(!value) return "Unknown";
-  const d = new Date(value);
-  if(Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleDateString([],{
-    month:"short",day:"numeric",year:"numeric"
-  });
-}
-
-function fmtDateTime(value){
-  if(!value) return "Unknown";
-  const d = new Date(value);
-  if(Number.isNaN(d.getTime())) return String(value);
-  return d.toLocaleString([],{
-    month:"short",day:"numeric",
-    hour:"numeric",minute:"2-digit"
-  });
-}
-
-function showToast(message){
-  const t=$("toast");
-  t.textContent=message;
-  t.classList.add("show");
-  clearTimeout(showToast.timer);
-  showToast.timer=setTimeout(()=>t.classList.remove("show"),2800);
-}
-
-function openModal(title,html){
-  $("modalTitle").textContent=title;
-  $("modalBody").innerHTML=html;
-  $("modal").classList.add("open");
-}
-
-function closeModal(){
-  $("modal").classList.remove("open");
-}
-
-$("modalClose").onclick=closeModal;
-$("modal").addEventListener("click",e=>{
-  if(e.target===$("modal")) closeModal();
-});
-
-/* =========================================================
-   DATABASE
-   ========================================================= */
-
-function openDB(){
-  return new Promise((resolve,reject)=>{
-    const request=indexedDB.open(DB_NAME,DB_VERSION);
-
-    request.onupgradeneeded=e=>{
-      const d=e.target.result;
-
-      if(!d.objectStoreNames.contains("users")){
-        d.createObjectStore("users",{keyPath:"username"});
-      }
-
-      if(!d.objectStoreNames.contains("bucks")){
-        const s=d.createObjectStore("bucks",{keyPath:"id"});
-        s.createIndex("username","username");
-      }
-
-      if(!d.objectStoreNames.contains("sightings")){
-        const s=d.createObjectStore("sightings",{keyPath:"id"});
-        s.createIndex("username","username");
-        s.createIndex("buckId","buckId");
-      }
-
-      if(!d.objectStoreNames.contains("photos")){
-        const s=d.createObjectStore("photos",{keyPath:"id"});
-        s.createIndex("username","username");
-        s.createIndex("buckId","buckId");
-      }
-
-      if(!d.objectStoreNames.contains("waypoints")){
-        const s=d.createObjectStore("waypoints",{keyPath:"id"});
-        s.createIndex("username","username");
-      }
-
-      if(!d.objectStoreNames.contains("hunts")){
-        const s=d.createObjectStore("hunts",{keyPath:"id"});
-        s.createIndex("username","username");
-      }
-
-      if(!d.objectStoreNames.contains("settings")){
-        d.createObjectStore("settings",{keyPath:"username"});
-      }
-    };
-
-    request.onsuccess=()=>{
-      db=request.result;
-      resolve(db);
-    };
-
-    request.onerror=()=>reject(request.error);
-  });
-}
-
-function tx(store,mode="readonly"){
-  return db.transaction(store,mode).objectStore(store);
-}
-
-function dbPut(store,obj){
-  return new Promise((resolve,reject)=>{
-    const r=tx(store,"readwrite").put(obj);
-    r.onsuccess=()=>resolve(r.result);
-    r.onerror=()=>reject(r.error);
-  });
-}
-
-function dbAdd(store,obj){
-  return new Promise((resolve,reject)=>{
-    const r=tx(store,"readwrite").add(obj);
-    r.onsuccess=()=>resolve(r.result);
-    r.onerror=()=>reject(r.error);
-  });
-}
-
-function dbDelete(store,key){
-  return new Promise((resolve,reject)=>{
-    const r=tx(store,"readwrite").delete(key);
-    r.onsuccess=()=>resolve();
-    r.onerror=()=>reject(r.error);
-  });
-}
-
-function dbGet(store,key){
-  return new Promise((resolve,reject)=>{
-    const r=tx(store).get(key);
-    r.onsuccess=()=>resolve(r.result);
-    r.onerror=()=>reject(r.error);
-  });
-}
-
-function dbAll(store){
-  return new Promise((resolve,reject)=>{
-    const r=tx(store).getAll();
-    r.onsuccess=()=>resolve(r.result||[]);
-    r.onerror=()=>reject(r.error);
-  });
-}
-
-async function userRows(store){
-  const rows=await dbAll(store);
-  return rows.filter(x=>x.username===currentUser);
-}
-
-async function hashPassword(password){
-  const data=new TextEncoder().encode(password);
-  const hash=await crypto.subtle.digest("SHA-256",data);
-  return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,"0")).join("");
-}
-
-/* =========================================================
-   AUTH
-   ========================================================= */
-
-$("loginTab").onclick=()=>{
-  authMode="login";
-  $("loginTab").classList.add("active");
-  $("registerTab").classList.remove("active");
-  $("authSubmit").textContent="ENTER COMMAND";
-};
-
-$("registerTab").onclick=()=>{
-  authMode="register";
-  $("registerTab").classList.add("active");
-  $("loginTab").classList.remove("active");
-  $("authSubmit").textContent="CREATE COMMAND ACCOUNT";
-};
-
-$("authForm").addEventListener("submit",async e=>{
-  e.preventDefault();
-
-  const username=$("authUser").value.trim().toLowerCase();
-  const password=$("authPass").value;
-
-  if(!username || password.length<4){
-    showToast("Username and password required.");
-    return;
-  }
-
-  const hash=await hashPassword(password);
-
-  if(authMode==="register"){
-    const existing=await dbGet("users",username);
-    if(existing){
-      showToast("Username already exists.");
-      return;
-    }
-
-    await dbPut("users",{
-      username,
-      passwordHash:hash,
-      createdAt:now()
-    });
-
-    currentUser=username;
-    localStorage.setItem("BT_SESSION",username);
-    await bootApp();
-    showToast("Command account created.");
-  }else{
-    const user=await dbGet("users",username);
-    if(!user || user.passwordHash!==hash){
-      showToast("Invalid credentials.");
-      return;
-    }
-
-    currentUser=username;
-    localStorage.setItem("BT_SESSION",username);
-    await bootApp();
-    showToast("Command access granted.");
-  }
-});
-
-$("logoutBtn").onclick=()=>{
-  localStorage.removeItem("BT_SESSION");
-  location.reload();
-};
-
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
-
-function showScreen(name){
-  $$(".screen").forEach(x=>x.classList.remove("active"));
-  $("screen-"+name).classList.add("active");
-
-  $$(".navBtn").forEach(x=>{
-    x.classList.toggle("active",x.dataset.screen===name);
-  });
-
-  if(name==="map"){
-    setTimeout(()=>{
-      if(map) map.invalidateSize();
-    },120);
-  }
-
-  if(name==="bucks") renderBucks();
-  if(name==="camera") renderGallery();
-  if(name==="intel") renderIntel();
-  if(name==="data") renderData();
-}
-
-$$(".navBtn").forEach(btn=>{
-  btn.onclick=()=>showScreen(btn.dataset.screen);
-});
-
-/* =========================================================
-   MAP
-   ========================================================= */
-
-function initMap(){
-  if(map) return;
-
-  map=L.map("map",{
-    zoomControl:false,
-    attributionControl:true
-  }).setView([45.816,-64.218],14);
-
-  L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      maxZoom:19,
-      attribution:"© OpenStreetMap contributors"
-    }
-  ).addTo(map);
-
-  L.control.zoom({position:"bottomright"}).addTo(map);
-
-  map.on("click",e=>{
-    if(map._btAddType){
-      addWaypointAt(e.latlng.lat,e.latlng.lng,map._btAddType);
-      map._btAddType=null;
-    }
-  });
-}
-
-function markerIcon(type){
-  let cls="customMarker";
-  let symbol="•";
-
-  if(type==="buck"){cls+=" buck";symbol="🦌";}
-  else if(type==="bedding"){cls+=" bed";symbol="⌂";}
-  else if(type==="stand"){cls+=" stand";symbol="⌖";}
-  else symbol="•";
-
-  return L.divIcon({
-    className:"",
-    html:`<div class="${cls}">${symbol}</div>`,
-    iconSize:[32,32],
-    iconAnchor:[16,16]
-  });
-}
-
-async function renderMapMarkers(){
-  if(!map) return;
-
-  mapMarkers.forEach(m=>map.removeLayer(m));
-  mapMarkers=[];
-
-  const rows=await userRows("waypoints");
-
-  rows.forEach(w=>{
-    if(typeof w.lat!=="number" || typeof w.lng!=="number") return;
-
-    const m=L.marker([w.lat,w.lng],{
-      icon:markerIcon(w.type)
-    }).addTo(map);
-
-    m.bindPopup(`
-      <div style="min-width:180px">
-        <strong>${esc(w.name||w.type)}</strong><br>
-        <small>${esc(w.type||"waypoint")}</small>
-        ${w.note?`<p>${esc(w.note)}</p>`:""}
-        <button onclick="deleteWaypoint('${w.id}')" style="padding:7px;border-radius:8px">Delete</button>
-      </div>
-    `);
-
-    mapMarkers.push(m);
-  });
-
-  const sightings=await userRows("sightings");
-
-  sightings.forEach(s=>{
-    if(typeof s.lat!=="number" || typeof s.lng!=="number") return;
-
-    const m=L.marker([s.lat,s.lng],{
-      icon:markerIcon("buck")
-    }).addTo(map);
-
-    m.bindPopup(`
-      <strong>🦌 ${esc(s.buckName||"Buck sighting")}</strong>
-      <br><small>${fmtDateTime(s.date)}</small>
-      ${s.note?`<p>${esc(s.note)}</p>`:""}
-    `);
-
-    mapMarkers.push(m);
-  });
-}
-
-async function deleteWaypoint(id){
-  await dbDelete("waypoints",id);
-  await renderMapMarkers();
-  await refreshAll();
-  showToast("Waypoint deleted.");
-}
-window.deleteWaypoint=deleteWaypoint;
-
-function locateUser(){
-  if(!navigator.geolocation){
-    showToast("Geolocation is not available.");
-    return;
-  }
-
-  $("mapGps").textContent="LOCATING";
-
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      const {latitude,longitude,accuracy}=pos.coords;
-
-      currentLocation={
-        lat:latitude,
-        lng:longitude,
-        accuracy,
-        timestamp:Date.now()
-      };
-
-      updateLocationUI();
-
-      if(!map) initMap();
-
-      if(!userMarker){
-        userMarker=L.marker([latitude,longitude],{
-          icon:L.divIcon({
-            className:"",
-            html:`<div style="width:18px;height:18px;border-radius:50%;background:#62b9ff;border:3px solid white;box-shadow:0 0 0 7px rgba(98,185,255,.2)"></div>`,
-            iconSize:[18,18],
-            iconAnchor:[9,9]
-          })
-        }).addTo(map);
-      }else{
-        userMarker.setLatLng([latitude,longitude]);
-      }
-
-      if(!userCircle){
-        userCircle=L.circle([latitude,longitude],{
-          radius:Math.max(accuracy||30,20),
-          color:"#62b9ff",
-          fillColor:"#62b9ff",
-          fillOpacity:.08,
-          weight:1
-        }).addTo(map);
-      }else{
-        userCircle.setLatLng([latitude,longitude]);
-        userCircle.setRadius(Math.max(accuracy||30,20));
-      }
-
-      if(followLocation || $("screen-map").classList.contains("active")){
-        map.setView([latitude,longitude],15);
-      }
-
-      $("mapGps").textContent="GPS LOCK";
-      fetchWeather();
-    },
-    err=>{
-      $("mapGps").textContent="GPS ERROR";
-      showToast("Location unavailable: "+err.message);
-    },
-    {
-      enableHighAccuracy:true,
-      timeout:12000,
-      maximumAge:60000
-    }
-  );
-}
-
-function updateLocationUI(){
-  if(!currentLocation)return;
-
-  $("mapCoord").textContent=
-    `${currentLocation.lat.toFixed(5)}, ${currentLocation.lng.toFixed(5)}`;
-
-  $("windLocation").textContent=
-    `${currentLocation.lat.toFixed(3)}, ${currentLocation.lng.toFixed(3)}`;
-}
-
-function beginMapAdd(type){
-  if(!map) initMap();
-  map._btAddType=type;
-  showToast("Tap the map to place "+type+".");
-}
-
-async function addWaypointAt(lat,lng,type="waypoint"){
-  const names={
-    buck:"Buck Location",
-    bedding:"Bedding Area",
-    stand:"Stand",
-    waypoint:"Waypoint"
-  };
-
-  openModal(
-    "NEW "+type.toUpperCase(),
-    `
-      <div class="formGroup">
-        <label>Name</label>
-        <input id="wpName" value="${names[type]||"Waypoint"}">
-      </div>
-      <div class="formGroup">
-        <label>Notes</label>
-        <textarea id="wpNote" placeholder="Field notes…"></textarea>
-      </div>
-      <div class="row">
-        <button class="actionBtn" onclick="closeModal()">CANCEL</button>
-        <button class="actionBtn primary" id="saveWp">SAVE LOCATION</button>
-      </div>
-    `
-  );
-
-  $("saveWp").onclick=async()=>{
-    await dbPut("waypoints",{
-      id:uid("wp"),
-      username:currentUser,
-      name:$("wpName").value.trim()||names[type],
-      type,
-      lat,
-      lng,
-      note:$("wpNote").value.trim(),
-      createdAt:now()
-    });
-
-    closeModal();
-    await renderMapMarkers();
-    await refreshAll();
-    showToast("Location saved.");
-  };
-}
-
-$("locBtn").onclick=locateUser;
-$("mapLocate").onclick=locateUser;
-$("addBuckMap").onclick=()=>beginMapAdd("buck");
-$("addBedMap").onclick=()=>beginMapAdd("bedding");
-$("addStandMap").onclick=()=>beginMapAdd("stand");
-$("addWaypointMap").onclick=()=>beginMapAdd("waypoint");
-$("clearMapSelection").onclick=()=>{if(map)map._btAddType=null};
-
-/* =========================================================
-   WEATHER
-   ========================================================= */
-
-function weatherCodeText(code){
-  if(code===0)return["Clear","☀️"];
-  if([1,2,3].includes(code))return["Partly cloudy","⛅"];
-  if([45,48].includes(code))return["Fog","🌫️"];
-  if([51,53,55,56,57].includes(code))return["Drizzle","🌦️"];
-  if([61,63,65,66,67].includes(code))return["Rain","🌧️"];
-  if([71,73,75,77].includes(code))return["Snow","❄️"];
-  if([80,81,82].includes(code))return["Showers","🌧️"];
-  if([85,86].includes(code))return["Snow showers","🌨️"];
-  if([95,96,99].includes(code))return["Thunderstorm","⛈️"];
-  return["Unknown","🌲"];
-}
-
-function windDir(deg){
-  if(deg==null)return"--";
-  const dirs=["N","NE","E","SE","S","SW","W","NW"];
-  return dirs[Math.round(deg/45)%8];
-}
-
-function cToF(c){
-  return c*9/5+32;
-}
-
-function tempText(c){
-  return metricUnits
-    ? `${Math.round(c)}°C`
-    : `${Math.round(cToF(c))}°F`;
-}
-
-function windText(kmh){
-  if(metricUnits)return `${Math.round(kmh)} km/h`;
-  return `${Math.round(kmh/1.60934)} mph`;
-}
-
-async function fetchWeather(){
-  if(!currentLocation)return;
-
-  try{
-    const {lat,lng}=currentLocation;
-
-    const url=
-      "https://api.open-meteo.com/v1/forecast"+
-      `?latitude=${encodeURIComponent(lat)}`+
-      `&longitude=${encodeURIComponent(lng)}`+
-      "&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,snowfall,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m"+
-      "&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,snowfall,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code"+
-      "&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min,snowfall_sum,precipitation_sum"+
-      "&forecast_days=3&timezone=auto";
-
-    const response=await fetch(url,{cache:"no-store"});
-    if(!response.ok)throw new Error("Weather request failed.");
-
-    weather=await response.json();
-    localStorage.setItem("BT_WEATHER_CACHE",JSON.stringify({
-      savedAt:Date.now(),
-      weather
-    }));
-
-    renderWeather();
-    calculateMovement();
-  }catch(err){
-    console.warn(err);
-
-    const cached=localStorage.getItem("BT_WEATHER_CACHE");
-    if(cached){
-      try{
-        weather=JSON.parse(cached).weather;
-        renderWeather();
-        showToast("Using cached weather.");
-      }catch{}
-    }else{
-      showToast("Weather unavailable. Check connection.");
-    }
-  }
-}
-
-function renderWeather(){
-  if(!weather?.current)return;
-
-  const c=weather.current;
-  const [desc,icon]=weatherCodeText(c.weather_code);
-
-  $("dashTemp").textContent=tempText(c.temperature_2m);
-  $("dashFeels").textContent=`Feels ${tempText(c.apparent_temperature)}`;
-
-  $("dashWind").textContent=windText(c.wind_speed_10m);
-  $("dashWindDir").textContent=`${windDir(c.wind_direction_10m)} • gust ${windText(c.wind_gusts_10m||0)}`;
-
-  $("dashPressure").textContent=Math.round(c.pressure_msl)+" hPa";
-  $("dashPressureTrend").textContent="Current sea-level pressure";
-
-  $("weatherTemp").textContent=tempText(c.temperature_2m);
-  $("weatherDesc").textContent=desc;
-  $("weatherIcon").textContent=icon;
-  $("weatherHumidity").textContent=Math.round(c.relative_humidity_2m)+"%";
-  $("weatherPrecip").textContent=(c.precipitation||0).toFixed(1)+" mm";
-  $("weatherWind").textContent=windText(c.wind_speed_10m);
-  $("weatherPressure").textContent=Math.round(c.pressure_msl)+" hPa";
-
-  $("windSpeedLarge").textContent=windText(c.wind_speed_10m);
-  $("windDirectionLarge").textContent=
-    `${windDir(c.wind_direction_10m)} • ${Math.round(c.wind_direction_10m||0)}°`;
-
-  $("windArrow").style.setProperty(
-    "--winddeg",
-    `${c.wind_direction_10m||0}deg`
-  );
-
-  renderForecast();
-  renderSnow();
-  calculateMovement();
-}
-
-function renderForecast(){
-  const h=weather?.hourly;
-  if(!h)return;
-
-  let html="";
-
-  const start=new Date();
-  const startHour=start.getHours();
-
-  for(let i=0;i<12;i++){
-    const idx=i;
-    if(idx>=h.time.length)break;
-
-    const d=new Date(h.time[idx]);
-    const [desc,icon]=weatherCodeText(h.weather_code[idx]);
-
-    html+=`
-      <div class="condition">
-        <div class="conditionIcon">${icon}</div>
-        <div style="flex:1">
-          <strong>${i===0?"NOW":d.toLocaleTimeString([],{
-            hour:"numeric"
-          })}</strong>
-          <small>${desc} • ${Math.round(h.precipitation_probability?.[idx]||0)}% precip</small>
-        </div>
-        <strong>${tempText(h.temperature_2m[idx])}</strong>
-      </div>
-    `;
-  }
-
-  $("forecastList").innerHTML=html;
-}
-
-function renderSnow(){
-  if(!weather?.hourly)return;
-
-  const h=weather.hourly;
-  let snowTotal=0;
-  let precipTotal=0;
-
-  for(let i=0;i<Math.min(24,h.time.length);i++){
-    snowTotal+=Number(h.snowfall?.[i]||0);
-    precipTotal+=Number(h.precipitation?.[i]||0);
-  }
-
-  let stormLevel="LOW";
-  let explanation="No significant snow signal in the next 24 hours.";
-
-  if(snowTotal>=10){
-    stormLevel="HIGH";
-    explanation="Significant snow accumulation is forecast. Monitor wind and temperature changes.";
-  }else if(snowTotal>=2){
-    stormLevel="MODERATE";
-    explanation="Snow is present in the near-term forecast.";
-  }
-
-  $("stormBadge").textContent=stormLevel;
-  $("stormBadge").className=
-    "badge "+(stormLevel==="HIGH"?"red":stormLevel==="MODERATE"?"amber":"green");
-
-  $("stormAnalysis").innerHTML=`
-    <div class="grid grid2">
-      <div class="metric">
-        <div class="label">24H Snow</div>
-        <div class="value">${snowTotal.toFixed(1)} mm</div>
-      </div>
-      <div class="metric">
-        <div class="label">24H Precip</div>
-        <div class="value">${precipTotal.toFixed(1)} mm</div>
-      </div>
-    </div>
-    <p style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:0">${explanation}</p>
-  `;
-
-  $("stormWindows").innerHTML=`
-    <div class="condition">
-      <div class="conditionIcon">🌨️</div>
-      <div style="flex:1"><strong>During precipitation</strong><small>Visibility and wind should be considered together.</small></div>
-      <span class="badge ${stormLevel==="HIGH"?"red":"amber"}">${stormLevel}</span>
-    </div>
-    <div class="condition">
-      <div class="conditionIcon">🌡️</div>
-      <div style="flex:1"><strong>Temperature transition</strong><small>Look for meaningful changes rather than a single temperature.</small></div>
-      <span class="badge blue">MONITOR</span>
-    </div>
-    <div class="condition">
-      <div class="conditionIcon">🦌</div>
-      <div style="flex:1"><strong>Movement opportunity</strong><small>Weather alone does not guarantee deer movement.</small></div>
-      <span class="badge green">${stormLevel==="HIGH"?"ELEVATED":"NORMAL"}</span>
-    </div>
-  `;
-}
-
-/* =========================================================
-   MOVEMENT MODEL
-   ========================================================= */
-
-async function calculateMovement(){
-  const bucks=await userRows("bucks");
-  const sightings=await userRows("sightings");
-
-  let score=35;
-  const factors=[];
-
-  if(weather?.current){
-    const c=weather.current;
-
-    if(c.wind_speed_10m>=5 && c.wind_speed_10m<=25){
-      score+=8;
-      factors.push(["Wind","Moderate wind","positive"]);
-    }else if(c.wind_speed_10m>35){
-      score-=8;
-      factors.push(["Wind","Strong wind","negative"]);
-    }else{
-      factors.push(["Wind","Light wind","neutral"]);
-    }
-
-    if(c.precipitation>0){
-      score+=5;
-      factors.push(["Precipitation","Active precipitation","positive"]);
-    }
-
-    if(c.snowfall>0){
-      score+=8;
-      factors.push(["Snow","Snow present","positive"]);
-    }
-
-    const tempF=cToF(c.temperature_2m);
-
-    if(tempF<35){
-      score+=7;
-      factors.push(["Temperature","Cold conditions","positive"]);
-    }else if(tempF>65){
-      score-=4;
-      factors.push(["Temperature","Warm conditions","negative"]);
-    }
-  }
-
-  const hour=new Date().getHours();
-
-  if(hour<9 || hour>=16){
-    score+=10;
-    factors.push(["Time","Crepuscular window","positive"]);
-  }else{
-    score-=3;
-    factors.push(["Time","Midday window","neutral"]);
-  }
-
-  if(sightings.length){
-    score+=Math.min(12,sightings.length*2);
-    factors.push(["History",`${sightings.length} recorded sightings`,"positive"]);
-  }
-
-  if(bucks.length){
-    score+=Math.min(10,bucks.length*2);
-  }
-
-  score=Math.max(0,Math.min(100,score));
-
-  $("movementScore").textContent=score;
-  $("movementScoreBadge").textContent=
-    score>=75?"HIGH":score>=55?"MODERATE":"LOW";
-
-  $("movementExplanation").textContent=
-    score>=75
-      ?"Current inputs produce a strong movement signal."
-      :score>=55
-      ?"Current inputs produce a moderate movement signal."
-      :"Current inputs produce a lower movement signal.";
-
-  $("dashMovement").textContent=
-    score>=75?"HIGH":score>=55?"MODERATE":"LOW";
-
-  $("dashMovementReason").textContent=
-    `${score}/100 calculated from current inputs`;
-
-  $("movementFactors").innerHTML=factors.map(f=>`
-    <div class="kpi">
-      <span>${esc(f[0])}</span>
-      <strong>${esc(f[1])}</strong>
-    </div>
-  `).join("");
-
-  $("movementAdvice").innerHTML=`
-    <strong style="color:var(--text)">Model interpretation:</strong><br>
-    This is a field-planning score, not a guarantee of animal movement.
-    Combine current weather with your actual observations, terrain,
-    access routes, bedding locations and historical sightings.
-    ${score>=75
-      ?"Current conditions warrant increased attention during suitable legal hunting periods."
-      :"Continue collecting observations and compare changing conditions against your historical sightings."
-    }
-  `;
-
-  renderReadiness(score);
-}
-
-function renderReadiness(score=0){
-  const items=[
-    ["Weather data",!!weather,"Live or cached"],
-    ["GPS location",!!currentLocation,"Required for location-aware weather"],
-    ["Target buck",!!document.querySelector(".targetExists"),"Create a profile"],
-    ["Field observations",true,"Database operational"]
-  ];
-
-  $("readinessRows").innerHTML=items.map(i=>`
-    <div class="kpi">
-      <span>${esc(i[0])}</span>
-      <strong style="color:${i[1]?"var(--green)":"var(--amber)"}">
-        ${i[1]?"READY":"INCOMPLETE"}
-      </strong>
-    </div>
-  `).join("");
-
-  const ready=items.filter(x=>x[1]).length;
-  $("readinessBadge").textContent=
-    ready===items.length?"FIELD READY":`${ready}/${items.length} READY`;
-}
-
-/* =========================================================
-   BUCKS
-   ========================================================= */
-
-async function renderBucks(){
-  const bucks=await userRows("bucks");
-  const sightings=await userRows("sightings");
-  const photos=await userRows("photos");
-
-  if(!bucks.length){
-    $("buckList").innerHTML=`
-      <div class="card empty">
-        <div style="font-size:30px;margin-bottom:8px">🦌</div>
-        No buck profiles yet.<br><br>
-        Create your first target profile.
-      </div>
-    `;
-    return;
-  }
-
-  const sorted=[...bucks].sort((a,b)=>{
-    if(a.target&&!b.target)return-1;
-    if(!a.target&&b.target)return 1;
-    return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt));
-  });
-
-  $("buckList").innerHTML=sorted.map(b=>{
-    const bs=sightings.filter(s=>s.buckId===b.id);
-    const ps=photos.filter(p=>p.buckId===b.id);
-
-    const confidence=calcBuckConfidence(b,bs);
-
-    return`
-      <div class="listItem">
-        <div class="row spread">
-          <div>
-            <strong style="font-size:15px">${esc(b.name)}</strong>
-            ${b.target?`<span class="badge green" style="margin-left:5px">TARGET</span>`:""}
-            <div style="font-size:10px;color:var(--muted);margin-top:4px">
-              ${esc(b.age||"Age unknown")} • ${bs.length} sightings • ${ps.length} photos
+      <button class="actionBtn" id="quickAddBtn" style="width:auto; padding: 6px 12px;">＋ QUICK ADD</button>
+    </header>
+
+    <!-- App Screens -->
+    <main>
+      <!-- 1. Command Center -->
+      <section class="screen active" id="commandScreen">
+        <div class="card">
+          <div class="cardTitle">
+            <span>TARGET BUCK INTEL</span>
+            <span id="commandDate" style="color:var(--text)"></span>
+          </div>
+          <div class="targetWrapper">
+            <div class="targetRing" id="targetRing" style="--score: 0;">
+              <div class="targetRingText" id="targetScore">0</div>
+            </div>
+            <div style="flex:1">
+              <h3 id="targetName" style="font-family:var(--font-mono); font-size:1.1rem">NO TARGET SELECTED</h3>
+              <p id="targetSub" style="font-size:0.75rem; color:var(--muted)">Select or create a buck profile to calculate activity intel.</p>
+              <div class="progressBar"><div class="progressFill" id="targetProgress"></div></div>
+              <div class="row spread" style="margin-top:4px">
+                <span style="font-size:0.65rem; color:var(--muted); font-family:var(--font-mono)">ACTIVITY INDEX</span>
+                <span id="targetConfidence" style="font-size:0.65rem; color:var(--primary-bright); font-family:var(--font-mono)">--</span>
+              </div>
             </div>
           </div>
-          <div class="scoreRing" style="--score:${confidence}% ;width:54px;height:54px">
-            <span style="font-size:14px">${confidence}</span>
+        </div>
+
+        <div class="grid4" style="margin-bottom:12px">
+          <div class="kpi"><span style="font-size:0.55rem">BUCKS</span><strong id="statBucks">0</strong></div>
+          <div class="kpi"><span style="font-size:0.55rem">SIGHTINGS</span><strong id="statSightings">0</strong></div>
+          <div class="kpi"><span style="font-size:0.55rem">PHOTOS</span><strong id="statPhotos">0</strong></div>
+          <div class="kpi"><span style="font-size:0.55rem">WAYPOINTS</span><strong id="statWaypoints">0</strong></div>
+        </div>
+
+        <div class="card">
+          <div class="cardTitle">
+            <span>TACTICAL ENVIRONMENTAL INDEX</span>
+            <span id="weatherStatus">OFFLINE</span>
+          </div>
+          <div class="grid2">
+            <div class="kpi"><span>PRESSURE</span><strong id="envBaro">--</strong></div>
+            <div class="kpi"><span>WIND</span><strong id="envWind">--</strong></div>
+            <div class="kpi"><span>TEMP</span><strong id="envTemp">--</strong></div>
+            <div class="kpi"><span>MOON PHASE</span><strong id="envMoon">--</strong></div>
           </div>
         </div>
 
-        <div class="progress" style="margin-top:11px"><div style="width:${confidence}%"></div></div>
+        <div class="card">
+          <div class="cardTitle">
+            <span>RECENT FIELD LOGS</span>
+            <span id="intelCount">0 logs</span>
+          </div>
+          <div id="recentActivity">
+            <div class="empty">No field activity logged.</div>
+          </div>
+        </div>
+      </section>
 
-        <div class="row" style="margin-top:10px">
-          <button class="actionBtn" onclick="viewBuck('${b.id}')">VIEW</button>
-          <button class="actionBtn" onclick="editBuck('${b.id}')">EDIT</button>
-          <button class="actionBtn" onclick="addSighting('${b.id}')">＋ SIGHTING</button>
+      <!-- 2. Buck Roster & Management -->
+      <section class="screen" id="bucksScreen">
+        <div class="row spread" style="margin-bottom:12px">
+          <h2 style="font-family:var(--font-mono); font-size:1rem">BUCK PROFILES</h2>
+          <button class="actionBtn primary" style="width:auto; padding:8px 14px;" onclick="openBuckForm()">＋ NEW BUCK</button>
+        </div>
+        <div id="buckList">
+          <div class="empty">No buck profiles configured.</div>
+        </div>
+      </section>
+
+      <!-- 3. Field Map & GIS -->
+      <section class="screen" id="mapScreen">
+        <div class="mapOverlay">
+          <button class="actionBtn" onclick="beginMapAdd('waypoint')">📍 MARK POINT</button>
+          <button class="actionBtn" onclick="beginMapAdd('sighting')">👁 RECORD SIGHTING</button>
+          <button class="actionBtn" onclick="locateUser()">🎯 GPS</button>
+        </div>
+        <div id="map"></div>
+      </section>
+
+      <!-- 4. Intel & Weather -->
+      <section class="screen" id="intelScreen">
+        <div class="tabBar">
+          <div class="tab active" data-intel="conditions">CONDITIONS</div>
+          <div class="tab" data-intel="snow">SOLUNAR & MOON</div>
+          <div class="tab" data-intel="movement">PREDICTIVE</div>
+        </div>
+
+        <div id="intelConditions">
+          <div class="card">
+            <div class="cardTitle">CURRENT WEATHER DATA</div>
+            <div class="grid2" style="margin-bottom:10px">
+              <div class="kpi"><span>TEMPERATURE</span><strong id="intelTemp">--</strong></div>
+              <div class="kpi"><span>BAROMETER</span><strong id="intelBaro">--</strong></div>
+              <div class="kpi"><span>WIND SPEED</span><strong id="intelWindSpeed">--</strong></div>
+              <div class="kpi"><span>WIND DIR</span><strong id="intelWindDir">--</strong></div>
+            </div>
+            <button class="actionBtn primary" onclick="fetchWeather()">↻ REFRESH WEATHER</button>
+          </div>
+        </div>
+
+        <div id="intelSnow" class="hidden">
+          <div class="card">
+            <div class="cardTitle">SOLUNAR DATA</div>
+            <div class="grid2">
+              <div class="kpi"><span>MOON PHASE</span><strong id="solMoon">--</strong></div>
+              <div class="kpi"><span>ILLUMINATION</span><strong id="solIllum">--</strong></div>
+              <div class="kpi"><span>MAJOR PERIOD</span><strong id="solMajor">--</strong></div>
+              <div class="kpi"><span>MINOR PERIOD</span><strong id="solMinor">--</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="intelMovement" class="hidden">
+          <div class="card">
+            <div class="cardTitle">PREDICTIVE MOVEMENT SCORE</div>
+            <div class="kpi" style="margin-bottom:12px">
+              <span>MOVEMENT PROBABILITY</span>
+              <strong id="predictScore" style="font-size:2rem; color:var(--primary-bright)">--</strong>
+            </div>
+            <p style="font-size:0.8rem; color:var(--muted)" id="predictReason">Fetch live weather data to generate predictive scoring engine insights.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Media Gallery & Settings -->
+      <section class="screen" id="dataScreen">
+        <div class="card">
+          <div class="cardTitle">TRAIL CAMERA MEDIA INTAKE</div>
+          <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+          <button class="actionBtn primary full" id="photoPick">📷 IMPORT TRAIL CAM PHOTOS</button>
+          <div class="row spread" style="margin-top:8px; margin-bottom:12px">
+            <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--muted)" id="photoCountLabel">0 images</span>
+          </div>
+          <div class="gallery" id="gallery">
+            <div class="empty" style="grid-column: 1 / -1">No images imported.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardTitle">SYSTEM & DATA CONTROL</div>
+          <div class="row spread" style="margin-bottom:12px">
+            <span style="font-size:0.8rem">METRIC UNITS</span>
+            <button class="switch" id="metricSwitch"><i></i></button>
+          </div>
+          <div class="row spread" style="margin-bottom:12px">
+            <span style="font-size:0.8rem">AUTO WEATHER FETCH</span>
+            <button class="switch on" id="weatherSwitch"><i></i></button>
+          </div>
+          <div class="row spread" style="margin-bottom:12px">
+            <span style="font-size:0.8rem">GPS AUTO-CENTER MAP</span>
+            <button class="switch" id="followSwitch"><i></i></button>
+          </div>
+          <div class="grid2">
+            <button class="actionBtn" id="exportBtn">📥 EXPORT BACKUP</button>
+            <button class="actionBtn" id="importBtn">📤 RESTORE DATA</button>
+          </div>
+          <input type="file" id="restoreInput" accept="application/json" style="display:none">
+        </div>
+
+        <div class="card">
+          <div class="cardTitle">SYSTEM INFO</div>
+          <div class="kpi"><span>OPERATOR SESSION</span><strong id="dataUser">Default User</strong></div>
+          <div class="grid2" style="margin-top:8px">
+            <div class="kpi"><span>DATABASE</span><strong>IndexedDB v1</strong></div>
+            <div class="kpi"><span>STATUS</span><strong style="color:var(--primary-bright)">LOCAL ONLY</strong></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav>
+      <button class="navBtn active" onclick="showScreen('commandScreen')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        COMMAND
+      </button>
+      <button class="navBtn" onclick="showScreen('bucksScreen')">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        ROSTER
+      </button>
+      <button class="navBtn" onclick="showScreen('mapScreen')">
+        <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        MAP
+      </button>
+      <button class="navBtn" onclick="showScreen('intelScreen')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        INTEL
+      </button>
+      <button class="navBtn" onclick="showScreen('dataScreen')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        SYSTEM
+      </button>
+    </nav>
+  </div>
+
+<script>
+/* =========================================================
+   CORE STATE & DATABASE ENGINE (IndexedDB)
+   ========================================================= */
+
+const DB_NAME = "BUCKTRACK_DB";
+const DB_VERSION = 1;
+let db = null;
+let currentUser = "Default Operator";
+let map = null;
+let mapMarkers = [];
+let currentLocation = null;
+let pendingMapMode = null;
+
+let metricUnits = false;
+let weatherAuto = true;
+let followLocation = false;
+let weatherTimer = null;
+let weather = null;
+
+// Helpers
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const esc = str => (str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const uid = pref => `${pref}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+const now = () => new Date().toISOString();
+const fmtDate = iso => iso ? new Date(iso).toLocaleDateString() : '--';
+const fmtDateTime = iso => iso ? new Date(iso).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '--';
+
+function showToast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+function openModal(title, html) {
+  $("modalContent").innerHTML = `
+    <div class="row spread" style="margin-bottom:14px; border-bottom:1px solid var(--line); padding-bottom:8px">
+      <h3 style="font-family:var(--font-mono); font-size:0.9rem; text-transform:uppercase">${title}</h3>
+      <button onclick="closeModal()" style="background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer">&times;</button>
+    </div>
+    ${html}
+  `;
+  $("modal").classList.remove("hidden");
+}
+
+function closeModal() {
+  $("modal").classList.add("hidden");
+  $("modalContent").innerHTML = "";
+}
+
+// Database Operations
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      ["bucks", "sightings", "photos", "waypoints", "settings"].forEach(store => {
+        if (!d.objectStoreNames.contains(store)) {
+          d.createObjectStore(store, { keyPath: "id" });
+        }
+      });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+function dbTx(storeName, mode = "readonly") {
+  return db.transaction(storeName, mode).objectStore(storeName);
+}
+
+function dbPut(storeName, item) {
+  return new Promise((resolve, reject) => {
+    const req = dbTx(storeName, "readwrite").put(item);
+    req.onsuccess = () => resolve(item);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGet(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const req = dbTx(storeName).get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGetAll(storeName) {
+  return new Promise((resolve, reject) => {
+    const req = dbTx(storeName).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDelete(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const req = dbTx(storeName, "readwrite").delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function userRows(storeName) {
+  const all = await dbGetAll(storeName);
+  return all.filter(r => r.username === currentUser || !r.username);
+}
+
+/* =========================================================
+   NAVIGATION & UI CONTROLS
+   ========================================================= */
+
+function showScreen(screenId) {
+  $$(".screen").forEach(s => s.classList.remove("active"));
+  $(screenId).classList.add("active");
+
+  $$(".navBtn").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("onclick").includes(screenId));
+  });
+
+  if (screenId === "mapScreen") {
+    setTimeout(() => { if (map) map.invalidateSize(); }, 200);
+  }
+  if (screenId === "dataScreen") renderGallery();
+  if (screenId === "intelScreen") renderIntel();
+  if (screenId === "bucksScreen") renderBucks();
+  if (screenId === "commandScreen") refreshAll();
+}
+
+/* =========================================================
+   WEATHER & SOLUNAR INTELLIGENCE ENGINE
+   ========================================================= */
+
+async function fetchWeather() {
+  if (!currentLocation) {
+    $("weatherStatus").textContent = "NO GPS";
+    return;
+  }
+
+  $("weatherStatus").textContent = "FETCHING...";
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentLocation.lat}&longitude=${currentLocation.lng}&current_weather=true&hourly=surface_pressure,relativehumidity_2m`;
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (data && data.current_weather) {
+      weather = {
+        tempC: data.current_weather.temperature,
+        windKph: data.current_weather.windspeed,
+        windDir: data.current_weather.winddirection,
+        pressure: data.hourly ? data.hourly.surface_pressure[0] : 1013,
+        time: now()
+      };
+      $("weatherStatus").textContent = "ONLINE";
+      renderWeather();
+      calculateMovement();
+    }
+  } catch (e) {
+    console.error("Weather fetch failed", e);
+    $("weatherStatus").textContent = "OFFLINE";
+  }
+}
+
+function renderWeather() {
+  if (!weather) return;
+
+  const temp = metricUnits ? `${weather.tempC}°C` : `${Math.round(weather.tempC * 9/5 + 32)}°F`;
+  const wind = metricUnits ? `${weather.windKph} km/h` : `${Math.round(weather.windKph * 0.621371)} mph`;
+  const baro = metricUnits ? `${Math.round(weather.pressure)} hPa` : `${(weather.pressure * 0.02953).toFixed(2)} inHg`;
+  
+  const moonPhase = getMoonPhase();
+
+  $("envTemp").textContent = temp;
+  $("envWind").textContent = `${wind} ${degToCompass(weather.windDir)}`;
+  $("envBaro").textContent = baro;
+  $("envMoon").textContent = moonPhase.name;
+
+  $("intelTemp").textContent = temp;
+  $("intelBaro").textContent = baro;
+  $("intelWindSpeed").textContent = wind;
+  $("intelWindDir").textContent = `${weather.windDir}° (${degToCompass(weather.windDir)})`;
+
+  $("solMoon").textContent = moonPhase.name;
+  $("solIllum").textContent = `${moonPhase.illumination}%`;
+  $("solMajor").textContent = moonPhase.major;
+  $("solMinor").textContent = moonPhase.minor;
+}
+
+function degToCompass(num) {
+  const val = Math.floor((num / 22.5) + 0.5);
+  const arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+  return arr[val % 16];
+}
+
+function getMoonPhase() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  
+  // Basic Moon Phase Calculation
+  let c = e = jd = b = 0;
+  if (month < 3) { year--; month += 12; }
+  ++month;
+  c = 365.25 * year;
+  e = 30.6 * month;
+  jd = c + e + day - 694039.09;
+  jd /= 29.5305882;
+  b = parseInt(jd);
+  jd -= b;
+  b = Math.round(jd * 8);
+  if (b >= 8) b = 0;
+
+  const phases = [
+    { name: "New Moon", illumination: 0, major: "12:00 PM", minor: "06:00 AM" },
+    { name: "Waxing Crescent", illumination: 25, major: "03:00 PM", minor: "09:00 AM" },
+    { name: "First Quarter", illumination: 50, major: "06:00 PM", minor: "12:00 PM" },
+    { name: "Waxing Gibbous", illumination: 75, major: "09:00 PM", minor: "03:00 PM" },
+    { name: "Full Moon", illumination: 100, major: "12:00 AM", minor: "06:00 PM" },
+    { name: "Waning Gibbous", illumination: 75, major: "03:00 AM", minor: "09:00 PM" },
+    { name: "Last Quarter", illumination: 50, major: "06:00 AM", minor: "12:00 AM" },
+    { name: "Waning Crescent", illumination: 25, major: "09:00 AM", minor: "03:00 AM" }
+  ];
+  return phases[b];
+}
+
+function calculateMovement() {
+  if (!weather) return;
+  
+  let score = 50; // Baseline
+  
+  // Barometric Pressure scoring
+  if (weather.pressure >= 1012 && weather.pressure <= 1022) score += 20;
+  
+  // Wind scoring
+  if (weather.windKph >= 5 && weather.windKph <= 19) score += 15;
+  else if (weather.windKph > 30) score -= 25;
+
+  // Moon phase scoring
+  const moon = getMoonPhase();
+  if (moon.illumination === 0 || moon.illumination === 100) score += 15;
+
+  score = Math.max(10, Math.min(99, score));
+
+  $("predictScore").textContent = `${score} / 100`;
+  $("predictReason").textContent = `Score derived from atmospheric pressure (${weather.pressure} hPa), wind vector (${weather.windKph} km/h), and ${moon.name} solunar phase alignments.`;
+}
+
+/* =========================================================
+   MAP & GEOLOCATION SYSTEM
+   ========================================================= */
+
+function initMap() {
+  if (map) return;
+  
+  // Default centered on Nova Scotia coordinates if GPS pending
+  map = L.map('map', { zoomControl: false }).setView([45.8, -64.2], 12);
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  map.on('click', onMapClick);
+}
+
+function locateUser() {
+  if (!navigator.geolocation) {
+    showToast("Geolocation not supported by device.");
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if (map) {
+        map.setView([currentLocation.lat, currentLocation.lng], 14);
+        L.circleMarker([currentLocation.lat, currentLocation.lng], {
+          radius: 8,
+          fillColor: "#76b375",
+          color: "#ffffff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).addTo(map).bindPopup("Current Operator Position");
+      }
+      if (weatherAuto && !weather) fetchWeather();
+      showToast("GPS position acquired.");
+    },
+    err => showToast("GPS position lock failed."),
+    { enableHighAccuracy: true }
+  );
+}
+
+function beginMapAdd(type) {
+  pendingMapMode = type;
+  showToast(`Tap map location to drop ${type}.`);
+  showScreen('mapScreen');
+}
+
+function onMapClick(e) {
+  if (!pendingMapMode) return;
+
+  const lat = e.latlng.lat;
+  const lng = e.latlng.lng;
+  const mode = pendingMapMode;
+  pendingMapMode = null;
+
+  if (mode === 'waypoint') {
+    openModal(
+      "PLACE WAYPOINT",
+      `
+        <div class="formGroup">
+          <label>Waypoint Designation / Name</label>
+          <input type="text" id="wpName" placeholder="e.g. Oak Ridge Stand, Feed Pile #2" required>
+        </div>
+        <div class="formGroup">
+          <label>Waypoint Type</label>
+          <select id="wpType">
+            <option value="Stand">Tree Stand / Blind</option>
+            <option value="Trail Cam">Trail Camera</option>
+            <option value="Feed">Feed Site / Salt Lick</option>
+            <option value="Rub/Scrape">Rub / Scrape Line</option>
+            <option value="Bedding">Bedding Area</option>
+            <option value="Other">General / Other</option>
+          </select>
+        </div>
+        <div class="row">
+          <button class="actionBtn" onclick="closeModal()">CANCEL</button>
+          <button class="actionBtn primary" id="saveWpBtn">SAVE WAYPOINT</button>
+        </div>
+      `
+    );
+
+    $("saveWpBtn").onclick = async () => {
+      const name = $("wpName").value.trim() || "Unassigned Waypoint";
+      const type = $("wpType").value;
+
+      await dbPut("waypoints", {
+        id: uid("wp"),
+        username: currentUser,
+        name,
+        type,
+        lat,
+        lng,
+        createdAt: now()
+      });
+
+      closeModal();
+      await renderMapMarkers();
+      await refreshAll();
+      showToast("Waypoint saved.");
+    };
+  } else if (mode === 'sighting') {
+    addSighting(lat, lng);
+  }
+}
+
+async function renderMapMarkers() {
+  if (!map) return;
+  
+  // Clear existing layers
+  mapMarkers.forEach(m => map.removeLayer(m));
+  mapMarkers = [];
+
+  const waypoints = await userRows("waypoints");
+  const sightings = await userRows("sightings");
+
+  waypoints.forEach(wp => {
+    const marker = L.marker([wp.lat, wp.lng]).addTo(map);
+    marker.bindPopup(`
+      <div style="font-family:sans-serif">
+        <strong>${esc(wp.name)}</strong><br>
+        <small style="color:#666">${wp.type}</small>
+      </div>
+    `);
+    mapMarkers.push(marker);
+  });
+
+  sightings.forEach(s => {
+    if (s.lat && s.lng) {
+      const circle = L.circleMarker([s.lat, s.lng], {
+        radius: 7,
+        fillColor: "#d97736",
+        color: "#ffffff",
+        weight: 1.5,
+        fillOpacity: 0.9
+      }).addTo(map);
+      
+      circle.bindPopup(`
+        <div style="font-family:sans-serif">
+          <strong>Sighting: ${esc(s.buckName || 'Buck')}</strong><br>
+          <small>${fmtDateTime(s.date)}</small><br>
+          <p style="margin-top:4px">${esc(s.note || '')}</p>
+        </div>
+      `);
+      mapMarkers.push(circle);
+    }
+  });
+}
+
+/* =========================================================
+   BUCK ROSTER MANAGEMENT
+   ========================================================= */
+
+async function renderBucks() {
+  const bucks = await userRows("bucks");
+  const sightings = await userRows("sightings");
+  
+  if (!bucks.length) {
+    $("buckList").innerHTML = `<div class="empty">No buck profiles created.<br>Click "+ NEW BUCK" to add target.</div>`;
+    return;
+  }
+
+  $("buckList").innerHTML = bucks.map(b => {
+    const bSightings = sightings.filter(s => s.buckId === b.id);
+    const confidence = calcBuckConfidence(b, bSightings);
+
+    return `
+      <div class="card">
+        <div class="row spread" style="margin-bottom:6px">
+          <div>
+            <strong style="font-family:var(--font-mono); font-size:1.05rem">${esc(b.name)}</strong>
+            ${b.target ? `<span style="background:var(--accent); color:#fff; font-size:0.6rem; padding:2px 6px; border-radius:4px; font-weight:700; margin-left:6px; font-family:var(--font-mono)">TARGET</span>` : ''}
+          </div>
+          <button class="actionBtn" style="width:auto; padding:4px 8px; font-size:0.7rem" onclick="openBuckForm('${b.id}')">EDIT</button>
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div style="font-size:0.8rem; color:var(--muted)">Est. Age: <strong style="color:var(--text)">${esc(b.age || '--')}</strong></div>
+          <div style="font-size:0.8rem; color:var(--muted)">Points: <strong style="color:var(--text)">${esc(b.points || '--')}</strong></div>
+        </div>
+        <div class="row spread" style="border-top:1px solid var(--line); padding-top:8px">
+          <span style="font-size:0.75rem; color:var(--muted)">Confidence Rating:</span>
+          <strong style="font-family:var(--font-mono); color:var(--primary-bright)">${confidence}%</strong>
         </div>
       </div>
     `;
   }).join("");
 }
 
-function calcBuckConfidence(b,sightings){
-  let score=25;
-
-  if(b.name)score+=5;
-  if(b.age)score+=8;
-  if(b.antlerNotes)score+=8;
-  if(b.description)score+=6;
-  if(sightings.length)score+=Math.min(35,sightings.length*7);
-
-  const latest=sightings.sort((a,c)=>
-    String(c.date).localeCompare(String(a.date))
-  )[0];
-
-  if(latest){
-    const days=(Date.now()-new Date(latest.date).getTime())/86400000;
-    if(days<3)score+=13;
-    else if(days<14)score+=8;
-    else if(days<45)score+=3;
-  }
-
-  return Math.min(99,score);
+function calcBuckConfidence(buck, sightings) {
+  let score = 20;
+  score += Math.min(60, sightings.length * 15);
+  if (buck.target) score += 20;
+  return Math.min(100, score);
 }
 
-$("newBuckBtn").onclick=()=>openBuckForm();
-$("newSightingBtn").onclick=()=>addSighting();
-
-function openBuckForm(existing=null){
-  const b=existing||{};
+async function openBuckForm(buckId = null) {
+  let buck = { name: "", age: "", points: "", notes: "", target: false };
+  if (buckId) {
+    buck = (await dbGet("bucks", buckId)) || buck;
+  }
 
   openModal(
-    existing?"EDIT BUCK":"NEW BUCK",
+    buckId ? "EDIT BUCK PROFILE" : "CREATE BUCK PROFILE",
     `
       <div class="formGroup">
-        <label>Target Name / ID</label>
-        <input id="buckName" value="${esc(b.name||"")}" placeholder="Buck 01">
+        <label>Buck Designation / Name</label>
+        <input type="text" id="bName" value="${esc(buck.name)}" placeholder="e.g. Split Brow, Ghost, Wide 10" required>
       </div>
-
+      <div class="grid2">
+        <div class="formGroup">
+          <label>Estimated Age</label>
+          <input type="text" id="bAge" value="${esc(buck.age)}" placeholder="e.g. 3.5 yrs">
+        </div>
+        <div class="formGroup">
+          <label>Point Count</label>
+          <input type="text" id="bPoints" value="${esc(buck.points)}" placeholder="e.g. 8 pt, 10 pt">
+        </div>
+      </div>
       <div class="formGroup">
-        <label>Estimated Age</label>
-        <select id="buckAge">
-          <option value="">Unknown</option>
-          <option ${b.age==="1.5 years"?"selected":""}>1.5 years</option>
-          <option ${b.age==="2.5 years"?"selected":""}>2.5 years</option>
-          <option ${b.age==="3.5 years"?"selected":""}>3.5 years</option>
-          <option ${b.age==="4.5+ years"?"selected":""}>4.5+ years</option>
-        </select>
+        <label>Notes & Pattern Identification</label>
+        <textarea id="bNotes" placeholder="Distinctive markings, drop tines, bedding habits...">${esc(buck.notes)}</textarea>
       </div>
-
-      <div class="formGroup">
-        <label>Antler Notes</label>
-        <input id="buckAntlers" value="${esc(b.antlerNotes||"")}" placeholder="Beam, tine, spread observations">
-      </div>
-
-      <div class="formGroup">
-        <label>Body / Identification Notes</label>
-        <textarea id="buckDesc">${esc(b.description||"")}</textarea>
-      </div>
-
       <div class="row spread" style="margin-bottom:14px">
-        <span style="font-size:11px">Primary Target</span>
-        <button class="switch ${b.target?"on":""}" id="targetSwitch"><i></i></button>
+        <span style="font-size:0.8rem; font-family:var(--font-mono)">SET AS PRIMARY TARGET BUCK</span>
+        <button class="switch ${buck.target ? "on" : ""}" id="targetSwitch"><i></i></button>
       </div>
-
       <div class="row">
-        ${existing?`<button class="actionBtn danger" id="deleteBuck">DELETE</button>`:""}
+        ${buckId ? `<button class="actionBtn danger" onclick="deleteBuck('${buckId}')">DELETE</button>` : ''}
         <button class="actionBtn" onclick="closeModal()">CANCEL</button>
-        <button class="actionBtn primary" id="saveBuck">SAVE</button>
+        <button class="actionBtn primary" id="saveBuckBtn">SAVE PROFILE</button>
       </div>
     `
   );
 
-  let target=!!b.target;
-
-  $("targetSwitch").onclick=()=>{
-    target=!target;
-    $("targetSwitch").classList.toggle("on",target);
+  let isTarget = !!buck.target;
+  $("targetSwitch").onclick = () => {
+    isTarget = !isTarget;
+    $("targetSwitch").classList.toggle("on", isTarget);
   };
 
-  $("saveBuck").onclick=async()=>{
-    const obj={
-      id:b.id||uid("buck"),
-      username:currentUser,
-      name:$("buckName").value.trim()||"Unnamed Buck",
-      age:$("buckAge").value,
-      antlerNotes:$("buckAntlers").value.trim(),
-      description:$("buckDesc").value.trim(),
-      target,
-      createdAt:b.createdAt||now(),
-      updatedAt:now()
-    };
+  $("saveBuckBtn").onclick = async () => {
+    const name = $("bName").value.trim();
+    if (!name) {
+      showToast("Name is required.");
+      return;
+    }
 
-    if(target){
-      const all=await userRows("bucks");
-      for(const other of all){
-        if(other.id!==obj.id && other.target){
-          other.target=false;
-          other.updatedAt=now();
-          await dbPut("bucks",other);
+    // If setting as target, unset other target bucks
+    if (isTarget) {
+      const existing = await userRows("bucks");
+      for (let b of existing) {
+        if (b.target && b.id !== buckId) {
+          b.target = false;
+          await dbPut("bucks", b);
         }
       }
     }
 
-    await dbPut("bucks",obj);
+    const item = {
+      id: buckId || uid("buck"),
+      username: currentUser,
+      name,
+      age: $("bAge").value.trim(),
+      points: $("bPoints").value.trim(),
+      notes: $("bNotes").value.trim(),
+      target: isTarget,
+      createdAt: buck.createdAt || now()
+    };
+
+    await dbPut("bucks", item);
     closeModal();
+    await renderBucks();
     await refreshAll();
     showToast("Buck profile saved.");
   };
-
-  if(existing){
-    $("deleteBuck").onclick=async()=>{
-      if(!confirm("Delete this buck profile?"))return;
-
-      await dbDelete("bucks",existing.id);
-
-      const sightings=await userRows("sightings");
-      for(const s of sightings.filter(x=>x.buckId===existing.id)){
-        await dbDelete("sightings",s.id);
-      }
-
-      const photos=await userRows("photos");
-      for(const p of photos.filter(x=>x.buckId===existing.id)){
-        await dbDelete("photos",p.id);
-      }
-
-      closeModal();
-      await refreshAll();
-      showToast("Buck deleted.");
-    };
-  }
 }
 
-async function editBuck(id){
-  const b=await dbGet("bucks",id);
-  if(b)openBuckForm(b);
+async function deleteBuck(id) {
+  if (!confirm("Delete this buck profile? Associated logs will remain.")) return;
+  await dbDelete("bucks", id);
+  closeModal();
+  await renderBucks();
+  await refreshAll();
+  showToast("Profile deleted.");
 }
-window.editBuck=editBuck;
 
-async function viewBuck(id){
-  const b=await dbGet("bucks",id);
-  if(!b)return;
+/* =========================================================
+   SIGHTING CAPTURE SYSTEM
+   ========================================================= */
 
-  const sightings=(await userRows("sightings"))
-    .filter(s=>s.buckId===id)
-    .sort((a,c)=>String(c.date).localeCompare(String(a.date)));
-
-  const photos=(await userRows("photos")).filter(p=>p.buckId===id);
-  const confidence=calcBuckConfidence(b,sightings);
+async function addSighting(defaultLat = null, defaultLng = null) {
+  const bucks = await userRows("bucks");
 
   openModal(
-    b.name,
-    `
-      <div class="hero">
-        <div class="eyebrow">${b.target?"PRIMARY TARGET":"BUCK PROFILE"}</div>
-        <h1>${esc(b.name)}</h1>
-        <p>${esc(b.description||"No identification notes recorded.")}</p>
-        <div class="progress" style="margin-top:15px"><div style="width:${confidence}%"></div></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:6px">${confidence}% profile confidence</div>
-      </div>
-
-      <div class="grid grid2">
-        <div class="metric"><div class="label">Age</div><div class="value" style="font-size:16px">${esc(b.age||"Unknown")}</div></div>
-        <div class="metric"><div class="label">Sightings</div><div class="value">${sightings.length}</div></div>
-        <div class="metric"><div class="label">Photos</div><div class="value">${photos.length}</div></div>
-        <div class="metric"><div class="label">Status</div><div class="value" style="font-size:16px">${b.target?"TARGET":"TRACKING"}</div></div>
-      </div>
-
-      <div class="card" style="margin-top:10px;padding:13px">
-        <div class="cardTitle"><strong>ANTLER NOTES</strong></div>
-        <div style="font-size:11px;color:var(--muted)">${esc(b.antlerNotes||"No antler observations recorded.")}</div>
-      </div>
-
-      <div class="card" style="margin-top:10px;padding:13px">
-        <div class="cardTitle"><strong>SIGHTING HISTORY</strong></div>
-        ${
-          sightings.length
-          ? `<div class="timeline">${sightings.map(s=>`
-              <div class="timelineItem">
-                <strong>${fmtDateTime(s.date)}</strong>
-                <small>${s.lat&&s.lng?`${Number(s.lat).toFixed(5)}, ${Number(s.lng).toFixed(5)} • `:""}${esc(s.note||"No notes")}</small>
-              </div>
-            `).join("")}</div>`
-          : `<div class="empty">No sightings recorded.</div>`
-        }
-      </div>
-    `
-  );
-}
-window.viewBuck=viewBuck;
-
-function addSighting(buckId=null){
-  openModal(
-    "NEW SIGHTING",
+    "RECORD FIELD SIGHTING",
     `
       <div class="formGroup">
-        <label>Buck</label>
+        <label>Associated Buck</label>
         <select id="sightBuck"></select>
       </div>
 
       <div class="formGroup">
-        <label>Date / Time</label>
-        <input id="sightDate" type="datetime-local" value="${new Date().toISOString().slice(0,16)}">
+        <label>Date & Time</label>
+        <input type="datetime-local" id="sightDate" value="${new Date().toISOString().slice(0, 16)}">
       </div>
 
       <div class="formGroup">
-        <label>Observation</label>
-        <textarea id="sightNote" placeholder="Direction, behaviour, distance, wind, terrain…"></textarea>
+        <label>Observations & Field Notes</label>
+        <textarea id="sightNote" placeholder="Sighting observations, direction of travel, behavior..."></textarea>
+      </div>
+
+      <div class="row spread" style="margin-bottom:12px">
+        <span style="font-size:0.75rem; color:var(--muted); font-family:var(--font-mono)">USE GPS LOCATION</span>
+        <button class="switch ${(currentLocation || (defaultLat && defaultLng)) ? "on" : ""}" id="sightGpsSwitch"><i></i></button>
       </div>
 
       <div class="row">
         <button class="actionBtn" onclick="closeModal()">CANCEL</button>
-        <button class="actionBtn primary" id="saveSight">SAVE SIGHTING</button>
+        <button class="actionBtn primary" id="saveSighting">RECORD SIGHTING</button>
       </div>
     `
   );
 
-  userRows("bucks").then(bucks=>{
-    $("sightBuck").innerHTML=
-      `<option value="">Unidentified</option>`+
-      bucks.map(b=>`<option value="${b.id}" ${b.id===buckId?"selected":""}>${esc(b.name)}</option>`).join("");
-  });
+  populateBuckSelect("sightBuck");
 
-  $("saveSight").onclick=async()=>{
-    let lat=null,lng=null;
+  let useGps = !!(currentLocation || (defaultLat && defaultLng));
+  $("sightGpsSwitch").onclick = () => {
+    useGps = !useGps;
+    $("sightGpsSwitch").classList.toggle("on", useGps);
+  };
 
-    if(currentLocation){
-      lat=currentLocation.lat;
-      lng=currentLocation.lng;
+  $("saveSighting").onclick = async () => {
+    const selectedBuckId = $("sightBuck").value;
+    const selectedBuck = selectedBuckId ? await dbGet("bucks", selectedBuckId) : null;
+
+    let lat = defaultLat;
+    let lng = defaultLng;
+
+    if (useGps && !lat && currentLocation) {
+      lat = currentLocation.lat;
+      lng = currentLocation.lng;
     }
 
-    const buck=await dbGet("bucks",$("sightBuck").value);
+    const sightingObj = {
+      id: uid("sight"),
+      username: currentUser,
+      buckId: selectedBuckId || null,
+      buckName: selectedBuck ? selectedBuck.name : "Unidentified Buck",
+      date: $("sightDate").value || now(),
+      note: $("sightNote").value.trim(),
+      lat: useGps ? lat : null,
+      lng: useGps ? lng : null,
+      createdAt: now()
+    };
 
-    await dbPut("sightings",{
-      id:uid("sighting"),
-      username:currentUser,
-      buckId:$("sightBuck").value||null,
-      buckName:buck?.name||"Unidentified",
-      date:new Date($("sightDate").value).toISOString(),
-      note:$("sightNote").value.trim(),
-      lat,
-      lng,
-      createdAt:now()
-    });
-
+    await dbPut("sightings", sightingObj);
     closeModal();
+    await renderMapMarkers();
     await refreshAll();
     showToast("Sighting recorded.");
   };
 }
-window.addSighting=addSighting;
 
-/* =========================================================
-   CAMERA / PHOTOS
-   ========================================================= */
+async function populateBuckSelect(elementId, selectedId = null) {
+  const bucks = await userRows("bucks");
+  const el = $(elementId);
+  if (!el) return;
 
-$("photoPick").onclick=()=>$("photoInput").click();
-
-$("photoInput").addEventListener("change",async e=>{
-  const files=[...e.target.files];
-
-  if(!files.length)return;
-
-  let added=0;
-
-  for(const file of files){
-    if(!file.type.startsWith("image/"))continue;
-
-    const dataUrl=await fileToDataURL(file);
-
-    await dbPut("photos",{
-      id:uid("photo"),
-      username:currentUser,
-      name:file.name,
-      type:file.type,
-      size:file.size,
-      dataUrl,
-      buckId:null,
-      createdAt:now(),
-      modifiedAt:file.lastModified
-    });
-
-    added++;
+  if (!bucks.length) {
+    el.innerHTML = `<option value="">No bucks available (Unidentified)</option>`;
+    return;
   }
 
-  e.target.value="";
+  el.innerHTML = `
+    <option value="">-- Select Buck (Optional) --</option>
+    ${bucks.map(b => `
+      <option value="${b.id}" ${b.id === selectedId ? "selected" : ""}>
+        ${esc(b.name)} ${b.target ? "(Target)" : ""}
+      </option>
+    `).join("")}
+  `;
+}
+
+/* =========================================================
+   CAMERA & GALLERY
+   ========================================================= */
+
+$("photoPick").onclick = () => $("photoInput").click();
+
+$("photoInput").onchange = async e => {
+  const files = [...(e.target.files || [])];
+  if (!files.length) return;
+
+  let addedCount = 0;
+  showToast(`Processing ${files.length} photo(s)...`);
+
+  for (const file of files) {
+    try {
+      const dataUrl = await readFileAsDataURL(file);
+      const photoObj = {
+        id: uid("photo"),
+        username: currentUser,
+        buckId: null,
+        filename: file.name,
+        dataUrl,
+        timestamp: file.lastModified ? new Date(file.lastModified).toISOString() : now(),
+        createdAt: now()
+      };
+
+      await dbPut("photos", photoObj);
+      addedCount++;
+    } catch (err) {
+      console.error("Error processing photo", err);
+    }
+  }
+
+  e.target.value = "";
   await renderGallery();
   await refreshAll();
-  showToast(`${added} photo${added===1?"":"s"} imported.`);
-});
+  showToast(`Added ${addedCount} photo(s) to intake.`);
+};
 
-function fileToDataURL(file){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>resolve(reader.result);
-    reader.onerror=reject;
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
 }
 
-async function renderGallery(){
-  const photos=(await userRows("photos"))
-    .sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+async function renderGallery() {
+  const photos = await userRows("photos");
+  $("photoCountLabel").textContent = `${photos.length} image${photos.length === 1 ? "" : "s"}`;
 
-  $("photoCountLabel").textContent=
-    `${photos.length} image${photos.length===1?"":"s"}`;
-
-  if(!photos.length){
-    $("gallery").innerHTML=`
+  if (!photos.length) {
+    $("gallery").innerHTML = `
       <div class="empty" style="grid-column:1/-1">
-        No photos yet.<br>Import trail-camera images above.
+        No trail camera photos stored.<br>Import images to populate field evidence gallery.
       </div>
     `;
     return;
   }
 
-  $("gallery").innerHTML=photos.map(p=>`
+  const sorted = [...photos].sort((a, b) =>
+    String(b.timestamp || b.createdAt).localeCompare(String(a.timestamp || a.createdAt))
+  );
+
+  $("gallery").innerHTML = sorted.map(p => `
     <div class="photo" onclick="viewPhoto('${p.id}')">
-      <img src="${p.dataUrl}" alt="${esc(p.name)}" loading="lazy">
-      <span>${esc(p.name.slice(0,18))}</span>
+      <img src="${p.dataUrl}" alt="${esc(p.filename)}" loading="lazy">
+      <span>${fmtDate(p.timestamp)}</span>
     </div>
   `).join("");
 }
 
-async function viewPhoto(id){
-  const p=await dbGet("photos",id);
-  if(!p)return;
-
-  const bucks=await userRows("bucks");
+async function viewPhoto(id) {
+  const photo = await dbGet("photos", id);
+  if (!photo) return;
 
   openModal(
-    "PHOTO INTELLIGENCE",
+    "FIELD PHOTO",
     `
-      <img src="${p.dataUrl}" style="width:100%;border-radius:15px;max-height:50vh;object-fit:contain;background:#050806">
-
-      <div class="card" style="margin-top:10px">
-        <div class="kpi"><span>Filename</span><strong>${esc(p.name)}</strong></div>
-        <div class="kpi"><span>Imported</span><strong>${fmtDateTime(p.createdAt)}</strong></div>
-        <div class="kpi"><span>Size</span><strong>${Math.round(p.size/1024)} KB</strong></div>
+      <div style="text-align:center;margin-bottom:12px">
+        <img src="${photo.dataUrl}" style="max-width:100%;max-height:50vh;border-radius:8px;border:1px solid var(--line)">
       </div>
 
-      <div class="formGroup" style="margin-top:10px">
-        <label>Associate With Buck</label>
-        <select id="photoBuck">
-          <option value="">Unassigned</option>
-          ${bucks.map(b=>`
-            <option value="${b.id}" ${p.buckId===b.id?"selected":""}>${esc(b.name)}</option>
-          `).join("")}
-        </select>
+      <div class="card" style="margin-bottom:12px">
+        <div class="kpi"><span>Filename</span><strong>${esc(photo.filename)}</strong></div>
+        <div class="kpi" style="margin-top:6px"><span>Captured / Added</span><strong>${fmtDateTime(photo.timestamp)}</strong></div>
+      </div>
+
+      <div class="formGroup">
+        <label>Link to Buck Profile</label>
+        <select id="photoBuckSelect"></select>
       </div>
 
       <div class="row">
-        <button class="actionBtn danger" id="deletePhoto">DELETE</button>
-        <button class="actionBtn primary" id="savePhoto">SAVE</button>
+        <button class="actionBtn danger" id="deletePhotoBtn">DELETE</button>
+        <button class="actionBtn" onclick="closeModal()">CLOSE</button>
+        <button class="actionBtn primary" id="savePhotoLinkBtn">LINK BUCK</button>
       </div>
     `
   );
 
-  $("savePhoto").onclick=async()=>{
-    p.buckId=$("photoBuck").value||null;
-    await dbPut("photos",p);
+  await populateBuckSelect("photoBuckSelect", photo.buckId);
+
+  $("savePhotoLinkBtn").onclick = async () => {
+    photo.buckId = $("photoBuckSelect").value || null;
+    await dbPut("photos", photo);
     closeModal();
+    await renderGallery();
     await refreshAll();
-    showToast("Photo updated.");
+    showToast("Photo link updated.");
   };
 
-  $("deletePhoto").onclick=async()=>{
-    if(!confirm("Delete this photo?"))return;
-    await dbDelete("photos",id);
+  $("deletePhotoBtn").onclick = async () => {
+    if (!confirm("Delete this photo from local storage?")) return;
+    await dbDelete("photos", id);
     closeModal();
+    await renderGallery();
     await refreshAll();
     showToast("Photo deleted.");
   };
 }
-window.viewPhoto=viewPhoto;
 
 /* =========================================================
-   INTELLIGENCE UI
+   INTEL SCREEN TABS
    ========================================================= */
 
-$$("[data-intel]").forEach(tab=>{
-  tab.onclick=()=>{
-    $$("[data-intel]").forEach(x=>x.classList.remove("active"));
+function renderIntel() {
+  if (weather) {
+    renderWeather();
+  } else {
+    fetchWeather();
+  }
+}
+
+$$(".tabBar .tab").forEach(tab => {
+  tab.onclick = () => {
+    $$(".tabBar .tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
-    $("intelConditions").classList.toggle("hidden",tab.dataset.intel!=="conditions");
-    $("intelSnow").classList.toggle("hidden",tab.dataset.intel!=="snow");
-    $("intelMovement").classList.toggle("hidden",tab.dataset.intel!=="movement");
+    const target = tab.dataset.intel;
+    $("intelConditions").classList.toggle("hidden", target !== "conditions");
+    $("intelSnow").classList.toggle("hidden", target !== "snow");
+    $("intelMovement").classList.toggle("hidden", target !== "movement");
   };
 });
 
-async function renderIntel(){
-  if(weather)renderWeather();
-  await calculateMovement();
-}
-
 /* =========================================================
-   DASHBOARD
+   DATA & SETTINGS
    ========================================================= */
 
-async function refreshDashboard(){
-  const bucks=await userRows("bucks");
-  const sightings=await userRows("sightings");
-  const photos=await userRows("photos");
-  const waypoints=await userRows("waypoints");
+async function renderData() {
+  $("dataUser").textContent = currentUser || "Default Operator";
 
-  $("statBucks").textContent=bucks.length;
-  $("statSightings").textContent=sightings.length;
-  $("statPhotos").textContent=photos.length;
-  $("statWaypoints").textContent=waypoints.length;
-  $("intelCount").textContent=
-    `${sightings.length} observation${sightings.length===1?"":"s"}`;
+  $("metricSwitch").classList.toggle("on", metricUnits);
+  $("weatherSwitch").classList.toggle("on", weatherAuto);
+  $("followSwitch").classList.toggle("on", followLocation);
+}
 
-  const target=bucks.find(b=>b.target)||bucks[0];
+$("metricSwitch").onclick = async () => {
+  metricUnits = !metricUnits;
+  $("metricSwitch").classList.toggle("on", metricUnits);
+  await saveUserSettings();
+  renderWeather();
+  renderData();
+};
 
-  document.querySelectorAll(".targetExists").forEach(()=>{});
+$("weatherSwitch").onclick = async () => {
+  weatherAuto = !weatherAuto;
+  $("weatherSwitch").classList.toggle("on", weatherAuto);
+  await saveUserSettings();
 
-  if(target){
-    document.querySelector(".hero").classList.add("targetExists");
+  if (weatherAuto) {
+    startWeatherInterval();
+  } else if (weatherTimer) {
+    clearInterval(weatherTimer);
+    weatherTimer = null;
+  }
+};
 
-    const bs=sightings.filter(s=>s.buckId===target.id);
-    const score=calcBuckConfidence(target,bs);
+$("followSwitch").onclick = async () => {
+  followLocation = !followLocation;
+  $("followSwitch").classList.toggle("on", followLocation);
+  await saveUserSettings();
+};
 
-    $("targetName").textContent=target.name.toUpperCase();
-    $("targetSub").textContent=
-      target.description||"Primary tracked buck.";
+async function saveUserSettings() {
+  await dbPut("settings", {
+    id: currentUser,
+    username: currentUser,
+    metricUnits,
+    weatherAuto,
+    followLocation
+  });
+}
 
-    $("targetScore").textContent=score;
-    $("targetRing").style.setProperty("--score",score+"%");
-    $("targetProgress").style.width=score+"%";
-    $("targetConfidence").textContent=
-      score>=80?"HIGH CONFIDENCE":score>=55?"DEVELOPING":"LIMITED DATA";
-  }else{
-    $("targetName").textContent="NO TARGET SELECTED";
-    $("targetSub").textContent="Create a buck profile to begin target intelligence.";
-    $("targetScore").textContent="0";
-    $("targetRing").style.setProperty("--score","0%");
-    $("targetProgress").style.width="0%";
-    $("targetConfidence").textContent="NO DATA";
+async function loadUserSettings() {
+  const s = await dbGet("settings", currentUser);
+  if (s) {
+    metricUnits = !!s.metricUnits;
+    weatherAuto = s.weatherAuto !== false;
+    followLocation = !!s.followLocation;
+  }
+}
+
+$("exportBtn").onclick = async () => {
+  const exportPayload = {
+    version: DB_VERSION,
+    exportedAt: now(),
+    user: currentUser,
+    bucks: await userRows("bucks"),
+    sightings: await userRows("sightings"),
+    photos: await userRows("photos"),
+    waypoints: await userRows("waypoints"),
+    settings: await dbGet("settings", currentUser)
+  };
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+  const dlAnchor = document.createElement("a");
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `BUCKTRACK_BACKUP_${new Date().toISOString().slice(0, 10)}.json`);
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+
+  showToast("Database exported.");
+};
+
+$("importBtn").onclick = () => $("restoreInput").click();
+
+$("restoreInput").onchange = async e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!data || typeof data !== "object") throw new Error("Invalid backup structure.");
+
+    const restoreStore = async (storeName, rows) => {
+      if (!Array.isArray(rows)) return;
+      for (const row of rows) {
+        row.username = currentUser;
+        await dbPut(storeName, row);
+      }
+    };
+
+    await restoreStore("bucks", data.bucks);
+    await restoreStore("sightings", data.sightings);
+    await restoreStore("photos", data.photos);
+    await restoreStore("waypoints", data.waypoints);
+
+    if (data.settings) {
+      data.settings.id = currentUser;
+      data.settings.username = currentUser;
+      await dbPut("settings", data.settings);
+      await loadUserSettings();
+    }
+
+    await refreshAll();
+    showToast("Backup imported successfully.");
+  } catch (err) {
+    showToast("Import failed: " + err.message);
+  } finally {
+    e.target.value = "";
+  }
+};
+
+/* =========================================================
+   COMMAND SCREEN & REFRESH ALL
+   ========================================================= */
+
+async function refreshAll() {
+  const bucks = await userRows("bucks");
+  const sightings = await userRows("sightings");
+  const photos = await userRows("photos");
+  const waypoints = await userRows("waypoints");
+
+  $("statBucks").textContent = bucks.length;
+  $("statSightings").textContent = sightings.length;
+  $("statPhotos").textContent = photos.length;
+  $("statWaypoints").textContent = waypoints.length;
+  $("intelCount").textContent = `${sightings.length + photos.length} logs`;
+
+  // Target Buck Processing
+  const targetBuck = bucks.find(b => b.target) || bucks[0];
+
+  if (targetBuck) {
+    const bSightings = sightings.filter(s => s.buckId === targetBuck.id);
+    const confidence = calcBuckConfidence(targetBuck, bSightings);
+
+    $("targetName").textContent = targetBuck.name.toUpperCase();
+    $("targetSub").textContent = `${targetBuck.age || "Age unk"} • ${targetBuck.points || "Unk"} points • ${bSightings.length} sightings`;
+    $("targetRing").style.setProperty("--score", `${confidence}`);
+    $("targetScore").textContent = confidence;
+    $("targetProgress").style.width = `${confidence}%`;
+    $("targetConfidence").textContent = confidence >= 70 ? "HIGH CONFIDENCE" : confidence >= 40 ? "MODERATE CONFIDENCE" : "LOW DATA";
+  } else {
+    $("targetName").textContent = "NO TARGET SELECTED";
+    $("targetSub").textContent = "Select or create a buck profile to calculate activity intel.";
+    $("targetRing").style.setProperty("--score", "0");
+    $("targetScore").textContent = "0";
+    $("targetProgress").style.width = "0%";
+    $("targetConfidence").textContent = "--";
   }
 
-  const activity=[
-    ...sightings.map(x=>({
-      type:"SIGHTING",
-      date:x.date,
-      text:x.buckName||"Unidentified buck"
-    })),
-    ...photos.map(x=>({
-      type:"PHOTO",
-      date:x.createdAt,
-      text:x.name
-    })),
-    ...waypoints.map(x=>({
-      type:"WAYPOINT",
-      date:x.createdAt,
-      text:x.name
-    }))
-  ].sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,7);
+  // Recent Activity Timeline
+  const activity = [];
+  sightings.forEach(s => activity.push({
+    title: `Sighting: ${s.buckName || "Buck"}`,
+    sub: s.note || "Field sighting recorded",
+    time: s.date || s.createdAt
+  }));
+  photos.forEach(p => activity.push({
+    title: `Photo Intake: ${p.filename}`,
+    sub: "Trail camera image indexed",
+    time: p.timestamp || p.createdAt
+  }));
+  waypoints.forEach(w => activity.push({
+    title: `Waypoint: ${w.name}`,
+    sub: `Location marked (${w.type})`,
+    time: w.createdAt
+  }));
 
-  $("recentActivity").innerHTML=activity.length
-    ?activity.map(a=>`
+  activity.sort((a, b) => String(b.time).localeCompare(String(a.time)));
+
+  if (activity.length) {
+    $("recentActivity").innerHTML = activity.slice(0, 5).map(act => `
       <div class="timelineItem">
-        <strong>${esc(a.type)}</strong>
-        <small>${esc(a.text)} • ${fmtDateTime(a.date)}</small>
+        <strong>${esc(act.title)}</strong>
+        <small>${fmtDateTime(act.time)} — ${esc(act.sub)}</small>
       </div>
-    `).join("")
-    :`<div class="empty">No field activity recorded.</div>`;
+    `).join("");
+  } else {
+    $("recentActivity").innerHTML = `<div class="empty">No field activity logged.</div>`;
+  }
 
   calculateMovement();
 }
 
-async function refreshAll(){
-  await refreshDashboard();
-  await renderBucks();
-  await renderGallery();
-  await renderMapMarkers();
-  await renderIntel();
-  await renderData();
+function startWeatherInterval() {
+  if (weatherTimer) clearInterval(weatherTimer);
+  weatherTimer = setInterval(() => {
+    if (weatherAuto && currentLocation) fetchWeather();
+  }, 15 * 60 * 1000);
 }
 
-$("commandDate").textContent=new Date().toLocaleString([],{
-  weekday:"long",
-  month:"long",
-  day:"numeric",
-  year:"numeric"
-});
-
-/* =========================================================
-   DATA / BACKUP
-   ========================================================= */
-
-async function renderData(){
-  $("dataUser").textContent=currentUser||"--";
-
-  const [bucks,photos,waypoints,sightings]=await Promise.all([
-    userRows("bucks"),
-    userRows("photos"),
-    userRows("waypoints"),
-    userRows("sightings")
-  ]);
-
-  $("dataBucks").textContent=bucks.length;
-  $("dataPhotos").textContent=photos.length;
-  $("dataWaypoints").textContent=waypoints.length;
-  $("dataSightings").textContent=sightings.length;
-}
-
-$("exportBtn").onclick=async()=>{
-  const stores=["users","bucks","sightings","photos","waypoints","hunts","settings"];
-  const backup={
-    app:"BUCKTRACK PRO",
-    version:DB_VERSION,
-    exportedAt:now(),
-    username:currentUser,
-    data:{}
-  };
-
-  for(const store of stores){
-    const rows=await dbAll(store);
-
-    if(store==="users"){
-      backup.data[store]=rows.filter(x=>x.username===currentUser);
-    }else{
-      backup.data[store]=rows.filter(x=>
-        !x.username || x.username===currentUser
-      );
-    }
-  }
-
-  const blob=new Blob(
-    [JSON.stringify(backup,null,2)],
-    {type:"application/json"}
-  );
-
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=`bucktrack-backup-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-
-  showToast("Database backup exported.");
-};
-
-$("importBtn").onclick=()=>$("restoreInput").click();
-
-$("restoreInput").addEventListener("change",async e=>{
-  const file=e.target.files[0];
-  if(!file)return;
-
-  try{
-    const text=await file.text();
-    const backup=JSON.parse(text);
-
-    if(!backup.data){
-      throw new Error("Invalid BUCKTRACK backup.");
-    }
-
-    if(!confirm(
-      "Restore this backup into the current local database? Existing matching records may be replaced."
-    ))return;
-
-    for(const store of Object.keys(backup.data)){
-      if(!["users","bucks","sightings","photos","waypoints","hunts","settings"].includes(store))continue;
-
-      for(const row of backup.data[store]){
-        if(row.username && row.username!==currentUser)continue;
-        await dbPut(store,row);
-      }
-    }
-
-    await refreshAll();
-    showToast("Backup restored.");
-  }catch(err){
-    console.error(err);
-    showToast("Backup could not be restored.");
-  }
-
-  e.target.value="";
-});
-
-/* =========================================================
-   SETTINGS
-   ========================================================= */
-
-function setSwitch(el,on){
-  el.classList.toggle("on",!!on);
-}
-
-$("metricSwitch").onclick=()=>{
-  metricUnits=!metricUnits;
-  setSwitch($("metricSwitch"),metricUnits);
-  saveSettings();
-  if(weather)renderWeather();
-};
-
-$("weatherSwitch").onclick=()=>{
-  weatherAuto=!weatherAuto;
-  setSwitch($("weatherSwitch"),weatherAuto);
-
-  if(weatherAuto){
-    fetchWeather();
-    weatherTimer=setInterval(fetchWeather,15*60*1000);
-  }else{
-    clearInterval(weatherTimer);
-  }
-
-  saveSettings();
-};
-
-$("followSwitch").onclick=()=>{
-  followLocation=!followLocation;
-  setSwitch($("followSwitch"),followLocation);
-  saveSettings();
-};
-
-async function saveSettings(){
-  await dbPut("settings",{
-    username:currentUser,
-    metricUnits,
-    weatherAuto,
-    followLocation,
-    updatedAt:now()
-  });
-}
-
-async function loadSettings(){
-  const s=await dbGet("settings",currentUser);
-
-  if(s){
-    metricUnits=!!s.metricUnits;
-    weatherAuto=s.weatherAuto!==false;
-    followLocation=!!s.followLocation;
-  }
-
-  setSwitch($("metricSwitch"),metricUnits);
-  setSwitch($("weatherSwitch"),weatherAuto);
-  setSwitch($("followSwitch"),followLocation);
-}
-
-/* =========================================================
-   QUICK ADD
-   ========================================================= */
-
-$("quickAddBtn").onclick=()=>{
+$("quickAddBtn").onclick = () => {
   openModal(
-    "QUICK ACTION",
+    "QUICK ENTRY",
     `
-      <div class="grid grid2">
-        <button class="actionBtn" id="qaBuck">🦌 NEW BUCK</button>
-        <button class="actionBtn" id="qaSight">👁 NEW SIGHTING</button>
-        <button class="actionBtn" id="qaPhoto">📷 IMPORT PHOTOS</button>
-        <button class="actionBtn" id="qaWp">📍 WAYPOINT</button>
-        <button class="actionBtn" id="qaBed">⌂ BEDDING</button>
-        <button class="actionBtn" id="qaStand">⌖ STAND</button>
+      <div class="list">
+        <button class="actionBtn primary full" onclick="closeModal();openBuckForm();">＋ NEW BUCK PROFILE</button>
+        <button class="actionBtn full" onclick="closeModal();addSighting();">👁 RECORD SIGHTING</button>
+        <button class="actionBtn full" onclick="closeModal();$('photoInput').click();">📷 IMPORT PHOTOS</button>
+        <button class="actionBtn full" onclick="closeModal();beginMapAdd('waypoint');">📍 PLACE WAYPOINT</button>
       </div>
     `
   );
-
-  $("qaBuck").onclick=()=>{closeModal();openBuckForm()};
-  $("qaSight").onclick=()=>{closeModal();addSighting()};
-  $("qaPhoto").onclick=()=>{closeModal();$("photoInput").click()};
-  $("qaWp").onclick=()=>{closeModal();showScreen("map");beginMapAdd("waypoint")};
-  $("qaBed").onclick=()=>{closeModal();showScreen("map");beginMapAdd("bedding")};
-  $("qaStand").onclick=()=>{closeModal();showScreen("map");beginMapAdd("stand")};
-});
+};
 
 /* =========================================================
-   LOCATION + WEATHER INITIALIZATION
+   INITIALIZATION
    ========================================================= */
 
-function loadCachedLocation(){
-  try{
-    const c=JSON.parse(localStorage.getItem("BT_LOCATION")||"null");
-    if(c && Date.now()-c.timestamp<86400000){
-      currentLocation=c;
-      updateLocationUI();
-    }
-  }catch{}
-}
-
-function persistLocation(){
-  if(currentLocation){
-    localStorage.setItem("BT_LOCATION",JSON.stringify(currentLocation));
-  }
-}
-
-const originalLocate=locateUser;
-function locateAndPersist(){
-  if(!navigator.geolocation)return originalLocate();
-
-  navigator.geolocation.getCurrentPosition(
-    pos=>{
-      currentLocation={
-        lat:pos.coords.latitude,
-        lng:pos.coords.longitude,
-        accuracy:pos.coords.accuracy,
-        timestamp:Date.now()
-      };
-      persistLocation();
-      updateLocationUI();
-
-      if(map){
-        if(!userMarker){
-          userMarker=L.marker([currentLocation.lat,currentLocation.lng]).addTo(map);
-        }else userMarker.setLatLng([currentLocation.lat,currentLocation.lng]);
-
-        if(followLocation)map.setView([currentLocation.lat,currentLocation.lng],15);
-      }
-
-      $("mapGps").textContent="GPS LOCK";
-      fetchWeather();
-    },
-    err=>{
-      $("mapGps").textContent="GPS ERROR";
-      showToast("Location unavailable.");
-    },
-    {
-      enableHighAccuracy:true,
-      timeout:12000,
-      maximumAge:60000
-    }
-  );
-}
-
-$("locBtn").onclick=locateAndPersist;
-$("mapLocate").onclick=locateAndPersist;
-
-/* =========================================================
-   APP BOOT
-   ========================================================= */
-
-async function bootApp(){
-  $("auth").classList.add("hidden");
-  $("app").classList.remove("hidden");
-
-  $("topStatus").textContent=
-    `LOCAL COMMAND // ${currentUser.toUpperCase()}`;
-
-  await loadSettings();
-
-  initMap();
-  loadCachedLocation();
-
-  if(currentLocation){
-    updateLocationUI();
-    fetchWeather();
-  }else{
-    locateAndPersist();
-  }
-
-  await refreshAll();
-
-  if(weatherAuto){
-    clearInterval(weatherTimer);
-    weatherTimer=setInterval(fetchWeather,15*60*1000);
-  }
-}
-
-async function startup(){
-  try{
+async function mainInit() {
+  try {
     await openDB();
+    await loadUserSettings();
+    
+    initMap();
 
-    const session=localStorage.getItem("BT_SESSION");
+    $("commandDate").textContent = new Date().toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric"
+    }).toUpperCase();
 
-    if(session && await dbGet("users",session)){
-      currentUser=session;
-      await bootApp();
-    }
-  }catch(err){
-    console.error(err);
-    alert("BUCKTRACK could not initialize its local database.");
+    await renderMapMarkers();
+    await refreshAll();
+    await renderData();
+
+    locateUser();
+    if (weatherAuto) startWeatherInterval();
+  } catch (err) {
+    console.error("Initialization error", err);
   }
 }
 
-startup();
-
-/* =========================================================
-   SERVICE WORKER
-   ========================================================= */
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
-    /*
-      A service worker cannot be embedded as a normal external file
-      inside a single index.html on GitHub Pages. The application
-      therefore remains fully functional without one.
-    */
-  });
-}
-
-/* =========================================================
-   KEYBOARD / MOBILE HELPERS
-   ========================================================= */
-
-document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")closeModal();
-});
-
-window.addEventListener("online",()=>{
-  $("topStatus").textContent=
-    `LOCAL COMMAND // ${currentUser?.toUpperCase()||""} // ONLINE`;
-});
-
-window.addEventListener("offline",()=>{
-  $("topStatus").textContent=
-    `LOCAL COMMAND // ${currentUser?.toUpperCase()||""} // OFFLINE`;
-});
-
-/* Persist GPS position when available */
-setInterval(()=>{
-  if(currentLocation)persistLocation();
-},60000);
+window.addEventListener("DOMContentLoaded", mainInit);
 </script>
-
 </body>
 </html>
