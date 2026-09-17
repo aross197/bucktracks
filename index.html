@@ -1,443 +1,192 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrailCam Tactical Intelligence Hub v3.0</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Cumberland County Stand & Telemetry Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        slate: { 850: '#151f32', 950: '#0b0f19' }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- TensorFlow.js & COCO-SSD -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        #map { height: 380px; z-index: 10; }
-        .hud-grid { background-image: radial-gradient(rgba(245, 158, 11, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
+        body { background-color: #0b0f19; color: #f3f4f6; font-family: ui-sans-serif, system-ui, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased p-4 lg:p-6 hud-grid">
+<body class="p-4 max-w-4xl mx-auto">
 
-    <!-- Top Header Navigation -->
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900/90 backdrop-blur border border-slate-800 rounded-2xl p-4 mb-6 shadow-2xl gap-4">
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6 shadow-xl gap-4">
         <div>
-            <h1 class="text-xl font-extrabold text-amber-500 tracking-wider uppercase flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Tactical Intelligence Hub v3.0
-            </h1>
-            <p class="text-xs text-slate-400">Autonomous Neural Biometrics, Bounding Inference, & Spatial Vector Triangulation</p>
+            <h1 class="text-lg font-bold text-amber-500 uppercase tracking-wider">Cumberland Stand Intelligence</h1>
+            <p class="text-xs text-slate-400">Zone 104 Stand Setup & Trail Cam Log</p>
         </div>
-        <div class="flex items-center gap-3">
-            <span id="ai-status" class="text-xs bg-amber-950 text-amber-300 px-3 py-1.5 rounded-full border border-amber-800/60 font-mono flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> AI Engine: Initializing...
-            </span>
-            <button onclick="exportDatabaseJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition font-mono">
-                Export JSON
-            </button>
+        <div class="flex gap-2">
+            <button onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 px-3 py-2 rounded-lg border border-slate-700 transition font-mono">Export JSON</button>
+            <button onclick="clearLogs()" class="bg-rose-950/50 hover:bg-rose-900/50 text-xs text-rose-300 px-3 py-2 rounded-lg border border-rose-900/50 transition font-mono">Clear Logs</button>
         </div>
     </header>
 
-    <!-- Main Workspace Grid -->
-    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Grid -->
+    <main class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        <!-- Left Column: Ingest & Neural Bounding Box Workspace -->
-        <section class="lg:col-span-1 flex flex-col gap-6">
+        <!-- Left Column: Quick Capture Form -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl md:col-span-1">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-4 border-b border-slate-800 pb-2">Log Field Sighting</h2>
             
-            <!-- Ingest Box -->
-            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl">
-                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center justify-between">
-                    <span>1. Telemetry Ingest</span>
-                    <span class="text-[10px] text-amber-400 font-mono">Auto-Canvas Overlay</span>
-                </h2>
-                
-                <div class="mb-3">
-                    <label class="block text-xs text-slate-400 mb-1">Active Station Designation</label>
-                    <select id="camera-select" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg p-2.5 focus:outline-none focus:border-amber-500 font-mono">
-                        <option value="North Ridge Funnel Cam">North Ridge Funnel Cam [Sector Alpha]</option>
-                        <option value="Riverbed South Station">Riverbed South Station [Sector Beta]</option>
-                        <option value="Timberline Ridge Cam">Timberline Ridge Cam [Sector Gamma]</option>
+            <form id="sighting-form" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Stand / Location ID</label>
+                    <input type="text" id="stand-id" value="South Pine Edge Stand" required class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Activity / Description</label>
+                    <input type="text" id="sighting-desc" placeholder="e.g., 8-point buck moving south" required class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1">Wind Direction</label>
+                    <select id="wind-dir" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2 focus:outline-none focus:border-amber-500">
+                        <option value="North">North</option>
+                        <option value="North-West">North-West</option>
+                        <option value="West">West</option>
+                        <option value="South-West">South-West</option>
+                        <option value="South">South</option>
+                        <option value="East">East</option>
                     </select>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-xs text-slate-400 mb-1">Upload Field Capture File</label>
-                    <input type="file" id="imageInput" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer"/>
-                </div>
-
-                <!-- Preview Box with Canvas Bounding Overlay -->
-                <div class="w-full h-64 bg-slate-950 border border-dashed border-slate-700 rounded-lg flex items-center justify-center relative overflow-hidden">
-                    <span id="placeholder-text" class="text-xs text-slate-500 text-center px-4">Awaiting telemetry packet for spatial neural mapping...</span>
-                    <img id="imagePreview" class="hidden absolute inset-0 w-full h-full object-cover" alt="Captured Feed Preview" />
-                    <canvas id="detectionCanvas" class="hidden absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
-                </div>
-            </div>
-
-            <!-- Biometric Extraction Log -->
-            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl flex-1 flex flex-col justify-between">
                 <div>
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 border-b border-slate-800 pb-2">Neural Telemetry Extraction</h2>
-                    <ul class="space-y-2.5 text-xs font-mono">
-                        <li class="flex justify-between"><span class="text-slate-500">Station Node:</span> <span id="log-cam" class="text-slate-300">-</span></li>
-                        <li class="flex justify-between"><span class="text-slate-500">UTC Timestamp:</span> <span id="log-date" class="text-slate-300">-</span></li>
-                        <li class="flex justify-between"><span class="text-slate-500">Primary Entity:</span> <span id="log-name" class="text-emerald-400 font-bold">-</span></li>
-                        <li class="flex justify-between"><span class="text-slate-500">Biometric Profile:</span> <span id="log-rack" class="text-amber-400">-</span></li>
-                        <li class="flex justify-between"><span class="text-slate-500">Confidence Index:</span> <span id="log-confidence" class="text-cyan-400">-</span></li>
-                    </ul>
+                    <label class="block text-slate-400 mb-1">Attach Photo (Optional)</label>
+                    <input type="file" id="photo-input" accept="image/*" class="w-full text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer">
                 </div>
 
-                <button id="save-btn" onclick="saveCurrentCapture()" disabled class="mt-6 w-full py-3 bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition shadow-lg cursor-pointer disabled:cursor-not-allowed">
-                    Commit to IndexedDB Matrix
+                <button type="submit" class="w-full mt-2 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold uppercase tracking-wider rounded-lg transition shadow-lg cursor-pointer">
+                    Save Telemetry Record
                 </button>
-            </div>
-
+            </form>
         </section>
 
-        <!-- Right Column: Map Vector Matrix & Compiled Database -->
-        <section class="lg:col-span-2 flex flex-col gap-6">
-            
-            <!-- Map & Vector Prediction Module -->
-            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Territorial Vector Triangulation Matrix</h2>
-                    <span class="text-[10px] bg-slate-800 text-amber-400 px-2.5 py-1 rounded font-mono border border-slate-700">Cumberland Grid Active</span>
-                </div>
-                <div id="map" class="rounded-lg border border-slate-800 mb-3"></div>
-                <div id="prediction-readout" class="bg-slate-950 border border-slate-800 p-3.5 rounded-lg text-xs font-mono text-slate-300 flex items-center justify-between">
-                    <span>Awaiting initial database records to compute trajectory velocities.</span>
-                    <span class="text-amber-500 animate-pulse font-bold">[STANDBY]</span>
-                </div>
+        <!-- Right Column: Sighting Logs Feed -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl md:col-span-2 flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Active Field Logs</h2>
+                <span id="log-counter" class="text-xs bg-slate-800 text-amber-400 px-2.5 py-1 rounded font-mono border border-slate-700">0 Entries</span>
             </div>
 
-            <!-- Compiled Herd Database with Filter, Sort & Analytics -->
-            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 pb-3 border-b border-slate-800">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-100">Compiled Intelligence Matrix</h2>
-                        <p class="text-xs text-slate-400">IndexedDB local persistent logs (<span id="record-count">0</span> records)</p>
-                    </div>
-                    <!-- Filter & Sort Controls -->
-                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                        <select id="filter-species" onchange="loadRecordsFromDB()" class="bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-mono">
-                            <option value="all">Filter: All Entities</option>
-                            <option value="deer">Species: Deer / Buck</option>
-                            <option value="wildlife">Species: Wildlife Animal</option>
-                        </select>
-                        <select id="sort-order" onchange="loadRecordsFromDB()" class="bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-mono">
-                            <option value="newest">Sort: Newest First</option>
-                            <option value="oldest">Sort: Oldest First</option>
-                            <option value="name">Sort: Name (A-Z)</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="overflow-x-auto max-h-64 overflow-y-auto">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="text-slate-500 border-b border-slate-800 sticky top-0 bg-slate-900 font-mono">
-                                <th class="p-2.5">Designation ID</th>
-                                <th class="p-2.5">Neural Classification</th>
-                                <th class="p-2.5">Biometric Profile</th>
-                                <th class="p-2.5">Timestamp</th>
-                                <th class="p-2.5 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="db-records">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-500 font-mono">Initializing local storage buffers...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div id="logs-container" class="space-y-4 overflow-y-auto max-h-[500px] pr-1">
+                <p class="text-xs text-slate-500 font-mono text-center py-8">No field entries logged yet. Use the form to start tracking.</p>
             </div>
-
         </section>
 
     </main>
 
-    <!-- Advanced Application Script Engine -->
+    <!-- Script Engine -->
     <script>
-        let aiModel = null;
-        let activeFileBase64 = null;
-        let currentTimestamp = null;
-        let evaluatedRecord = {};
-        let db = null;
-        let cachedRecords = [];
+        const STORAGE_KEY = "cumberland_stand_logs_v1";
 
-        // --- 1. LOAD AI MODEL ---
-        async function loadAIModel() {
-            const statusEl = document.getElementById('ai-status');
-            try {
-                aiModel = await cocoSsd.load();
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> AI Engine: Active [COCO-SSD]`;
-                statusEl.className = "text-xs bg-emerald-950 text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-800/60 font-mono flex items-center gap-2";
-            } catch (err) {
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> AI Engine: Offline`;
-                statusEl.className = "text-xs bg-rose-950 text-rose-300 px-3 py-1.5 rounded-full border border-rose-800/60 font-mono flex items-center gap-2";
+        function getStoredLogs() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveStoredLogs(logs) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+            renderLogs();
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const standId = document.getElementById('stand-id').value;
+            const desc = document.getElementById('sighting-desc').value;
+            const wind = document.getElementById('wind-dir').value;
+            const fileInput = document.getElementById('photo-input');
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    addRecord({
+                        stand: standId,
+                        description: desc,
+                        wind: wind,
+                        image: uploadEvent.target.result,
+                        date: new Date().toLocaleString()
+                    });
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                addRecord({
+                    stand: standId,
+                    description: desc,
+                    wind: wind,
+                    image: null,
+                    date: new Date().toLocaleString()
+                });
             }
         }
 
-        // --- 2. INDEXEDDB SETUP ---
-        const DB_NAME = "TrailCamTacticalHubDB";
-        const DB_VERSION = 1;
-        const STORE_NAME = "telemetry_matrix";
-
-        function initDB() {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
-            request.onerror = (e) => console.error("IndexedDB error:", e.target.error);
-            request.onsuccess = (e) => {
-                db = e.target.result;
-                loadRecordsFromDB();
-            };
-            request.onupgradeneeded = (e) => {
-                const database = e.target.result;
-                if (!database.objectStoreNames.contains(STORE_NAME)) {
-                    database.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-                }
-            };
+        function addRecord(record) {
+            const logs = getStoredLogs();
+            logs.unshift(record); // Add to top
+            saveStoredLogs(logs);
+            document.getElementById('sighting-form').reset();
+            document.getElementById('stand-id').value = "South Pine Edge Stand"; // Keep default convenience
         }
 
-        function saveRecordToDB(recordData) {
-            if (!db) return;
-            const transaction = db.transaction([STORE_NAME], "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.add(recordData);
-
-            request.onsuccess = () => {
-                loadRecordsFromDB();
-                alert("Telemetry record successfully committed to IndexedDB matrix!");
-            };
+        function deleteLog(index) {
+            const logs = getStoredLogs();
+            logs.splice(index, 1);
+            saveStoredLogs(logs);
         }
 
-        function deleteRecord(id) {
-            if (!db || !confirm("Confirm telemetry record purge?")) return;
-            const transaction = db.transaction([STORE_NAME], "readwrite");
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.delete(id);
-            request.onsuccess = () => loadRecordsFromDB();
+        function clearLogs() {
+            if (confirm("Clear all recorded field entries?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderLogs();
+            }
         }
 
-        function exportDatabaseJSON() {
-            if (cachedRecords.length === 0) {
-                alert("No telemetry records available for export.");
+        function exportData() {
+            const logs = getStoredLogs();
+            if (logs.length === 0) {
+                alert("No data available to export.");
                 return;
             }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cachedRecords, null, 2));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(logs, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `trailcam_intelligence_matrix_${Date.now()}.json`);
+            dlAnchor.setAttribute("download", `stand_logs_${Date.now()}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
         }
 
-        function loadRecordsFromDB() {
-            if (!db) return;
-            const transaction = db.transaction([STORE_NAME], "readonly");
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.getAll();
+        function renderLogs() {
+            const logs = getStoredLogs();
+            const container = document.getElementById('logs-container');
+            document.getElementById('log-counter').innerText = `${logs.length} Entries`;
 
-            request.onsuccess = (e) => {
-                let records = e.target.result;
-                cachedRecords = records;
-                document.getElementById('record-count').innerText = records.length;
-                const tbody = document.getElementById('db-records');
-                
-                if (records.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 font-mono">No intelligence logs compiled yet.</td></tr>`;
-                    document.getElementById('prediction-readout').innerHTML = `<span>Awaiting initial database records to compute trajectory velocities.</span><span class="text-amber-500 font-bold">[STANDBY]</span>`;
-                    return;
-                }
+            if (logs.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 font-mono text-center py-8">No field entries logged yet. Use the form to start tracking.</p>`;
+                return;
+            }
 
-                // Species Filter
-                const speciesFilter = document.getElementById('filter-species').value;
-                if (speciesFilter !== 'all') {
-                    records = records.filter(rec => rec.species.toLowerCase().includes(speciesFilter));
-                }
-
-                // Sorting Matrix
-                const sortOrder = document.getElementById('sort-order').value;
-                records.sort((a, b) => {
-                    if (sortOrder === 'newest') return new Date(b.timestamp) - new Date(a.timestamp);
-                    if (sortOrder === 'oldest') return new Date(a.timestamp) - new Date(b.timestamp);
-                    if (sortOrder === 'name') return a.assignedName.localeCompare(b.assignedName);
-                });
-
-                if (records.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 font-mono">No records match current filter parameters.</td></tr>`;
-                    return;
-                }
-
-                const lastRecord = records[0];
-                const velocityKmH = (Math.random() * 2.8 + 1.2).toFixed(1);
-                const transitHours = (Math.random() * 3 + 1.5).toFixed(1);
-                
-                document.getElementById('prediction-readout').innerHTML = `
-                    <span class="text-slate-200">Vector Lock: <b class="text-amber-400">${lastRecord.assignedName}</b> @ ${lastRecord.cameraName} (${velocityKmH} km/h vector)</span> 
-                    <span class="text-emerald-400 font-bold">ETA ~${transitHours}h [North Ridge]</span>
-                `;
-
-                tbody.innerHTML = records.map(rec => `
-                    <tr class="hover:bg-slate-900/60 font-mono border-b border-slate-800/50 transition">
-                        <td class="p-2.5 text-emerald-400 font-bold">${rec.assignedName}</td>
-                        <td class="p-2.5 text-slate-300">${rec.species}</td>
-                        <td class="p-2.5 text-amber-400">${rec.rackScore}</td>
-                        <td class="p-2.5 text-slate-400 text-[11px]">${rec.timestamp}</td>
-                        <td class="p-2.5 text-right">
-                            <button onclick="deleteRecord(${rec.id})" class="text-rose-400 hover:text-rose-300 text-[11px] px-2 py-1 rounded bg-rose-950/40 border border-rose-900/60">Purge</button>
-                        </td>
-                    </tr>
-                `).join('');
-            };
+            container.innerHTML = logs.map((log, idx) => `
+                <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 flex flex-col sm:flex-row gap-4 items-start justify-between">
+                    <div class="space-y-1 text-xs font-mono">
+                        <div class="flex items-center gap-2">
+                            <span class="text-amber-400 font-bold">${log.stand}</span>
+                            <span class="text-slate-500">|</span>
+                            <span class="text-slate-400">${log.date}</span>
+                        </div>
+                        <p class="text-slate-200 text-sm font-sans font-medium">${log.description}</p>
+                        <p class="text-slate-400">Wind: <span class="text-cyan-400">${log.wind}</span></p>
+                    </div>
+                    ${log.image ? `<img src="${log.image}" class="w-24 h-24 object-cover rounded-md border border-slate-800 shrink-0" />` : ''}
+                    <button onclick="deleteLog(${idx})" class="text-rose-400 hover:text-rose-300 text-xs px-2.5 py-1 rounded bg-rose-950/40 border border-rose-900/60 self-end sm:self-start">Delete</button>
+                </div>
+            `).join('');
         }
 
-        // --- 3. MAP VECTOR SETUP ---
-        const map = L.map('map').setView([45.648, -64.065], 13);
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
-        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
-        satelliteLayer.addTo(map);
-
-        const northRidgeLine = L.polyline([[45.675, -64.090], [45.660, -64.075], [45.645, -64.060]], { color: '#f59e0b', weight: 3, dashArray: '6, 6' });
-        const southCrestLine = L.polyline([[45.645, -64.060], [45.635, -64.055], [45.620, -64.040]], { color: '#38bdf8', weight: 3, dashArray: '6, 6' });
-        const vectorGroup = L.layerGroup([northRidgeLine, southCrestLine]).addTo(map);
-
-        L.control.layers({ "Satellite View": satelliteLayer, "Topography": topoLayer }, { "Vector Pathways": vectorGroup }).addTo(map);
-
-        L.marker([45.660, -64.075]).addTo(map).bindPopup('<b>North Ridge Funnel Cam [Sector Alpha]</b>');
-        L.marker([45.635, -64.055]).addTo(map).bindPopup('<b>Riverbed South Station [Sector Beta]</b>');
-
-        // --- 4. ADVANCED NEURAL INFERENCE & CANVAS OVERLAY ENGINE ---
-        const imageInput = document.getElementById('imageInput');
-        const imagePreview = document.getElementById('imagePreview');
-        const detectionCanvas = document.getElementById('detectionCanvas');
-        const placeholderText = document.getElementById('placeholder-text');
-        const saveBtn = document.getElementById('save-btn');
-
-        imageInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                activeFileBase64 = uploadEvent.target.result;
-                
-                imagePreview.classList.add('hidden');
-                detectionCanvas.classList.add('hidden');
-                imagePreview.src = activeFileBase64;
-                
-                imagePreview.onload = async function() {
-                    imagePreview.classList.remove('hidden');
-                    detectionCanvas.classList.remove('hidden');
-                    placeholderText.classList.add('hidden');
-
-                    // Set canvas display dimensions to match rendered image
-                    detectionCanvas.width = imagePreview.clientWidth;
-                    detectionCanvas.height = imagePreview.clientHeight;
-                    const ctx = detectionCanvas.getContext('2d');
-                    ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
-                    
-                    currentTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-                    const selectedCam = document.getElementById('camera-select').value;
-                    
-                    document.getElementById('log-cam').innerText = selectedCam;
-                    document.getElementById('log-date').innerText = currentTimestamp;
-                    document.getElementById('log-name').innerText = "Processing neural tensors...";
-                    document.getElementById('log-rack').innerText = "Calculating biometric metrics...";
-                    document.getElementById('log-confidence').innerText = "Evaluating...";
-
-                    let detectedClass = "Wildlife Animal";
-                    let confidencePct = "87.4%";
-                    
-                    if (aiModel) {
-                        try {
-                            if (imagePreview.complete && imagePreview.naturalWidth !== 0) {
-                                const predictions = await aiModel.detect(imagePreview);
-                                if (predictions && predictions.length > 0) {
-                                    predictions.sort((a, b) => b.score - a.score);
-                                    const topPred = predictions[0];
-                                    detectedClass = topPred.class;
-                                    confidencePct = `${(topPred.score * 100).toFixed(1)}%`;
-
-                                    // Scale bounding box coordinates to rendered canvas size
-                                    const scaleX = detectionCanvas.width / imagePreview.naturalWidth;
-                                    const scaleY = detectionCanvas.height / imagePreview.naturalHeight;
-                                    const [x, y, w, h] = topPred.bbox;
-                                    
-                                    const rx = x * scaleX;
-                                    const ry = y * scaleY;
-                                    const rw = w * scaleX;
-                                    const rh = h * scaleY;
-
-                                    // Render Tactical Bounding Box
-                                    ctx.strokeStyle = "#f59e0b";
-                                    ctx.lineWidth = 2.5;
-                                    ctx.strokeRect(rx, ry, rw, rh);
-
-                                    ctx.fillStyle = "rgba(245, 158, 11, 0.85)";
-                                    ctx.fillRect(rx, ry > 20 ? ry - 22 : 0, rw > 120 ? rw : 120, 22);
-
-                                    ctx.fillStyle = "#0b0f19";
-                                    ctx.font = "bold 11px monospace";
-                                    ctx.fillText(`${detectedClass.toUpperCase()} [${confidencePct}]`, rx + 4, ry > 20 ? ry - 7 : 15);
-                                }
-                            }
-                        } catch (err) {
-                            console.warn("Inference warning handled safely:", err);
-                        }
-                    }
-
-                    let assignedName = "";
-                    let rackScore = "";
-
-                    if (['deer', 'animal', 'sheep', 'horse', 'dog', 'cat', 'cow'].some(term => detectedClass.toLowerCase().includes(term))) {
-                        const names = ["Buck-Sovereign-01", "Delta-Ridge-Stag", "Crest-Alpha-09", "Matriarch-Ghost-03", "Timberline-Stag-07"];
-                        assignedName = names[Math.floor(Math.random() * names.length)];
-                        const points = Math.floor(Math.random() * 6) + 6;
-                        const spread = Math.floor(Math.random() * 8) + 14;
-                        rackScore = `${points}-Point Rack (${spread}" Spread)`;
-                    } else {
-                        assignedName = `Entity-Code-${Math.floor(Math.random() * 900) + 100}`;
-                        rackScore = `Class: ${detectedClass} (Standard Biometrics)`;
-                    }
-
-                    evaluatedRecord = {
-                        cameraName: selectedCam,
-                        timestamp: currentTimestamp,
-                        species: detectedClass,
-                        assignedName: assignedName,
-                        rackScore: rackScore,
-                        imageData: activeFileBase64
-                    };
-
-                    document.getElementById('log-name').innerText = assignedName;
-                    document.getElementById('log-rack').innerText = rackScore;
-                    document.getElementById('log-confidence').innerText = confidencePct;
-                    saveBtn.disabled = false;
-                };
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function saveCurrentCapture() {
-            if (!evaluatedRecord.assignedName) return;
-            saveRecordToDB(evaluatedRecord);
-        }
-
-        initDB();
-        loadAIModel();
+        // Initial render
+        renderLogs();
     </script>
 </body>
 </html>
