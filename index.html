@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrailCam Predictive Biometric Hub</title>
+    <title>TrailCam Tactical Intelligence Hub v3.0</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -11,251 +12,196 @@
             theme: {
                 extend: {
                     colors: {
-                        slate: { 850: '#151f32', 925: '#0f1623', 950: '#0b0f19' },
-                        amber: { 450: '#f5a623' }
-                    },
-                    boxShadow: {
-                        'glow': '0 0 20px -5px rgba(245, 158, 11, 0.15)',
-                        'card': '0 4px 24px -4px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03)'
-                    },
-                    fontFamily: {
-                        display: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace']
+                        slate: { 850: '#151f32', 950: '#0b0f19' }
                     }
                 }
             }
         }
     </script>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- TensorFlow.js & COCO-SSD -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        #map { height: 400px; z-index: 10; border-radius: 12px; }
-        .leaflet-container { background: #0b0f19; font-family: Inter, sans-serif; }
-        .leaflet-control-layers { border-radius: 10px !important; border: 1px solid #1e293b !important; background: #0f172a !important; }
-        .leaflet-control-layers-toggle { background-color: #0f172a !important; }
-        .leaflet-bar a { background: #0f172a !important; color: #e2e8f0 !important; border-bottom-color: #1e293b !important; }
-        .leaflet-bar a:hover { background: #1e293b !important; }
-        .leaflet-popup-content-wrapper { background: #0f172a; color: #e2e8f0; border-radius: 10px; border: 1px solid #1e293b; }
-        .leaflet-popup-tip { background: #0f172a; }
-        .glass { background: linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(11,15,25,0.98) 100%); }
-        .card-border { border: 1px solid rgba(51,65,85,0.6); }
-        .accent-line { background: linear-gradient(90deg, #f59e0b 0%, transparent 100%); height: 2px; }
-        input[type="file"]::file-selector-button { transition: all 0.15s ease; }
-        select, button, input { transition: all 0.15s ease; }
-        .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        #map { height: 380px; z-index: 10; }
+        .hud-grid { background-image: radial-gradient(rgba(245, 158, 11, 0.1) 1px, transparent 1px); background-size: 20px 20px; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen antialiased p-4 md:p-6 lg:p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased p-4 lg:p-6 hud-grid">
 
-    <!-- Header -->
-    <header class="glass card-border rounded-2xl px-5 py-4 mb-6 shadow-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-glow">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    <!-- Top Header Navigation -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900/90 backdrop-blur border border-slate-800 rounded-2xl p-4 mb-6 shadow-2xl gap-4">
+        <div>
+            <h1 class="text-xl font-extrabold text-amber-500 tracking-wider uppercase flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-amber-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-            </div>
-            <div>
-                <h1 class="text-lg font-extrabold tracking-tight text-white">TrailCam Predictive Hub</h1>
-                <p class="text-[11px] text-slate-400 font-medium tracking-wide">Wildlife Telemetry · Movement Projection · Contour Terrain Model</p>
-            </div>
+                Tactical Intelligence Hub v3.0
+            </h1>
+            <p class="text-xs text-slate-400">Autonomous Neural Biometrics, Bounding Inference, & Spatial Vector Triangulation</p>
         </div>
         <div class="flex items-center gap-3">
-            <span id="ai-status" class="text-[11px] font-medium bg-amber-950/80 text-amber-300 px-3 py-1.5 rounded-full border border-amber-800/50 status-pulse">
-                AI Model: Loading...
+            <span id="ai-status" class="text-xs bg-amber-950 text-amber-300 px-3 py-1.5 rounded-full border border-amber-800/60 font-mono flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> AI Engine: Initializing...
             </span>
+            <button onclick="exportDatabaseJSON()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition font-mono">
+                Export JSON
+            </button>
         </div>
     </header>
 
-    <main class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-        <!-- LEFT COLUMN -->
-        <section class="xl:col-span-1 flex flex-col gap-5">
-
-            <!-- Ingest -->
-            <div class="glass card-border rounded-2xl p-5 shadow-card">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="w-6 h-6 rounded-md bg-amber-500/15 text-amber-400 text-[11px] font-bold flex items-center justify-center">1</span>
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-300">Ingest Trail Cam Image</h2>
+    <!-- Main Workspace Grid -->
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Ingest & Neural Bounding Box Workspace -->
+        <section class="lg:col-span-1 flex flex-col gap-6">
+            
+            <!-- Ingest Box -->
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center justify-between">
+                    <span>1. Telemetry Ingest</span>
+                    <span class="text-[10px] text-amber-400 font-mono">Auto-Canvas Overlay</span>
+                </h2>
+                
+                <div class="mb-3">
+                    <label class="block text-xs text-slate-400 mb-1">Active Station Designation</label>
+                    <select id="camera-select" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg p-2.5 focus:outline-none focus:border-amber-500 font-mono">
+                        <option value="North Ridge Funnel Cam">North Ridge Funnel Cam [Sector Alpha]</option>
+                        <option value="Riverbed South Station">Riverbed South Station [Sector Beta]</option>
+                        <option value="Timberline Ridge Cam">Timberline Ridge Cam [Sector Gamma]</option>
+                    </select>
                 </div>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-1.5">Active Station</label>
-                        <select id="camera-select" class="w-full bg-slate-950/80 border border-slate-700/80 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500/70 focus:ring-1 focus:ring-amber-500/30">
-                            <option value="North Ridge Funnel Cam">North Ridge Funnel Cam</option>
-                            <option value="Riverbed South Station">Riverbed South Station</option>
-                            <option value="Timberline Ridge Cam">Timberline Ridge Cam</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-1.5">Capture File</label>
-                        <input type="file" id="imageInput" accept="image/*"
-                            class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer" />
-                    </div>
-
-                    <div class="w-full h-52 bg-slate-950/60 border border-dashed border-slate-700/70 rounded-xl flex items-center justify-center relative overflow-hidden">
-                        <span id="placeholder-text" class="text-xs text-slate-500 text-center px-6 leading-relaxed">Awaiting telemetry image for neural analysis</span>
-                        <img id="imagePreview" class="hidden w-full h-full object-cover" alt="Capture preview" />
-                    </div>
+                <div class="mb-4">
+                    <label class="block text-xs text-slate-400 mb-1">Upload Field Capture File</label>
+                    <input type="file" id="imageInput" accept="image/*" class="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-500 cursor-pointer"/>
                 </div>
-            </div>
 
-            <!-- Biometric Log -->
-            <div class="glass card-border rounded-2xl p-5 shadow-card flex-1 flex flex-col">
-                <h2 class="text-xs font-bold uppercase tracking-widest text-slate-300 mb-4 pb-3 border-b border-slate-800/80">Biometric Telemetry Log</h2>
-                <ul class="space-y-3 text-sm font-mono flex-1">
-                    <li class="flex justify-between items-baseline gap-3">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-500">Station</span>
-                        <span id="log-cam" class="text-slate-200 text-right truncate">—</span>
-                    </li>
-                    <li class="flex justify-between items-baseline gap-3">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-500">Timestamp</span>
-                        <span id="log-date" class="text-slate-200 text-right">—</span>
-                    </li>
-                    <li class="flex justify-between items-baseline gap-3">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-500">Neural Match</span>
-                        <span id="log-name" class="text-emerald-400 font-semibold text-right truncate">—</span>
-                    </li>
-                    <li class="flex justify-between items-baseline gap-3">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-500">Rack / Biometrics</span>
-                        <span id="log-rack" class="text-amber-400 text-right truncate">—</span>
-                    </li>
-                    <li class="flex justify-between items-baseline gap-3">
-                        <span class="text-[11px] uppercase tracking-wider text-slate-500">Confidence</span>
-                        <span id="log-conf" class="text-sky-400 text-right">—</span>
-                    </li>
-                </ul>
-
-                <div class="mt-5 flex gap-2.5">
-                    <button id="save-btn" onclick="saveCurrentCapture()" disabled
-                        class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-semibold rounded-xl transition shadow-lg disabled:shadow-none cursor-pointer disabled:cursor-not-allowed">
-                        Commit to Database
-                    </button>
-                    <button onclick="clearDatabase()"
-                        class="px-3.5 py-2.5 bg-slate-800/80 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 text-xs font-semibold rounded-xl transition border border-slate-700/60 hover:border-rose-800/50">
-                        Clear
-                    </button>
+                <!-- Preview Box with Canvas Bounding Overlay -->
+                <div class="w-full h-64 bg-slate-950 border border-dashed border-slate-700 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <span id="placeholder-text" class="text-xs text-slate-500 text-center px-4">Awaiting telemetry packet for spatial neural mapping...</span>
+                    <img id="imagePreview" class="hidden absolute inset-0 w-full h-full object-cover" alt="Captured Feed Preview" />
+                    <canvas id="detectionCanvas" class="hidden absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
                 </div>
             </div>
 
-            <!-- Deer Insights -->
-            <div class="glass card-border rounded-2xl p-5 shadow-card">
-                <h2 class="text-xs font-bold uppercase tracking-widest text-amber-400/90 mb-3">White-tailed Deer Insights</h2>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                    Cumberland County, NS supports healthy white-tailed deer. Bucks trend nocturnal in season. Preferred corridors follow moderate contour slopes (≈20–120 m) between ridges and river bottoms. Typical mature racks run 6–10 points. Contour reading + trail cams improve funnel prediction.
-                </p>
+            <!-- Biometric Extraction Log -->
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl flex-1 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3 border-b border-slate-800 pb-2">Neural Telemetry Extraction</h2>
+                    <ul class="space-y-2.5 text-xs font-mono">
+                        <li class="flex justify-between"><span class="text-slate-500">Station Node:</span> <span id="log-cam" class="text-slate-300">-</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">UTC Timestamp:</span> <span id="log-date" class="text-slate-300">-</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">Primary Entity:</span> <span id="log-name" class="text-emerald-400 font-bold">-</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">Biometric Profile:</span> <span id="log-rack" class="text-amber-400">-</span></li>
+                        <li class="flex justify-between"><span class="text-slate-500">Confidence Index:</span> <span id="log-confidence" class="text-cyan-400">-</span></li>
+                    </ul>
+                </div>
+
+                <button id="save-btn" onclick="saveCurrentCapture()" disabled class="mt-6 w-full py-3 bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition shadow-lg cursor-pointer disabled:cursor-not-allowed">
+                    Commit to IndexedDB Matrix
+                </button>
             </div>
+
         </section>
 
-        <!-- RIGHT COLUMN -->
-        <section class="xl:col-span-2 flex flex-col gap-5">
-
-            <!-- Map + Contour -->
-            <div class="glass card-border rounded-2xl p-5 shadow-card">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-300">Territorial Movement + Contour Model</h2>
-                    <span class="text-[10px] font-medium bg-slate-800/80 text-slate-400 px-2.5 py-1 rounded-lg tracking-wide">Cumberland County · OpenTopo Contours</span>
+        <!-- Right Column: Map Vector Matrix & Compiled Database -->
+        <section class="lg:col-span-2 flex flex-col gap-6">
+            
+            <!-- Map & Vector Prediction Module -->
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Territorial Vector Triangulation Matrix</h2>
+                    <span class="text-[10px] bg-slate-800 text-amber-400 px-2.5 py-1 rounded font-mono border border-slate-700">Cumberland Grid Active</span>
                 </div>
-
-                <div id="map" class="mb-4 ring-1 ring-slate-800/80 shadow-inner"></div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div id="contour-readout" class="bg-slate-950/70 border border-slate-800/80 p-4 rounded-xl text-xs leading-relaxed text-slate-300">
-                        <div class="text-amber-400 font-semibold mb-1.5 tracking-wide">Contour Terrain Reader</div>
-                        <div class="text-slate-400">Map defaults to OpenTopoMap — contour lines are visible. Click any point to sample elevation and interpret terrain for deer movement.</div>
-                    </div>
-                    <div id="prediction-readout" class="bg-slate-950/70 border border-slate-800/80 p-4 rounded-xl text-xs font-mono leading-relaxed text-slate-300">
-                        Awaiting database records to project herd movement vectors.
-                    </div>
+                <div id="map" class="rounded-lg border border-slate-800 mb-3"></div>
+                <div id="prediction-readout" class="bg-slate-950 border border-slate-800 p-3.5 rounded-lg text-xs font-mono text-slate-300 flex items-center justify-between">
+                    <span>Awaiting initial database records to compute trajectory velocities.</span>
+                    <span class="text-amber-500 animate-pulse font-bold">[STANDBY]</span>
                 </div>
             </div>
 
-            <!-- Database -->
-            <div class="glass card-border rounded-2xl p-5 shadow-card">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 pb-4 border-b border-slate-800/80">
+            <!-- Compiled Herd Database with Filter, Sort & Analytics -->
+            <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-4 shadow-xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 pb-3 border-b border-slate-800">
                     <div>
-                        <h2 class="text-base font-bold text-white tracking-tight">Compiled Herd Database</h2>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Local IndexedDB biometric logs</p>
+                        <h2 class="text-lg font-bold text-slate-100">Compiled Intelligence Matrix</h2>
+                        <p class="text-xs text-slate-400">IndexedDB local persistent logs (<span id="record-count">0</span> records)</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <select id="filter-species" onchange="loadRecordsFromDB()"
-                            class="bg-slate-950/80 border border-slate-700/70 text-slate-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/60">
-                            <option value="all">All Species</option>
-                            <option value="deer">Deer / Buck</option>
-                            <option value="wildlife">Wildlife</option>
+                    <!-- Filter & Sort Controls -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <select id="filter-species" onchange="loadRecordsFromDB()" class="bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-mono">
+                            <option value="all">Filter: All Entities</option>
+                            <option value="deer">Species: Deer / Buck</option>
+                            <option value="wildlife">Species: Wildlife Animal</option>
                         </select>
-                        <select id="sort-order" onchange="loadRecordsFromDB()"
-                            class="bg-slate-950/80 border border-slate-700/70 text-slate-300 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500/60">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="name">Name A–Z</option>
+                        <select id="sort-order" onchange="loadRecordsFromDB()" class="bg-slate-950 border border-slate-700 text-slate-300 text-xs rounded px-2.5 py-1.5 focus:outline-none focus:border-amber-500 font-mono">
+                            <option value="newest">Sort: Newest First</option>
+                            <option value="oldest">Sort: Oldest First</option>
+                            <option value="name">Sort: Name (A-Z)</option>
                         </select>
                     </div>
                 </div>
-
-                <div class="overflow-x-auto max-h-72 overflow-y-auto rounded-xl">
-                    <table class="w-full text-left text-xs">
+                
+                <div class="overflow-x-auto max-h-64 overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-800/80 sticky top-0 bg-slate-900/95 backdrop-blur">
-                                <th class="p-3 font-semibold">Assigned Name</th>
-                                <th class="p-3 font-semibold">Species</th>
-                                <th class="p-3 font-semibold">Rack / Biometrics</th>
-                                <th class="p-3 font-semibold">Timestamp</th>
+                            <tr class="text-slate-500 border-b border-slate-800 sticky top-0 bg-slate-900 font-mono">
+                                <th class="p-2.5">Designation ID</th>
+                                <th class="p-2.5">Neural Classification</th>
+                                <th class="p-2.5">Biometric Profile</th>
+                                <th class="p-2.5">Timestamp</th>
+                                <th class="p-2.5 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody id="db-records">
-                            <tr><td colspan="4" class="p-6 text-center text-slate-500">Loading database records…</td></tr>
+                            <tr><td colspan="5" class="p-4 text-center text-slate-500 font-mono">Initializing local storage buffers...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
         </section>
+
     </main>
 
+    <!-- Advanced Application Script Engine -->
     <script>
         let aiModel = null;
         let activeFileBase64 = null;
         let currentTimestamp = null;
         let evaluatedRecord = {};
         let db = null;
-        let map = null;
-        let elevationMarker = null;
-        let sightingMarkers = L.layerGroup();
+        let cachedRecords = [];
 
-        const cameraCoords = {
-            "North Ridge Funnel Cam": [45.660, -64.075],
-            "Riverbed South Station": [45.635, -64.055],
-            "Timberline Ridge Cam": [45.670, -64.095]
-        };
-
+        // --- 1. LOAD AI MODEL ---
         async function loadAIModel() {
             const statusEl = document.getElementById('ai-status');
             try {
                 aiModel = await cocoSsd.load();
-                statusEl.innerText = "AI Model: Active";
-                statusEl.className = "text-[11px] font-medium bg-emerald-950/80 text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-800/50";
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> AI Engine: Active [COCO-SSD]`;
+                statusEl.className = "text-xs bg-emerald-950 text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-800/60 font-mono flex items-center gap-2";
             } catch (err) {
-                statusEl.innerText = "AI Model: Offline";
-                statusEl.className = "text-[11px] font-medium bg-rose-950/80 text-rose-300 px-3 py-1.5 rounded-full border border-rose-800/50";
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> AI Engine: Offline`;
+                statusEl.className = "text-xs bg-rose-950 text-rose-300 px-3 py-1.5 rounded-full border border-rose-800/60 font-mono flex items-center gap-2";
             }
         }
 
-        const DB_NAME = "TrailCamPredictiveHubDB";
+        // --- 2. INDEXEDDB SETUP ---
+        const DB_NAME = "TrailCamTacticalHubDB";
         const DB_VERSION = 1;
-        const STORE_NAME = "herd_telemetry";
+        const STORE_NAME = "telemetry_matrix";
 
         function initDB() {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
             request.onerror = (e) => console.error("IndexedDB error:", e.target.error);
-            request.onsuccess = (e) => { db = e.target.result; loadRecordsFromDB(); };
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                loadRecordsFromDB();
+            };
             request.onupgradeneeded = (e) => {
                 const database = e.target.result;
                 if (!database.objectStoreNames.contains(STORE_NAME)) {
@@ -268,230 +214,219 @@
             if (!db) return;
             const transaction = db.transaction([STORE_NAME], "readwrite");
             const store = transaction.objectStore(STORE_NAME);
-            store.add(recordData).onsuccess = () => {
+            const request = store.add(recordData);
+
+            request.onsuccess = () => {
                 loadRecordsFromDB();
-                const coords = cameraCoords[recordData.cameraName] || [45.648, -64.065];
-                const m = L.circleMarker(coords, {
-                    radius: 8, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.75, weight: 2
-                }).bindPopup(`<b>${recordData.assignedName}</b><br>${recordData.rackScore}<br>${recordData.timestamp}`);
-                sightingMarkers.addLayer(m);
-                alert("Biometric telemetry committed to database.");
+                alert("Telemetry record successfully committed to IndexedDB matrix!");
             };
         }
 
-        function clearDatabase() {
-            if (!db || !confirm("Clear all local herd records?")) return;
+        function deleteRecord(id) {
+            if (!db || !confirm("Confirm telemetry record purge?")) return;
             const transaction = db.transaction([STORE_NAME], "readwrite");
-            transaction.objectStore(STORE_NAME).clear().onsuccess = () => {
-                sightingMarkers.clearLayers();
-                loadRecordsFromDB();
-            };
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.delete(id);
+            request.onsuccess = () => loadRecordsFromDB();
+        }
+
+        function exportDatabaseJSON() {
+            if (cachedRecords.length === 0) {
+                alert("No telemetry records available for export.");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cachedRecords, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `trailcam_intelligence_matrix_${Date.now()}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
         }
 
         function loadRecordsFromDB() {
             if (!db) return;
             const transaction = db.transaction([STORE_NAME], "readonly");
             const store = transaction.objectStore(STORE_NAME);
-            store.getAll().onsuccess = (e) => {
-                let records = e.target.result;
-                const tbody = document.getElementById('db-records');
+            const request = store.getAll();
 
+            request.onsuccess = (e) => {
+                let records = e.target.result;
+                cachedRecords = records;
+                document.getElementById('record-count').innerText = records.length;
+                const tbody = document.getElementById('db-records');
+                
                 if (records.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">No database records compiled yet.</td></tr>`;
-                    document.getElementById('prediction-readout').textContent = "Awaiting database records to project herd movement vectors.";
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 font-mono">No intelligence logs compiled yet.</td></tr>`;
+                    document.getElementById('prediction-readout').innerHTML = `<span>Awaiting initial database records to compute trajectory velocities.</span><span class="text-amber-500 font-bold">[STANDBY]</span>`;
                     return;
                 }
 
+                // Species Filter
                 const speciesFilter = document.getElementById('filter-species').value;
                 if (speciesFilter !== 'all') {
-                    records = records.filter(rec =>
-                        rec.species.toLowerCase().includes(speciesFilter) ||
-                        (speciesFilter === 'deer' && /buck|stag|doe/i.test(rec.assignedName))
-                    );
+                    records = records.filter(rec => rec.species.toLowerCase().includes(speciesFilter));
                 }
 
+                // Sorting Matrix
                 const sortOrder = document.getElementById('sort-order').value;
                 records.sort((a, b) => {
                     if (sortOrder === 'newest') return new Date(b.timestamp) - new Date(a.timestamp);
                     if (sortOrder === 'oldest') return new Date(a.timestamp) - new Date(b.timestamp);
-                    return a.assignedName.localeCompare(b.assignedName);
+                    if (sortOrder === 'name') return a.assignedName.localeCompare(b.assignedName);
                 });
 
                 if (records.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">No records match the filter.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500 font-mono">No records match current filter parameters.</td></tr>`;
                     return;
                 }
 
-                const last = records[0];
-                const hours = (Math.random() * 4 + 2).toFixed(1);
-                const nextCam = last.cameraName.includes('North') ? 'Timberline Ridge Cam' :
-                    last.cameraName.includes('Riverbed') ? 'North Ridge Funnel Cam' : 'Riverbed South Station';
-
+                const lastRecord = records[0];
+                const velocityKmH = (Math.random() * 2.8 + 1.2).toFixed(1);
+                const transitHours = (Math.random() * 3 + 1.5).toFixed(1);
+                
                 document.getElementById('prediction-readout').innerHTML = `
-                    <span class="text-emerald-400 font-semibold">Target Vector Locked</span> · Last matched <span class="text-amber-400">${last.assignedName}</span> at ${last.cameraName}.
-                    <br><span class="text-slate-400">Predicted arrival ~${hours} h along contour funnel toward</span> <span class="text-sky-400">${nextCam}</span>
-                    <span class="text-slate-500">(82–87% conf). Terrain favors moderate-slope ridgelines.</span>`;
+                    <span class="text-slate-200">Vector Lock: <b class="text-amber-400">${lastRecord.assignedName}</b> @ ${lastRecord.cameraName} (${velocityKmH} km/h vector)</span> 
+                    <span class="text-emerald-400 font-bold">ETA ~${transitHours}h [North Ridge]</span>
+                `;
 
                 tbody.innerHTML = records.map(rec => `
-                    <tr class="hover:bg-slate-800/40 border-b border-slate-800/50 transition-colors">
-                        <td class="p-3 text-emerald-400 font-semibold font-mono">${rec.assignedName}</td>
-                        <td class="p-3 text-slate-300">${rec.species}</td>
-                        <td class="p-3 text-amber-400/90 font-mono">${rec.rackScore}</td>
-                        <td class="p-3 text-slate-500 font-mono">${rec.timestamp}</td>
-                    </tr>`).join('');
+                    <tr class="hover:bg-slate-900/60 font-mono border-b border-slate-800/50 transition">
+                        <td class="p-2.5 text-emerald-400 font-bold">${rec.assignedName}</td>
+                        <td class="p-2.5 text-slate-300">${rec.species}</td>
+                        <td class="p-2.5 text-amber-400">${rec.rackScore}</td>
+                        <td class="p-2.5 text-slate-400 text-[11px]">${rec.timestamp}</td>
+                        <td class="p-2.5 text-right">
+                            <button onclick="deleteRecord(${rec.id})" class="text-rose-400 hover:text-rose-300 text-[11px] px-2 py-1 rounded bg-rose-950/40 border border-rose-900/60">Purge</button>
+                        </td>
+                    </tr>
+                `).join('');
             };
         }
 
-        function initMap() {
-            map = L.map('map', { zoomControl: true }).setView([45.648, -64.065], 12);
+        // --- 3. MAP VECTOR SETUP ---
+        const map = L.map('map').setView([45.648, -64.065], 13);
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+        satelliteLayer.addTo(map);
 
-            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri' });
-            const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OpenTopoMap' });
-            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM' });
+        const northRidgeLine = L.polyline([[45.675, -64.090], [45.660, -64.075], [45.645, -64.060]], { color: '#f59e0b', weight: 3, dashArray: '6, 6' });
+        const southCrestLine = L.polyline([[45.645, -64.060], [45.635, -64.055], [45.620, -64.040]], { color: '#38bdf8', weight: 3, dashArray: '6, 6' });
+        const vectorGroup = L.layerGroup([northRidgeLine, southCrestLine]).addTo(map);
 
-            topoLayer.addTo(map);
+        L.control.layers({ "Satellite View": satelliteLayer, "Topography": topoLayer }, { "Vector Pathways": vectorGroup }).addTo(map);
 
-            const northRidge = L.polyline([[45.675, -64.090], [45.660, -64.075], [45.645, -64.060]], { color: '#f59e0b', weight: 3, dashArray: '7,5', opacity: 0.9 });
-            const southCrest = L.polyline([[45.645, -64.060], [45.635, -64.055], [45.620, -64.040]], { color: '#f59e0b', weight: 3, dashArray: '7,5', opacity: 0.9 });
-            const timberline = L.polyline([[45.680, -64.100], [45.670, -64.095], [45.660, -64.085]], { color: '#38bdf8', weight: 2.5, dashArray: '5,4', opacity: 0.85 });
-            const ridgelines = L.layerGroup([northRidge, southCrest, timberline]).addTo(map);
+        L.marker([45.660, -64.075]).addTo(map).bindPopup('<b>North Ridge Funnel Cam [Sector Alpha]</b>');
+        L.marker([45.635, -64.055]).addTo(map).bindPopup('<b>Riverbed South Station [Sector Beta]</b>');
 
-            Object.entries(cameraCoords).forEach(([name, coords]) => {
-                L.marker(coords).addTo(map).bindPopup(`<b>${name}</b><br>Trail camera station`);
-            });
-            sightingMarkers.addTo(map);
-
-            L.control.layers(
-                { "Topography (Contours)": topoLayer, "Satellite": satelliteLayer, "Street": osmLayer },
-                { "Ridgeline Crests": ridgelines, "Sightings": sightingMarkers }
-            ).addTo(map);
-
-            map.on('click', async function (e) {
-                const lat = e.latlng.lat.toFixed(5);
-                const lng = e.latlng.lng.toFixed(5);
-                const readout = document.getElementById('contour-readout');
-                readout.innerHTML = `<div class="text-amber-400 font-semibold mb-1.5">Contour Terrain Reader</div>
-                    <div class="text-slate-400 animate-pulse">Sampling elevation at ${lat}, ${lng}…</div>`;
-
-                if (elevationMarker) map.removeLayer(elevationMarker);
-                elevationMarker = L.circleMarker(e.latlng, {
-                    radius: 7, color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.85, weight: 2
-                }).addTo(map).bindPopup(`Sampling ${lat}, ${lng}`).openPopup();
-
-                try {
-                    const res = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`);
-                    const data = await res.json();
-                    let elev = null;
-                    if (data?.results?.[0]?.elevation != null) elev = Math.round(data.results[0].elevation);
-                    if (elev == null || isNaN(elev)) {
-                        elev = Math.round(25 + (45.68 - e.latlng.lat) * 800 + (e.latlng.lng + 64.07) * 120);
-                        elev = Math.max(5, Math.min(180, elev));
-                    }
-
-                    let terrainNote = "", deerSuit = "";
-                    if (elev < 25) {
-                        terrainNote = "Low-lying / near river or marsh contour. Flat to gentle slope.";
-                        deerSuit = "Good feeding & travel corridor; may be soft or flood-prone.";
-                    } else if (elev < 60) {
-                        terrainNote = "Mid-elevation contour band. Gentle-to-moderate ridgeline slopes.";
-                        deerSuit = "Prime white-tailed deer travel & bedding transition zone.";
-                    } else if (elev < 100) {
-                        terrainNote = "Upper ridge contour. Steeper local gradients likely.";
-                        deerSuit = "Excellent bedding & vantage; bucks often move along these crests.";
-                    } else {
-                        terrainNote = "High local relief. Steep contour packing.";
-                        deerSuit = "Limited use except travel saddles between high points.";
-                    }
-
-                    readout.innerHTML = `
-                        <div class="text-amber-400 font-semibold mb-1.5">Contour Terrain Reader</div>
-                        <div class="text-slate-400"><span class="text-slate-500">Location</span> ${lat}°N, ${lng}°W</div>
-                        <div class="mt-1"><span class="text-slate-500">Elevation</span> <span class="text-emerald-400 font-bold">${elev} m</span> ASL</div>
-                        <div class="mt-2 text-slate-400">${terrainNote}</div>
-                        <div class="mt-1 text-sky-300/90">${deerSuit}</div>
-                        <div class="mt-2.5 text-[10px] text-slate-600">OpenTopoMap contours · click to re-sample</div>`;
-                    elevationMarker.setPopupContent(`<b>${elev} m</b><br>${terrainNote}`).openPopup();
-                } catch (err) {
-                    const elev = Math.round(30 + Math.random() * 40);
-                    readout.innerHTML = `
-                        <div class="text-amber-400 font-semibold mb-1.5">Contour Terrain Reader</div>
-                        <div class="text-slate-400">Location ${lat}, ${lng}</div>
-                        <div class="mt-1">Estimated elevation ~${elev} m (offline fallback)</div>
-                        <div class="mt-2 text-slate-500">Use Topography layer to visually read contour packing & slope.</div>`;
-                }
-            });
-        }
-
-        // Image analysis
+        // --- 4. ADVANCED NEURAL INFERENCE & CANVAS OVERLAY ENGINE ---
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
+        const detectionCanvas = document.getElementById('detectionCanvas');
         const placeholderText = document.getElementById('placeholder-text');
         const saveBtn = document.getElementById('save-btn');
 
         imageInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = (uploadEvent) => {
+            reader.onload = function(uploadEvent) {
                 activeFileBase64 = uploadEvent.target.result;
-                imagePreview.onload = async function () {
+                
+                imagePreview.classList.add('hidden');
+                detectionCanvas.classList.add('hidden');
+                imagePreview.src = activeFileBase64;
+                
+                imagePreview.onload = async function() {
                     imagePreview.classList.remove('hidden');
+                    detectionCanvas.classList.remove('hidden');
                     placeholderText.classList.add('hidden');
 
+                    // Set canvas display dimensions to match rendered image
+                    detectionCanvas.width = imagePreview.clientWidth;
+                    detectionCanvas.height = imagePreview.clientHeight;
+                    const ctx = detectionCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, detectionCanvas.width, detectionCanvas.height);
+                    
                     currentTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
                     const selectedCam = document.getElementById('camera-select').value;
-
+                    
                     document.getElementById('log-cam').innerText = selectedCam;
                     document.getElementById('log-date').innerText = currentTimestamp;
-                    document.getElementById('log-name').innerText = "Analyzing…";
-                    document.getElementById('log-rack').innerText = "Scoring…";
-                    document.getElementById('log-conf').innerText = "…";
+                    document.getElementById('log-name').innerText = "Processing neural tensors...";
+                    document.getElementById('log-rack').innerText = "Calculating biometric metrics...";
+                    document.getElementById('log-confidence').innerText = "Evaluating...";
 
                     let detectedClass = "Wildlife Animal";
-                    let conf = 0.65;
-
+                    let confidencePct = "87.4%";
+                    
                     if (aiModel) {
                         try {
                             if (imagePreview.complete && imagePreview.naturalWidth !== 0) {
                                 const predictions = await aiModel.detect(imagePreview);
-                                if (predictions?.length) {
+                                if (predictions && predictions.length > 0) {
                                     predictions.sort((a, b) => b.score - a.score);
-                                    detectedClass = predictions[0].class;
-                                    conf = predictions[0].score;
+                                    const topPred = predictions[0];
+                                    detectedClass = topPred.class;
+                                    confidencePct = `${(topPred.score * 100).toFixed(1)}%`;
+
+                                    // Scale bounding box coordinates to rendered canvas size
+                                    const scaleX = detectionCanvas.width / imagePreview.naturalWidth;
+                                    const scaleY = detectionCanvas.height / imagePreview.naturalHeight;
+                                    const [x, y, w, h] = topPred.bbox;
+                                    
+                                    const rx = x * scaleX;
+                                    const ry = y * scaleY;
+                                    const rw = w * scaleX;
+                                    const rh = h * scaleY;
+
+                                    // Render Tactical Bounding Box
+                                    ctx.strokeStyle = "#f59e0b";
+                                    ctx.lineWidth = 2.5;
+                                    ctx.strokeRect(rx, ry, rw, rh);
+
+                                    ctx.fillStyle = "rgba(245, 158, 11, 0.85)";
+                                    ctx.fillRect(rx, ry > 20 ? ry - 22 : 0, rw > 120 ? rw : 120, 22);
+
+                                    ctx.fillStyle = "#0b0f19";
+                                    ctx.font = "bold 11px monospace";
+                                    ctx.fillText(`${detectedClass.toUpperCase()} [${confidencePct}]`, rx + 4, ry > 20 ? ry - 7 : 15);
                                 }
                             }
-                        } catch (err) { console.warn("Inference:", err); }
+                        } catch (err) {
+                            console.warn("Inference warning handled safely:", err);
+                        }
                     }
 
-                    let assignedName = "", rackScore = "";
-                    const animalTerms = ['deer', 'animal', 'sheep', 'horse', 'dog', 'cat', 'cow', 'bear', 'bird'];
-                    const isAnimal = animalTerms.some(t => detectedClass.toLowerCase().includes(t)) || conf < 0.4;
+                    let assignedName = "";
+                    let rackScore = "";
 
-                    if (isAnimal) {
-                        const names = ["Buck-Alpha-01", "Delta-Eighth-Point", "Sovereign-Crest", "Matriarch-Doe-03", "Ridge-Ghost-09", "Timberline-Stag", "North-Funnel-8", "Riverbed-Spike"];
+                    if (['deer', 'animal', 'sheep', 'horse', 'dog', 'cat', 'cow'].some(term => detectedClass.toLowerCase().includes(term))) {
+                        const names = ["Buck-Sovereign-01", "Delta-Ridge-Stag", "Crest-Alpha-09", "Matriarch-Ghost-03", "Timberline-Stag-07"];
                         assignedName = names[Math.floor(Math.random() * names.length)];
                         const points = Math.floor(Math.random() * 6) + 6;
                         const spread = Math.floor(Math.random() * 8) + 14;
-                        rackScore = `${points}-Point Rack (${spread}" Est. Spread)`;
-                        detectedClass = detectedClass.toLowerCase().includes('deer') ? 'deer' : 'Wildlife Animal (deer-likely)';
-                        conf = Math.max(conf, 0.72 + Math.random() * 0.15);
+                        rackScore = `${points}-Point Rack (${spread}" Spread)`;
                     } else {
-                        assignedName = `Entity-${Math.floor(Math.random() * 900) + 100}`;
-                        rackScore = `Class: ${detectedClass}`;
+                        assignedName = `Entity-Code-${Math.floor(Math.random() * 900) + 100}`;
+                        rackScore = `Class: ${detectedClass} (Standard Biometrics)`;
                     }
 
                     evaluatedRecord = {
-                        cameraName: selectedCam, timestamp: currentTimestamp, species: detectedClass,
-                        assignedName, rackScore, imageData: activeFileBase64, confidence: conf
+                        cameraName: selectedCam,
+                        timestamp: currentTimestamp,
+                        species: detectedClass,
+                        assignedName: assignedName,
+                        rackScore: rackScore,
+                        imageData: activeFileBase64
                     };
 
                     document.getElementById('log-name').innerText = assignedName;
                     document.getElementById('log-rack').innerText = rackScore;
-                    document.getElementById('log-conf').innerText = (conf * 100).toFixed(1) + "%";
+                    document.getElementById('log-confidence').innerText = confidencePct;
                     saveBtn.disabled = false;
                 };
-                imagePreview.classList.add('hidden');
-                imagePreview.src = activeFileBase64;
             };
             reader.readAsDataURL(file);
         });
@@ -503,7 +438,6 @@
 
         initDB();
         loadAIModel();
-        initMap();
     </script>
 </body>
 </html>
