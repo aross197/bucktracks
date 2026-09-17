@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrailCam 3D Hub with IndexedDB</title>
+    <title>TrailCam 3D Hub & Local Database</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- CesiumJS CSS & JS -->
@@ -104,7 +104,7 @@
 
     </main>
 
-    <!-- Application Script (IndexedDB + Cesium) -->
+    <!-- Application Script (IndexedDB + Cesium 3D Globe) -->
     <script>
         // --- 1. INDEXEDDB SETUP ---
         const DB_NAME = "TrailCamHubDB";
@@ -177,6 +177,8 @@
         }
 
         // --- 2. CESIUM 3D GLOBE SETUP ---
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjZjQ5OGUyNS1jMzkxLTQ0NDctOTBhNi04MGViZDNjNmNiMGMiLCJpZCI6MTQ4MjA3LCJpYXQiOjE2ODE4MzgyMDh9.Y2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVw';
+
         const viewer = new Cesium.Viewer('cesiumContainer', {
             animation: false,
             timeline: false,
@@ -184,7 +186,8 @@
             geocoder: false,
             homeButton: false,
             sceneModePicker: false,
-            navigationHelpButton: false
+            navigationHelpButton: false,
+            terrainProvider: Cesium.createWorldTerrain()
         });
 
         const cameras = [
