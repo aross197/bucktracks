@@ -1,487 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>BUCKTRACK - Automated Pattern Analytics</title>
-
-  <!-- Leaflet & EXIF JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
-
-  <style>
-    :root {
-      --bg: #0f120f;
-      --card: #182018;
-      --card-alt: #202b20;
-      --border: #2a382a;
-      --line: #374a37;
-      --text: #e1e8e1;
-      --muted: #7d947d;
-      --primary: #4e804d;
-      --primary-bright: #6ebd6c;
-      --accent: #d9702e;
-      --radius: 10px;
-      --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
-    body, html { width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-sans); overflow: hidden; }
-
-    #app { display: flex; flex-direction: column; width: 100vw; height: 100vh; height: 100dvh; position: relative; }
-    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; z-index: 1000; }
-    .brand { font-family: var(--font-mono); font-weight: 900; letter-spacing: 1.5px; color: var(--primary-bright); font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
-    .brand span { color: var(--text); }
-    
-    main { flex: 1; position: relative; overflow: hidden; }
-    .screen { position: absolute; inset: 0; display: none; flex-direction: column; overflow-y: auto; padding: 14px; padding-bottom: 80px; }
-    .screen.active { display: flex; }
-    .screen#mapScreen { padding: 0; }
-
-    nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-around: space-around; align-items: center; z-index: 1000; }
-    .navBtn { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); background: none; border: none; font-size: 0.65rem; font-family: var(--font-mono); font-weight: 700; width: 19%; cursor: pointer; }
-    .navBtn svg { width: 20px; height: 20px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .navBtn.active { color: var(--primary-bright); }
-    .navBtn.active svg { stroke: var(--primary-bright); }
-
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
-    .cardTitle { font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    .kpi { background: var(--card-alt); padding: 8px; border-radius: 6px; border: 1px solid var(--line); text-align: center; }
-    .kpi span { font-size: 0.6rem; color: var(--muted); display: block; text-transform: uppercase; font-family: var(--font-mono); }
-    .kpi strong { font-size: 0.95rem; font-weight: 800; color: var(--text); font-family: var(--font-mono); }
-
-    .actionBtn { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 10px; border-radius: 6px; font-weight: 700; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-    .actionBtn.primary { background: var(--primary); border-color: var(--primary-bright); color: #fff; }
-
-    .formGroup { margin-bottom: 10px; }
-    .formGroup label { display: block; font-size: 0.65rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
-    input, select, textarea { width: 100%; background: var(--card-alt); border: 1px solid var(--line); color: var(--text); padding: 8px; border-radius: 5px; font-size: 0.85rem; font-family: var(--font-sans); }
-    
-    #map { width: 100%; height: 100%; background: #111; z-index: 1; }
-    .mapOverlay { position: absolute; top: 10px; left: 10px; right: 10px; z-index: 500; display: flex; gap: 6px; }
-    .mapOverlay .actionBtn { flex: 1; background: rgba(24, 32, 24, 0.92); backdrop-filter: blur(6px); font-size: 0.7rem; padding: 8px; }
-
-    .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-    .photo { aspect-ratio: 1; border-radius: 6px; overflow: hidden; background: var(--card-alt); border: 1px solid var(--line); position: relative; }
-    .photo img { width: 100%; height: 100%; object-fit: cover; }
-    .photo span { position: absolute; bottom: 0; inset-x: 0; background: rgba(0,0,0,0.85); font-size: 0.55rem; font-family: var(--font-mono); padding: 2px 4px; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 14px; }
-    .modal.hidden { display: none; }
-    .modalContent { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; padding: 14px; }
-
-    .row { display: flex; gap: 8px; align-items: center; }
-    .row.spread { justify-content: space-between; }
-    .toast { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); background: var(--primary-bright); color: #0f120f; padding: 6px 14px; border-radius: 16px; font-weight: 800; font-size: 0.75rem; font-family: var(--font-mono); z-index: 3000; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
-    .toast.show { opacity: 1; }
-    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.6rem; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; }
-    .badge-success { background: rgba(110, 189, 108, 0.2); color: var(--primary-bright); border: 1px solid var(--primary-bright); }
-    .badge-accent { background: rgba(217, 112, 46, 0.2); color: var(--accent); border: 1px solid var(--accent); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrailCam 3D Hub with IndexedDB</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- CesiumJS CSS & JS -->
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
-  <div id="toast" class="toast">System Active</div>
-
-  <div id="modal" class="modal hidden">
-    <div class="modalContent" id="modalContent"></div>
-  </div>
-
-  <div id="app">
-    <header>
-      <div class="brand">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>
-        BUCK<span>TRACK</span>
-      </div>
-      <button class="actionBtn" id="quickAddBtn" style="width:auto; padding: 4px 10px; font-size: 0.7rem;">＋ QUICK LOG</button>
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md flex justify-between items-center">
+        <h1 class="text-xl font-bold tracking-wide text-emerald-400">🌲 TrailCam 3D Command Hub & Local DB</h1>
+        <span id="db-status" class="text-xs bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full border border-emerald-700">IndexedDB: Connected</span>
     </header>
 
-    <main>
-      <!-- 1. Command Dashboard -->
-      <section class="screen active" id="commandScreen">
-        <div class="card">
-          <div class="cardTitle">
-            <span>LIVE ENVIRONMENTAL TELEMETRY</span>
-            <span id="weatherStatus" class="badge badge-success">FETCHING...</span>
-          </div>
-          <div class="grid2">
-            <div class="kpi"><span>PRESSURE / TREND</span><strong id="envBaro">-- hPa</strong></div>
-            <div class="kpi"><span>WIND VELOCITY</span><strong id="envWind">-- km/h</strong></div>
-            <div class="kpi"><span>TEMPERATURE</span><strong id="envTemp">-- °C</strong></div>
-            <div class="kpi"><span>MOON PHASE</span><strong id="envMoon">--</strong></div>
-          </div>
+    <!-- Main Workspace -->
+    <main class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl mx-auto w-full">
+        
+        <!-- Left Panel: 3D Globe Container (1 Column) -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col shadow-lg">
+            <h2 class="text-lg font-semibold mb-3 text-slate-200">🌍 3D Terrain & Camera Nodes</h2>
+            <!-- Cesium Container -->
+            <div id="cesiumContainer" class="w-full h-80 rounded-lg border border-slate-700 overflow-hidden"></div>
+            
+            <div class="mt-4 flex-1 flex flex-col">
+                <h3 class="text-sm font-medium text-slate-400 mb-2">Select Target Camera:</h3>
+                <select id="camera-select" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 mb-3">
+                    <option value="North Ridge Cam">North Ridge Cam (45.820, -64.225)</option>
+                    <option value="Riverbed South">Riverbed South (45.810, -64.205)</option>
+                </select>
+                
+                <h3 class="text-sm font-medium text-slate-400 mb-1">Stored Captures Log:</h3>
+                <div id="capture-count" class="text-xs text-emerald-400 mb-2">0 captures recorded in IndexedDB</div>
+            </div>
         </div>
 
-        <div class="card">
-          <div class="cardTitle">TARGET BUCK PATTERN SUMMARY</div>
-          <div style="margin: 2px 0 8px 0;">
-            <h3 id="targetName" style="font-family:var(--font-mono); font-size:1rem; color:var(--primary-bright)">NO TARGET SELECTED</h3>
-            <p id="targetSub" style="font-size:0.75rem; color:var(--muted)">Select a profile in Roster to view automated pattern intelligence.</p>
-          </div>
-          <div class="grid2" style="margin-top:8px">
-            <div class="kpi"><span>PEAK TIME</span><strong id="targetPeak">--</strong></div>
-            <div class="kpi"><span>NOCTURNAL %</span><strong id="targetNoct">--</strong></div>
-          </div>
+        <!-- Right Panel: Picture Reader & IndexedDB Feed (2 Columns) -->
+        <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col shadow-lg justify-between">
+            <div>
+                <h2 class="text-lg font-semibold mb-3 text-slate-200">🖼️ Ingestion & Local Database Reader</h2>
+                
+                <!-- Upload Box -->
+                <div class="border-2 border-dashed border-slate-600 rounded-xl p-5 text-center hover:border-emerald-500 transition cursor-pointer relative bg-slate-900/50" id="drop-zone">
+                    <input type="file" id="imageInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                    <p class="text-slate-300 font-medium text-sm">Drag & drop trailcam export here, or <span class="text-emerald-400 underline">browse files</span></p>
+                    <p class="text-xs text-slate-500 mt-1">Saved automatically to browser's IndexedDB</p>
+                </div>
+
+                <!-- Analysis Workspace -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Image Preview -->
+                    <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center relative min-h-[160px]">
+                        <img id="imagePreview" class="max-h-40 rounded object-contain hidden" alt="Uploaded Preview">
+                        <span id="placeholder-text" class="text-slate-500 text-xs">No image selected</span>
+                    </div>
+
+                    <!-- Telemetry Readout -->
+                    <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex flex-col justify-between text-sm">
+                        <div class="space-y-2">
+                            <div class="flex justify-between border-b border-slate-800 pb-1">
+                                <span class="text-slate-400 text-xs">Assigned Cam:</span>
+                                <span id="log-cam" class="font-mono text-xs text-emerald-400">-</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-800 pb-1">
+                                <span class="text-slate-400 text-xs">Timestamp:</span>
+                                <span id="log-date" class="font-mono text-xs text-slate-200">-</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-800 pb-1">
+                                <span class="text-slate-400 text-xs">Detected Tag:</span>
+                                <span id="log-species" class="font-mono text-xs text-emerald-400">-</span>
+                            </div>
+                        </div>
+                        <button onclick="saveCurrentCapture()" id="save-btn" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-1.5 rounded text-xs transition disabled:opacity-50" disabled>
+                            Commit to IndexedDB
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Local DB History Table -->
+            <div class="mt-4 border-t border-slate-700 pt-3">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Recent Database Entries</h3>
+                <div class="overflow-x-auto max-h-36 overflow-y-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-slate-400 sticky top-0">
+                            <tr>
+                                <th class="p-2">Camera</th>
+                                <th class="p-2">Timestamp</th>
+                                <th class="p-2">Tag</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-records" class="divide-y divide-slate-800 text-slate-300">
+                            <tr><td colspan="3" class="p-2 text-center text-slate-500">Loading database records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <div class="grid4" style="margin-bottom:10px">
-          <div class="kpi"><span>BUCKS</span><strong id="statBucks">0</strong></div>
-          <div class="kpi"><span>SIGHTINGS</span><strong id="statSightings">0</strong></div>
-          <div class="kpi"><span>PHOTOS</span><strong id="statPhotos">0</strong></div>
-          <div class="kpi"><span>WAYPOINTS</span><strong id="statWaypoints">0</strong></div>
-        </div>
-      </section>
-
-      <!-- 2. Buck Profiles & Pattern Intelligence -->
-      <section class="screen" id="bucksScreen">
-        <div class="row spread" style="margin-bottom:10px">
-          <h2 style="font-family:var(--font-mono); font-size:0.9rem">BUCK ROSTER & PATTERNS</h2>
-          <button class="actionBtn primary" style="width:auto; padding:6px 12px; font-size:0.75rem;" onclick="openBuckForm()">＋ NEW BUCK</button>
-        </div>
-        <div id="buckList"><div class="card"><p style="text-align:center; color:var(--muted); font-size:0.8rem">Loading profiles...</p></div></div>
-      </section>
-
-      <!-- 3. Field Map & GIS -->
-      <section class="screen" id="mapScreen">
-        <div class="mapOverlay">
-          <button class="actionBtn" onclick="beginMapAdd('waypoint')">📍 WAYPOINT</button>
-          <button class="actionBtn" onclick="beginMapAdd('sighting')">👁 SIGHTING</button>
-          <button class="actionBtn" onclick="locateUser()">🎯 GPS LOCATE</button>
-        </div>
-        <div id="map"></div>
-      </section>
-
-      <!-- 4. Media Ingestion & Auto Pattern Extraction -->
-      <section class="screen" id="dataScreen">
-        <div class="card">
-          <div class="cardTitle">PHOTO PATTERN INGESTION</div>
-          <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
-          <button class="actionBtn primary" id="photoPick" style="margin-bottom:8px">📷 UPLOAD TRAIL CAM PHOTOS</button>
-          <div class="row spread" style="margin-bottom:8px">
-            <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--muted)" id="photoCountLabel">0 images</span>
-          </div>
-          <div class="gallery" id="gallery"></div>
-        </div>
-      </section>
     </main>
 
-    <nav>
-      <button class="navBtn active" onclick="showScreen('commandScreen')">
-        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        COMMAND
-      </button>
-      <button class="navBtn" onclick="showScreen('bucksScreen')">
-        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        ROSTER
-      </button>
-      <button class="navBtn" onclick="showScreen('mapScreen')">
-        <svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-        MAP
-      </button>
-      <button class="navBtn" onclick="showScreen('dataScreen')">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        PHOTOS
-      </button>
-    </nav>
-  </div>
+    <!-- Application Script (IndexedDB + Cesium) -->
+    <script>
+        // --- 1. INDEXEDDB SETUP ---
+        const DB_NAME = "TrailCamHubDB";
+        const DB_VERSION = 1;
+        const STORE_NAME = "captures";
+        let db = null;
 
-<script>
-/* DATABASE & STATE ENGINE */
-const DB_NAME = "BUCKTRACK_LIVE_DB";
-const DB_VERSION = 1;
-let db = null;
-let map = null;
-let mapMarkers = [];
-let currentLocation = { lat: 45.82, lng: -64.21 };
-let pendingMapMode = null;
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-const $ = id => document.getElementById(id);
-const $$ = sel => document.querySelectorAll(sel);
-const esc = str => (str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const uid = pref => `${pref}_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-const now = () => new Date().toISOString();
+            request.onerror = (event) => {
+                console.error("IndexedDB error:", event.target.error);
+                document.getElementById('db-status').innerText = "IndexedDB: Error";
+                document.getElementById('db-status').className = "text-xs bg-rose-900 text-rose-300 px-3 py-1 rounded-full border border-rose-700";
+            };
 
-function showToast(msg) {
-  const t = $("toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2200);
-}
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                loadRecordsFromDB();
+            };
 
-function openModal(title, html) {
-  $("modalContent").innerHTML = `
-    <div class="row spread" style="margin-bottom:12px; border-bottom:1px solid var(--line); padding-bottom:6px">
-      <h3 style="font-family:var(--font-mono); font-size:0.85rem; text-transform:uppercase">${title}</h3>
-      <button onclick="closeModal()" style="background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer">&times;</button>
-    </div>
-    ${html}
-  `;
-  $("modal").classList.remove("hidden");
-}
+            request.onupgradeneeded = (event) => {
+                const database = event.target.result;
+                if (!database.objectStoreNames.contains(STORE_NAME)) {
+                    database.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+                }
+            };
+        }
 
-function closeModal() {
-  $("modal").classList.add("hidden");
-  $("modalContent").innerHTML = "";
-}
+        function saveRecordToDB(recordData) {
+            if (!db) return;
+            const transaction = db.transaction([STORE_NAME], "readwrite");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.add(recordData);
 
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      ["bucks", "sightings", "photos", "waypoints"].forEach(store => {
-        if (!d.objectStoreNames.contains(store)) d.createObjectStore(store, { keyPath: "id" });
-      });
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror = e => reject(e.target.error);
-  });
-}
+            request.onsuccess = () => {
+                loadRecordsFromDB();
+                alert("Capture successfully committed to IndexedDB!");
+            };
 
-function dbTx(storeName, mode = "readonly") { return db.transaction(storeName, mode).objectStore(storeName); }
-function dbPut(storeName, item) {
-  return new Promise((resolve, reject) => {
-    const req = dbTx(storeName, "readwrite").put(item);
-    req.onsuccess = () => resolve(item);
-    req.onerror = () => reject(req.error);
-  });
-}
-function dbGetAll(storeName) {
-  return new Promise((resolve, reject) => {
-    const req = dbTx(storeName).getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
-}
+            request.onerror = (event) => {
+                console.error("Failed to save record:", event.target.error);
+            };
+        }
 
-/* PATTERN ANALYTICS ENGINE */
-function calculateBuckPattern(sightings) {
-  if (!sightings.length) return { peakTime: "No Data", nocturnalPct: "0%", totalHits: 0 };
+        function loadRecordsFromDB() {
+            if (!db) return;
+            const transaction = db.transaction([STORE_NAME], "readonly");
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
 
-  let hours = Array(24).fill(0);
-  let nocturnalCount = 0;
+            request.onsuccess = (event) => {
+                const records = event.target.result;
+                document.getElementById('capture-count').innerText = `${records.length} captures recorded in IndexedDB`;
+                
+                const tbody = document.getElementById('db-records');
+                if (records.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-2 text-center text-slate-500">No records found in local database.</td></tr>`;
+                    return;
+                }
 
-  sightings.forEach(s => {
-    const date = new Date(s.date);
-    if (!isNaN(date.getTime())) {
-      const h = date.getHours();
-      hours[h]++;
-      if (h < 6 || h >= 21) nocturnalCount++; // Night timeframe definition
-    }
-  });
+                tbody.innerHTML = records.reverse().map(rec => `
+                    <tr class="hover:bg-slate-900/50">
+                        <td class="p-2 font-medium">${rec.cameraName}</td>
+                        <td class="p-2 font-mono text-slate-400">${rec.timestamp}</td>
+                        <td class="p-2 text-emerald-400">${rec.speciesTag}</td>
+                    </tr>
+                `).join('');
+            };
+        }
 
-  let maxHits = -1, peakHour = 0;
-  hours.forEach((count, h) => {
-    if (count > maxHits) { maxHits = count; peakHour = h; }
-  });
-
-  const peakFormatted = `${peakHour.toString().padStart(2, '0')}:00 - ${(peakHour + 1).toString().padStart(2, '0')}:00`;
-  const nocturnalPct = `${Math.round((nocturnalCount / sightings.length) * 100)}%`;
-
-  return { peakTime: peakFormatted, nocturnalPct, totalHits: sightings.length };
-}
-
-/* AUTOMATED PHOTO & EXIF INGESTION */
-$("photoPick").onclick = () => $("photoInput").click();
-$("photoInput").onchange = async e => {
-  const files = [...(e.target.files || [])];
-  const bucks = await dbGetAll("bucks");
-
-  if (!bucks.length) {
-    showToast("Create a Buck Profile first to assign photos.");
-    openBuckForm();
-    return;
-  }
-
-  openModal("ASSIGN PHOTO BATCH TO BUCK", `
-    <div class="formGroup">
-      <label>Target Buck in Photos</label>
-      <select id="assignBuckId">
-        ${bucks.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join("")}
-      </select>
-    </div>
-    <button class="actionBtn primary" id="confirmAssignBtn">PROCESS & EXTRACT TIMESTAMPS</button>
-  `);
-
-  $("confirmAssignBtn").onclick = async () => {
-    const buckId = $("assignBuckId").value;
-    const selectedBuck = bucks.find(b => b.id === buckId);
-    closeModal();
-
-    for (const file of files) {
-      await new Promise(resolve => {
-        EXIF.getData(file, function() {
-          let timestamp = now();
-          const exifDate = EXIF.getTag(this, "DateTimeOriginal");
-          
-          if (exifDate) {
-            // Convert EXIF "YYYY:MM:DD HH:MM:SS" to ISO format
-            const parts = exifDate.split(" ");
-            if (parts.length === 2) {
-              const dParts = parts[0].split(":");
-              timestamp = new Date(`${dParts[0]}-${dParts[1]}-${dParts[2]}T${parts[1]}`).toISOString();
-            }
-          }
-
-          const reader = new FileReader();
-          reader.onload = async () => {
-            // Save photo
-            await dbPut("photos", { id: uid("photo"), buckId, filename: file.name, dataUrl: reader.result, timestamp });
-            // Automatically record pattern sighting point from timestamp
-            await dbPut("sightings", {
-              id: uid("sight"),
-              buckId,
-              buckName: selectedBuck ? selectedBuck.name : "Buck",
-              note: `Auto-extracted from photo EXIF (${file.name})`,
-              lat: currentLocation.lat,
-              lng: currentLocation.lng,
-              date: timestamp
-            });
-            resolve();
-          };
-          reader.readAsDataURL(file);
+        // --- 2. CESIUM 3D GLOBE SETUP ---
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            animation: false,
+            timeline: false,
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false
         });
-      });
-    }
 
-    await renderGallery();
-    await renderBucks();
-    await refreshAll();
-    showToast(`Processed ${files.length} photos with timestamps.`);
-  };
-};
+        const cameras = [
+            { name: "North Ridge Cam", lon: -64.225, lat: 45.820, height: 100 },
+            { name: "Riverbed South", lon: -64.205, lat: 45.810, height: 80 }
+        ];
 
-/* BUCK ROSTER WITH PATTERN CARDS */
-async function renderBucks() {
-  const bucks = await dbGetAll("bucks");
-  const sightings = await dbGetAll("sightings");
+        cameras.forEach(cam => {
+            viewer.entities.add({
+                name: cam.name,
+                position: Cesium.Cartesian3.fromDegrees(cam.lon, cam.lat, cam.height),
+                point: {
+                    pixelSize: 12,
+                    color: Cesium.Color.EMERALD,
+                    outlineColor: Cesium.Color.WHITE,
+                    outlineWidth: 2
+                },
+                label: {
+                    text: cam.name,
+                    font: '11pt sans-serif',
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    fillColor: Cesium.Color.WHITE,
+                    outlineColor: Cesium.Color.BLACK,
+                    outlineWidth: 2,
+                    pixelOffset: new Cesium.Cartesian2(0, -20)
+                }
+            });
+        });
 
-  if (!bucks.length) {
-    $("buckList").innerHTML = `<div class="card"><p style="text-align:center; color:var(--muted); font-size:0.8rem">No profiles saved. Tap "+ NEW BUCK" to add one.</p></div>`;
-    return;
-  }
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(-64.215, 45.815, 15000),
+            orientation: {
+                heading: Cesium.Math.toRadians(0.0),
+                pitch: Cesium.Math.toRadians(-45.0),
+                roll: 0.0
+            }
+        });
 
-  $("buckList").innerHTML = bucks.map(b => {
-    const buckSightings = sightings.filter(s => s.buckId === b.id);
-    const pattern = calculateBuckPattern(buckSightings);
+        // --- 3. UI & FILE HANDLING LOGIC ---
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const placeholderText = document.getElementById('placeholder-text');
+        const saveBtn = document.getElementById('save-btn');
+        
+        let activeFileBase64 = null;
+        let currentTimestamp = null;
+        let currentSpecies = "White-tailed Deer (Detected)";
 
-    return `
-      <div class="card">
-        <div class="row spread">
-          <strong style="font-family:var(--font-mono); font-size:0.95rem">${esc(b.name)}</strong>
-          <span class="badge badge-success">${b.points || 'Unk'} PT</span>
-        </div>
-        <div style="font-size:0.75rem; color:var(--muted); margin: 4px 0 8px 0;">Age: ${esc(b.age || 'Unknown')}</div>
-        <div class="grid2">
-          <div class="kpi"><span>PEAK ACTIVITY</span><strong>${pattern.peakTime}</strong></div>
-          <div class="kpi"><span>NIGHT MOVEMENT</span><strong>${pattern.nocturnalPct}</strong></div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    activeFileBase64 = uploadEvent.target.result;
+                    imagePreview.src = activeFileBase64;
+                    imagePreview.classList.remove('hidden');
+                    placeholderText.classList.add('hidden');
+                    
+                    currentTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                    const selectedCam = document.getElementById('camera-select').value;
+                    
+                    document.getElementById('log-cam').innerText = selectedCam;
+                    document.getElementById('log-date').innerText = currentTimestamp;
+                    document.getElementById('log-species').innerText = currentSpecies;
+                    saveBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-async function renderGallery() {
-  const photos = await dbGetAll("photos");
-  $("photoCountLabel").textContent = `${photos.length} image(s) registered`;
-  if (!photos.length) {
-    $("gallery").innerHTML = `<p style="grid-column:1/-1; text-align:center; color:var(--muted); font-size:0.8rem; padding:12px;">No images loaded.</p>`;
-    return;
-  }
-  $("gallery").innerHTML = photos.map(p => `
-    <div class="photo">
-      <img src="${p.dataUrl}" alt="${esc(p.filename)}">
-      <span>${new Date(p.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-    </div>
-  `).join("");
-}
+        function saveCurrentCapture() {
+            if (!activeFileBase64) return;
+            
+            const selectedCam = document.getElementById('camera-select').value;
+            
+            const record = {
+                cameraName: selectedCam,
+                timestamp: currentTimestamp,
+                speciesTag: currentSpecies,
+                imageData: activeFileBase64
+            };
 
-/* UI UTILITIES & INITIALIZATION */
-async function refreshAll() {
-  const bucks = await dbGetAll("bucks");
-  const sightings = await dbGetAll("sightings");
-  const photos = await dbGetAll("photos");
-  const waypoints = await dbGetAll("waypoints");
+            saveRecordToDB(record);
+        }
 
-  $("statBucks").textContent = bucks.length;
-  $("statSightings").textContent = sightings.length;
-  $("statPhotos").textContent = photos.length;
-  $("statWaypoints").textContent = waypoints.length;
-
-  const target = bucks[0];
-  if (target) {
-    const targetSightings = sightings.filter(s => s.buckId === target.id);
-    const pattern = calculateBuckPattern(targetSightings);
-    $("targetName").textContent = target.name.toUpperCase();
-    $("targetSub").textContent = `${target.points || "?"} pts • ${targetSightings.length} total hits logged`;
-    $("targetPeak").textContent = pattern.peakTime;
-    $("targetNoct").textContent = pattern.nocturnalPct;
-  }
-}
-
-function showScreen(screenId) {
-  $$(".screen").forEach(s => s.classList.remove("active"));
-  $(screenId).classList.add("active");
-  $$(".navBtn").forEach(btn => btn.classList.toggle("active", btn.getAttribute("onclick").includes(screenId)));
-  if (screenId === "mapScreen" && !map) initMap();
-  if (screenId === "dataScreen") renderGallery();
-  if (screenId === "bucksScreen") renderBucks();
-  if (screenId === "commandScreen") refreshAll();
-}
-
-function initMap() {
-  map = L.map('map', { zoomControl: false }).setView([currentLocation.lat, currentLocation.lng], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-}
-
-function locateUser() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      if (map) map.setView([currentLocation.lat, currentLocation.lng], 13);
-    });
-  }
-}
-
-async function openBuckForm() {
-  openModal("CREATE BUCK PROFILE", `
-    <div class="formGroup">
-      <label>Buck Designation / Name</label>
-      <input type="text" id="bName" placeholder="e.g. Split Brow, Ghost" required>
-    </div>
-    <div class="grid2">
-      <div class="formGroup">
-        <label>Points</label>
-        <input type="text" id="bPoints" placeholder="8">
-      </div>
-      <div class="formGroup">
-        <label>Age</label>
-        <input type="text" id="bAge" placeholder="3.5 yrs">
-      </div>
-    </div>
-    <button class="actionBtn primary" id="saveBuckBtn">SAVE PROFILE</button>
-  `);
-
-  $("saveBuckBtn").onclick = async () => {
-    const name = $("bName").value.trim();
-    if (!name) return;
-    await dbPut("bucks", { id: uid("buck"), name, points: $("bPoints").value, age: $("bAge").value, createdAt: now() });
-    closeModal();
-    await renderBucks();
-    await refreshAll();
-    showToast("Profile saved.");
-  };
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
-  await openDB();
-  locateUser();
-  await refreshAll();
-});
-</script>
+        // Initialize IndexedDB on startup
+        initDB();
+    </script>
 </body>
 </html>
