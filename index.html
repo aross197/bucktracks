@@ -3,67 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrailCam 3D Hub & Local Database</title>
+    <title>TrailCam AI Mapping Model - Ridgelines & Topo</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- CesiumJS CSS & JS -->
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- TensorFlow.js & COCO-SSD Model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
 
     <!-- Header -->
     <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-xl font-bold tracking-wide text-emerald-400">🌲 TrailCam 3D Command Hub & Local DB</h1>
-        <span id="db-status" class="text-xs bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full border border-emerald-700">IndexedDB: Connected</span>
+        <h1 class="text-xl font-bold tracking-wide text-emerald-400">🌲 TrailCam AI Mapping Model (Terrain & Ridgelines)</h1>
+        <div class="flex items-center space-x-3">
+            <span id="ai-status" class="text-xs bg-amber-900 text-amber-300 px-3 py-1 rounded-full border border-amber-700">AI Model: Loading...</span>
+            <span id="db-status" class="text-xs bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full border border-emerald-700">IndexedDB: Connected</span>
+        </div>
     </header>
 
     <!-- Main Workspace -->
     <main class="flex-1 p-4 grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl mx-auto w-full">
         
-        <!-- Left Panel: 3D Globe Container (1 Column) -->
+        <!-- Left Panel: Accurate Map, Ridgelines & Camera Nodes (1 Column) -->
         <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col shadow-lg">
-            <h2 class="text-lg font-semibold mb-3 text-slate-200">🌍 3D Terrain & Camera Nodes</h2>
-            <!-- Cesium Container -->
-            <div id="cesiumContainer" class="w-full h-80 rounded-lg border border-slate-700 overflow-hidden"></div>
+            <h2 class="text-lg font-semibold mb-3 text-slate-200">🗺️ Satellite, Topo & Ridgeline Overlays</h2>
+            <!-- Leaflet Map Container -->
+            <div id="map" class="w-full h-80 rounded-lg border border-slate-700 z-0"></div>
             
             <div class="mt-4 flex-1 flex flex-col">
                 <h3 class="text-sm font-medium text-slate-400 mb-2">Select Target Camera:</h3>
                 <select id="camera-select" class="bg-slate-900 border border-slate-700 rounded p-2 text-sm text-slate-200 mb-3">
-                    <option value="North Ridge Cam">North Ridge Cam (45.820, -64.225)</option>
-                    <option value="Riverbed South">Riverbed South (45.810, -64.205)</option>
+                    <option value="North Ridge Cam" data-lat="45.660" data-lng="-64.075">North Ridge Cam (Springhill Junction)</option>
+                    <option value="Riverbed South" data-lat="45.635" data-lng="-64.055">Riverbed South (Cumberland County)</option>
                 </select>
                 
-                <h3 class="text-sm font-medium text-slate-400 mb-1">Stored Captures Log:</h3>
-                <div id="capture-count" class="text-xs text-emerald-400 mb-2">0 captures recorded in IndexedDB</div>
+                <h3 class="text-sm font-medium text-slate-400 mb-1">AI Indexed Activity:</h3>
+                <div id="capture-count" class="text-xs text-emerald-400 mb-2">0 intelligent captures recorded</div>
             </div>
         </div>
 
-        <!-- Right Panel: Picture Reader & IndexedDB Feed (2 Columns) -->
+        <!-- Right Panel: AI Vision Workspace & Database Feed (2 Columns) -->
         <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col shadow-lg justify-between">
             <div>
-                <h2 class="text-lg font-semibold mb-3 text-slate-200">🖼️ Ingestion & Local Database Reader</h2>
+                <h2 class="text-lg font-semibold mb-3 text-slate-200">👁️ Neural Vision Ingestion Hub</h2>
                 
                 <!-- Upload Box -->
                 <div class="border-2 border-dashed border-slate-600 rounded-xl p-5 text-center hover:border-emerald-500 transition cursor-pointer relative bg-slate-900/50" id="drop-zone">
                     <input type="file" id="imageInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-                    <p class="text-slate-300 font-medium text-sm">Drag & drop trailcam export here, or <span class="text-emerald-400 underline">browse files</span></p>
-                    <p class="text-xs text-slate-500 mt-1">Saved automatically to browser's IndexedDB</p>
+                    <p class="text-slate-300 font-medium text-sm">Drop trailcam export here for <span class="text-emerald-400 underline">AI inference scan</span></p>
+                    <p class="text-xs text-slate-500 mt-1">Runs local machine learning object recognition</p>
                 </div>
 
                 <!-- Analysis Workspace -->
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Image Preview -->
-                    <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center relative min-h-[160px]">
-                        <img id="imagePreview" class="max-h-40 rounded object-contain hidden" alt="Uploaded Preview">
-                        <span id="placeholder-text" class="text-slate-500 text-xs">No image selected</span>
+                    <!-- Image Preview Container -->
+                    <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex flex-col items-center justify-center relative min-h-[180px] overflow-hidden">
+                        <img id="imagePreview" class="max-h-44 rounded object-contain hidden" alt="AI Scanned Preview">
+                        <span id="placeholder-text" class="text-slate-500 text-xs">Awaiting image ingestion...</span>
                     </div>
 
-                    <!-- Telemetry Readout -->
+                    <!-- AI Telemetry Readout -->
                     <div class="bg-slate-900 border border-slate-700 rounded-lg p-3 flex flex-col justify-between text-sm">
                         <div class="space-y-2">
                             <div class="flex justify-between border-b border-slate-800 pb-1">
-                                <span class="text-slate-400 text-xs">Assigned Cam:</span>
+                                <span class="text-slate-400 text-xs">Target Node:</span>
                                 <span id="log-cam" class="font-mono text-xs text-emerald-400">-</span>
                             </div>
                             <div class="flex justify-between border-b border-slate-800 pb-1">
@@ -71,12 +77,12 @@
                                 <span id="log-date" class="font-mono text-xs text-slate-200">-</span>
                             </div>
                             <div class="flex justify-between border-b border-slate-800 pb-1">
-                                <span class="text-slate-400 text-xs">Detected Tag:</span>
-                                <span id="log-species" class="font-mono text-xs text-emerald-400">-</span>
+                                <span class="text-slate-400 text-xs">AI Prediction:</span>
+                                <span id="log-species" class="font-mono text-xs text-amber-400">Model idle</span>
                             </div>
                         </div>
                         <button onclick="saveCurrentCapture()" id="save-btn" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-1.5 rounded text-xs transition disabled:opacity-50" disabled>
-                            Commit to IndexedDB
+                            Commit AI Data to Map Model
                         </button>
                     </div>
                 </div>
@@ -84,18 +90,18 @@
 
             <!-- Recent Local DB History Table -->
             <div class="mt-4 border-t border-slate-700 pt-3">
-                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Recent Database Entries</h3>
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Mapped AI Detections Log</h3>
                 <div class="overflow-x-auto max-h-36 overflow-y-auto">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-900 text-slate-400 sticky top-0">
                             <tr>
-                                <th class="p-2">Camera</th>
+                                <th class="p-2">Node Location</th>
                                 <th class="p-2">Timestamp</th>
-                                <th class="p-2">Tag</th>
+                                <th class="p-2">AI Classification</th>
                             </tr>
                         </thead>
                         <tbody id="db-records" class="divide-y divide-slate-800 text-slate-300">
-                            <tr><td colspan="3" class="p-2 text-center text-slate-500">Loading database records...</td></tr>
+                            <tr><td colspan="3" class="p-2 text-center text-slate-500">Initializing local AI database records...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -104,30 +110,42 @@
 
     </main>
 
-    <!-- Application Script (IndexedDB + Cesium 3D Globe) -->
+    <!-- Application Script -->
     <script>
-        // --- 1. INDEXEDDB SETUP ---
-        const DB_NAME = "TrailCamHubDB";
-        const DB_VERSION = 1;
-        const STORE_NAME = "captures";
+        let aiModel = null;
+        let activeFileBase64 = null;
+        let currentTimestamp = null;
+        let detectedClassification = "Analyzing...";
         let db = null;
+
+        // --- 1. LOAD TENSORFLOW.JS COCO-SSD MODEL ---
+        async function loadAIModel() {
+            const statusEl = document.getElementById('ai-status');
+            try {
+                aiModel = await cocoSsd.load();
+                statusEl.innerText = "AI Model: Active (COCO-SSD)";
+                statusEl.className = "text-xs bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full border border-emerald-700";
+            } catch (err) {
+                console.error("Failed to load AI model:", err);
+                statusEl.innerText = "AI Model: Offline";
+                statusEl.className = "text-xs bg-rose-900 text-rose-300 px-3 py-1 rounded-full border border-rose-700";
+            }
+        }
+
+        // --- 2. INDEXEDDB SETUP ---
+        const DB_NAME = "TrailCamAIMapDB";
+        const DB_VERSION = 1;
+        const STORE_NAME = "ai_captures";
 
         function initDB() {
             const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-            request.onerror = (event) => {
-                console.error("IndexedDB error:", event.target.error);
-                document.getElementById('db-status').innerText = "IndexedDB: Error";
-                document.getElementById('db-status').className = "text-xs bg-rose-900 text-rose-300 px-3 py-1 rounded-full border border-rose-700";
-            };
-
-            request.onsuccess = (event) => {
-                db = event.target.result;
+            request.onerror = (e) => console.error("IndexedDB error:", e.target.error);
+            request.onsuccess = (e) => {
+                db = e.target.result;
                 loadRecordsFromDB();
             };
-
-            request.onupgradeneeded = (event) => {
-                const database = event.target.result;
+            request.onupgradeneeded = (e) => {
+                const database = e.target.result;
                 if (!database.objectStoreNames.contains(STORE_NAME)) {
                     database.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
                 }
@@ -142,11 +160,7 @@
 
             request.onsuccess = () => {
                 loadRecordsFromDB();
-                alert("Capture successfully committed to IndexedDB!");
-            };
-
-            request.onerror = (event) => {
-                console.error("Failed to save record:", event.target.error);
+                alert("AI capture committed to map model database!");
             };
         }
 
@@ -156,13 +170,13 @@
             const store = transaction.objectStore(STORE_NAME);
             const request = store.getAll();
 
-            request.onsuccess = (event) => {
-                const records = event.target.result;
-                document.getElementById('capture-count').innerText = `${records.length} captures recorded in IndexedDB`;
+            request.onsuccess = (e) => {
+                const records = e.target.result;
+                document.getElementById('capture-count').innerText = `${records.length} intelligent captures recorded`;
                 
                 const tbody = document.getElementById('db-records');
                 if (records.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="p-2 text-center text-slate-500">No records found in local database.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-2 text-center text-slate-500">No records found.</td></tr>`;
                     return;
                 }
 
@@ -170,111 +184,137 @@
                     <tr class="hover:bg-slate-900/50">
                         <td class="p-2 font-medium">${rec.cameraName}</td>
                         <td class="p-2 font-mono text-slate-400">${rec.timestamp}</td>
-                        <td class="p-2 text-emerald-400">${rec.speciesTag}</td>
+                        <td class="p-2 text-amber-400 font-mono">${rec.aiTag}</td>
                     </tr>
                 `).join('');
             };
         }
 
-        // --- 2. CESIUM 3D GLOBE SETUP ---
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjZjQ5OGUyNS1jMzkxLTQ0NDctOTBhNi04MGViZDNjNmNiMGMiLCJpZCI6MTQ4MjA3LCJpYXQiOjE2ODE4MzgyMDh9.Y2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVwY2V5bXVw';
+        // --- 3. MAP SETUP (Satellite, Topo & Ridgeline Overlays) ---
+        const map = L.map('map').setView([45.648, -64.065], 13);
 
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            animation: false,
-            timeline: false,
-            baseLayerPicker: false,
-            geocoder: false,
-            homeButton: false,
-            sceneModePicker: false,
-            navigationHelpButton: false,
-            terrainProvider: Cesium.createWorldTerrain()
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri'
         });
 
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            maxZoom: 17,
+            attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM'
+        });
+
+        satelliteLayer.addTo(map);
+
+        // Define Ridgeline Vector Overlays
+        const northRidgeLine = L.polyline([
+            [45.675, -64.090],
+            [45.660, -64.075],
+            [45.645, -64.060]
+        ], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).bindPopup('<b class="text-slate-900">North Ridge Crest</b><br><span class="text-xs text-slate-600">Primary Elevation Spine / Travel Corridor</span>');
+
+        const southCrestLine = L.polyline([
+            [45.645, -64.060],
+            [45.635, -64.055],
+            [45.620, -64.040]
+        ], { color: '#f59e0b', weight: 3, dashArray: '5, 5' }).bindPopup('<b class="text-slate-900">South Riverbed Ridge</b><br><span class="text-xs text-slate-600">Elevation Break & Funnel Point</span>');
+
+        const ridgelinesGroup = L.layerGroup([northRidgeLine, southCrestLine]).addTo(map);
+
+        // Layer Controls (Base maps & Overlays)
+        const baseMaps = {
+            "Satellite (Esri)": satelliteLayer,
+            "Topographic (Topo)": topoLayer
+        };
+
+        const overlayMaps = {
+            "Ridgelines & Terrain Crests": ridgelinesGroup
+        };
+
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+        // Map Camera Markers
         const cameras = [
-            { name: "North Ridge Cam", lon: -64.225, lat: 45.820, height: 100 },
-            { name: "Riverbed South", lon: -64.205, lat: 45.810, height: 80 }
+            { name: "North Ridge Cam", lat: 45.660, lng: -64.075 },
+            { name: "Riverbed South", lat: 45.635, lng: -64.055 }
         ];
 
         cameras.forEach(cam => {
-            viewer.entities.add({
-                name: cam.name,
-                position: Cesium.Cartesian3.fromDegrees(cam.lon, cam.lat, cam.height),
-                point: {
-                    pixelSize: 12,
-                    color: Cesium.Color.EMERALD,
-                    outlineColor: Cesium.Color.WHITE,
-                    outlineWidth: 2
-                },
-                label: {
-                    text: cam.name,
-                    font: '11pt sans-serif',
-                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                    fillColor: Cesium.Color.WHITE,
-                    outlineColor: Cesium.Color.BLACK,
-                    outlineWidth: 2,
-                    pixelOffset: new Cesium.Cartesian2(0, -20)
-                }
-            });
+            L.marker([cam.lat, cam.lng]).addTo(map)
+                .bindPopup(`<b class="text-slate-900">${cam.name}</b><br><span class="text-xs text-slate-600">AI Node Active</span>`);
         });
 
-        viewer.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-64.215, 45.815, 15000),
-            orientation: {
-                heading: Cesium.Math.toRadians(0.0),
-                pitch: Cesium.Math.toRadians(-45.0),
-                roll: 0.0
-            }
-        });
-
-        // --- 3. UI & FILE HANDLING LOGIC ---
+        // --- 4. IMAGE UPLOAD & AI INFERENCE EXECUTION ---
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const placeholderText = document.getElementById('placeholder-text');
         const saveBtn = document.getElementById('save-btn');
-        
-        let activeFileBase64 = null;
-        let currentTimestamp = null;
-        let currentSpecies = "White-tailed Deer (Detected)";
 
-        imageInput.addEventListener('change', (e) => {
+        imageInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(uploadEvent) {
-                    activeFileBase64 = uploadEvent.target.result;
-                    imagePreview.src = activeFileBase64;
-                    imagePreview.classList.remove('hidden');
-                    placeholderText.classList.add('hidden');
-                    
-                    currentTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-                    const selectedCam = document.getElementById('camera-select').value;
-                    
-                    document.getElementById('log-cam').innerText = selectedCam;
-                    document.getElementById('log-date').innerText = currentTimestamp;
-                    document.getElementById('log-species').innerText = currentSpecies;
-                    saveBtn.disabled = false;
-                };
-                reader.readAsDataURL(file);
-            }
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(uploadEvent) {
+                activeFileBase64 = uploadEvent.target.result;
+                imagePreview.src = activeFileBase64;
+                imagePreview.classList.remove('hidden');
+                placeholderText.classList.add('hidden');
+                
+                currentTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+                const selectEl = document.getElementById('camera-select');
+                const selectedCam = selectEl.value;
+                
+                document.getElementById('log-cam').innerText = selectedCam;
+                document.getElementById('log-date').innerText = currentTimestamp;
+                document.getElementById('log-species').innerText = "Running AI Inference...";
+
+                if (aiModel) {
+                    try {
+                        const predictions = await aiModel.detect(imagePreview);
+                        if (predictions.length > 0) {
+                            predictions.sort((a, b) => b.score - a.score);
+                            const top = predictions[0];
+                            const confidence = Math.round(top.score * 100);
+                            detectedClassification = `${top.class} (${confidence}% match)`;
+                        } else {
+                            detectedClassification = "No distinct object recognized (Wildlife/Environment)";
+                        }
+                    } catch (err) {
+                        console.error("Inference failed:", err);
+                        detectedClassification = "Inference Error";
+                    }
+                } else {
+                    detectedClassification = "AI Model initializing...";
+                }
+
+                document.getElementById('log-species').innerText = detectedClassification;
+                saveBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
         });
 
         function saveCurrentCapture() {
             if (!activeFileBase64) return;
-            
-            const selectedCam = document.getElementById('camera-select').value;
+            const selectEl = document.getElementById('camera-select');
+            const selectedCam = selectEl.value;
+            const lat = selectEl.options[selectEl.selectedIndex].getAttribute('data-lat');
+            const lng = selectEl.options[selectEl.selectedIndex].getAttribute('data-lng');
             
             const record = {
                 cameraName: selectedCam,
+                lat: lat,
+                lng: lng,
                 timestamp: currentTimestamp,
-                speciesTag: currentSpecies,
+                aiTag: detectedClassification,
                 imageData: activeFileBase64
             };
 
             saveRecordToDB(record);
         }
 
-        // Initialize IndexedDB on startup
+        // Initialize systems on startup
         initDB();
+        loadAIModel();
     </script>
 </body>
 </html>
