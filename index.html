@@ -441,13 +441,17 @@ async function processOneImage(file) {
       }
     } catch (e) { console.warn(e); }
   }
-  const animalish = /deer|animal|sheep|horse|dog|cow|bear|bird|cat/i.test(detected) || conf < 0.45;
-  isDeer = /deer/i.test(detected) || (animalish && conf < 0.7);
+
+  // Expanded sensitive wildlife fallback for COCO-SSD object classes
+  const animalish = /deer|animal|sheep|horse|dog|cow|bear|bird|cat|giraffe|elephant/i.test(detected) || conf < 0.5;
+  isDeer = /deer/i.test(detected) || (animalish && conf < 0.75);
+  
   if (animalish && !/deer/i.test(detected)) {
     isDeer = true;
-    detected = 'deer (likely)';
-    conf = Math.max(conf, 0.7);
+    detected = 'deer (detected)';
+    conf = Math.max(conf, 0.75);
   }
+
   const name = pickHumanName(isDeer);
   const activity = activityFromHour(hour, isDeer);
   const camera = currentCamera;
