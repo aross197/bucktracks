@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#04070d">
+<meta name="description" content="Elite local trail-camera telemetry for the Teardrop Corridor, Springhill Junction, NS">
+<title>Bucktracks · Teardrop Corridor Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        obsidian: { 900: '#090d16', 950: '#04070d' },
+        amber: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
+      },
+      boxShadow: {
+        'tactical-glow': '0 0 40px -8px rgba(245,158,11,0.30)',
+        'tactical-card': '0 14px 44px -12px rgba(0,0,0,0.88), 0 0 0 1px rgba(255,255,255,0.05)'
+      },
+      animation: {
+        'pulse-soft': 'pulseSoft 2.8s cubic-bezier(0.4,0,0.6,1) infinite',
+        'fade-in': 'fadeIn 0.35s ease-out'
+      },
+      keyframes: {
+        pulseSoft: {
+          '0%,100%': { opacity: 1, boxShadow: '0 0 18px rgba(245,158,11,0.38)' },
+          '50%': { opacity: 0.55, boxShadow: '0 0 6px rgba(245,158,11,0.12)' }
+        },
+        fadeIn: { '0%': { opacity: 0, transform: 'translateY(6px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+      }
+    }
+  }
+}
+</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+:root { color-scheme: dark; }
+body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background: #04070d; color: #f1f5f9; }
+code, .font-mono { font-family: 'JetBrains Mono', monospace; }
+#map { height: 520px; border-radius: 16px; border: 1px solid rgba(51,65,85,0.5); }
+.leaflet-container { background: #04070d; font-family: 'Plus Jakarta Sans', sans-serif; }
+.leaflet-control-layers, .leaflet-bar a {
+  border-radius: 12px !important; border: 1px solid #1e293b !important;
+  background: #090d16 !important; color: #e2e8f0 !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.7) !important;
+}
+.leaflet-bar a:hover { background: #131b2e !important; color: #fbbf24 !important; }
+.leaflet-popup-content-wrapper {
+  background: #090d16; color: #e2e8f0; border-radius: 14px;
+  border: 1px solid #334155; box-shadow: 0 16px 36px rgba(0,0,0,0.92); max-width: 300px;
+}
+.leaflet-popup-tip { background: #090d16; }
+.glass { background: linear-gradient(145deg, rgba(13,20,36,0.96) 0%, rgba(8,12,22,0.98) 100%); backdrop-filter: blur(24px); }
+.tactical-border { border: 1px solid rgba(51,65,85,0.55); box-shadow: 0 14px 40px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04); }
+input[type=range] { accent-color: #f59e0b; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #04070d; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #334155; }
+.cam-pill.active { background: rgba(245,158,11,0.24) !important; border-color: rgba(245,158,11,0.7) !important; color: #fcd34d !important; box-shadow: 0 0 22px -6px rgba(245,158,11,0.45); }
+.drop-active { border-color: rgba(245,158,11,0.8) !important; background: rgba(245,158,11,0.07) !important; }
+.toast { animation: fadeIn 0.3s ease-out; }
+.hour-bar { transition: height 0.4s cubic-bezier(0.22,1,0.36,1); }
+</style>
+</head>
+<body class="min-h-screen antialiased pb-28 selection:bg-amber-500 selection:text-slate-950">
+
+<div id="toast-root" class="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+<nav class="sticky top-0 z-50 glass border-b border-slate-800/90 shadow-2xl">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500/30 to-amber-600/10 border border-amber-500/45 flex items-center justify-center shadow-tactical-glow">
+        <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </div>
+      <div>
+        <div class="text-sm font-extrabold tracking-tight text-white flex items-center gap-2.5">
+          Bucktracks Hub
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold tracking-wider">Elite v7.0 Gemini</span>
+        </div>
+        <div class="text-xs text-slate-400 font-medium tracking-wide">Springhill Junction Node · Cumberland County, NS</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 flex-wrap font-mono text-xs">
+      <div id="weather-pill" class="bg-slate-900/95 text-slate-300 px-3.5 py-2 rounded-xl border border-slate-800 flex items-center gap-2.5 shadow-inner">
+        <span id="weather-icon">⛅</span> <span id="weather-text">Loading micro-climate…</span>
+      </div>
+      <div id="ai-status" class="bg-amber-950/80 text-amber-300 px-3.5 py-2 rounded-xl border border-amber-800/50 animate-pulse-soft font-bold">Gemini: Idle</div>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+<section class="grid lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 glass tactical-border rounded-2xl p-6 shadow-tactical-card relative overflow-hidden flex flex-col">
+    <div class="absolute -right-24 -top-24 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+      <div>
+        <h1 class="text-lg font-extrabold text-white tracking-tight flex items-center gap-2.5">
+          <span class="text-2xl">📥</span> Camera SD Batch Ingestion
+        </h1>
+        <p class="text-xs text-slate-400 mt-1 max-w-xl">Drop trail-camera folders. Gemini classifies Buck / Spike / Doe / Fawn from a resized still. EXIF + local IndexedDB stay on this device.</p>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <span class="text-[11px] uppercase tracking-wider font-mono font-semibold text-slate-400 block mb-2">Target Camera Station</span>
+      <div id="camera-pills" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <button type="button" onclick="setCamera('Teardrop North Cam')" class="cam-pill active px-3.5 py-3 rounded-xl text-xs font-semibold border text-left transition bg-slate-900/90 border-slate-800 text-slate-300 hover:bg-slate-800" data-cam="Teardrop North Cam">📍 North Cam</button>
+        <button type="button" onclick="setCamera('Teardrop South Approach')" class="cam-pill px-3.5 py-3 rounded-xl text-xs font-semibold border text-left transition bg-slate-900/90 border-slate-800 text-slate-300 hover:bg-slate-800" data-cam="Teardrop South Approach">📍 South Approach</button>
+        <button type="button" onclick="setCamera('Service Road Edge')" class="cam-pill px-3.5 py-3 rounded-xl text-xs font-semibold border text-left transition bg-slate-900/90 border-slate-800 text-slate-300 hover:bg-slate-800" data-cam="Service Road Edge">📍 Service Road Edge</button>
+      </div>
+    </div>
+
+    <label class="block cursor-pointer group flex-1">
+      <div id="drop-zone" class="border-2 border-dashed border-slate-700/80 group-hover:border-amber-500/70 rounded-2xl p-8 text-center transition-all duration-300 bg-slate-950/60 group-hover:bg-amber-500/[0.04] shadow-inner h-full flex flex-col items-center justify-center min-h-[170px]">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl shadow-tactical-glow group-hover:scale-110 transition-transform">🦌</div>
+        <div class="text-sm font-bold text-slate-200 group-hover:text-amber-300 transition-colors">Drag & Drop SD Card Batch or Click to Browse</div>
+        <div class="text-xs text-slate-500 mt-1.5 font-mono">Multi-file · Auto EXIF · Gemini classify · Persistent thumbs</div>
+        <input type="file" id="imageInput" accept="image/*" multiple class="hidden"/>
+      </div>
+    </label>
+
+    <div id="progress-container" class="mt-5 hidden space-y-2 bg-slate-900/95 p-4 rounded-xl border border-slate-800 animate-fade-in">
+      <div class="flex justify-between text-xs font-mono">
+        <span id="process-status" class="text-amber-400 font-bold">Processing batch…</span>
+        <span id="progress-pct" class="text-slate-400 font-bold">0%</span>
+      </div>
+      <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+        <div id="progress-bar" class="bg-gradient-to-r from-amber-600 to-amber-400 h-2.5 rounded-full transition-all duration-300 shadow-tactical-glow" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="preview-strip" class="mt-4 flex gap-2.5 overflow-x-auto pb-2 min-h-[4.5rem]"></div>
+  </div>
+
+  <div class="glass tactical-border rounded-2xl p-6 shadow-tactical-card flex flex-col justify-between space-y-4">
+    <div>
+      <div class="flex items-center gap-2.5 mb-4">
+        <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-sm font-mono">⚡</div>
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-white">System Diagnostics</h2>
+      </div>
+      <div class="bg-slate-950/90 rounded-xl p-4 border border-slate-800/80 font-mono text-[11px] space-y-2.5 text-slate-300 shadow-inner">
+        <div class="flex justify-between pb-2 border-b border-slate-900"><span class="text-slate-500">KERNEL</span><span class="text-emerald-400 font-semibold">STABLE / ONLINE</span></div>
+        <div class="flex justify-between pb-2 border-b border-slate-900"><span class="text-slate-500">DATABASE</span><span class="text-amber-400 font-semibold">IndexedDB (Local)</span></div>
+        <div class="flex justify-between pb-2 border-b border-slate-900"><span class="text-slate-500">CLASSIFIER</span><span class="text-sky-400 font-semibold">Gemini Vision</span></div>
+        <div class="flex justify-between pb-2 border-b border-slate-900"><span class="text-slate-500">PAYLOAD</span><span class="text-slate-200">Resized JPEG ≤640px</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">DATUM</span><span class="text-slate-200">45.6935°N 64.1025°W</span></div>
+      </div>
+    </div>
+
+    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-xs space-y-3">
+      <div class="font-bold text-amber-400 uppercase tracking-wider font-mono text-[10px]">Gemini Conduit</div>
+      <label class="flex items-center justify-between gap-3 cursor-pointer">
+        <span class="text-slate-300">Send stills to Gemini</span>
+        <input id="gemini-enabled" type="checkbox" class="accent-amber-500 w-4 h-4" onchange="persistGeminiSettings()">
+      </label>
+      <label class="block space-y-1">
+        <span class="text-[10px] uppercase tracking-wider text-slate-500 font-mono">API key (stored only in this browser)</span>
+        <input id="gemini-key" type="password" autocomplete="off" placeholder="AIza…" class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono focus:outline-none focus:border-amber-500/60" onchange="persistGeminiSettings()">
+      </label>
+      <label class="block space-y-1">
+        <span class="text-[10px] uppercase tracking-wider text-slate-500 font-mono">Model</span>
+        <select id="gemini-model" class="w-full px-2.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/60" onchange="persistGeminiSettings()">
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+          <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+        </select>
+      </label>
+      <p class="text-[10px] text-slate-500 leading-relaxed">Key never leaves this device except as the Google API query. Stills are resized before upload. Leave the box unchecked to classify from filename + time only.</p>
+    </div>
+
+    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
+      <div class="font-bold text-amber-400 uppercase tracking-wider font-mono text-[10px]">Active Corridor Advisory</div>
+      <div id="terminal-advice" class="text-slate-300 text-xs leading-relaxed">Upload camera batches to initialize automated behavioral telemetry.</div>
+    </div>
+  </div>
+</section>
+
+<section class="grid lg:grid-cols-5 gap-6">
+  <div class="lg:col-span-3 glass tactical-border rounded-2xl p-6 shadow-tactical-card">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-sm">💡</div>
+      <div>
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-white">Corridor Intelligence & Weather</h2>
+        <p class="text-xs text-slate-400">Live micro-climate + movement modeling for Springhill Junction</p>
+      </div>
+    </div>
+    <div id="advice-panel" class="text-sm text-slate-300 leading-relaxed space-y-3">
+      <p class="text-slate-500 italic">Upload trail camera batch images to generate movement metrics.</p>
+    </div>
+  </div>
+  <div class="lg:col-span-2 glass tactical-border rounded-2xl p-6 shadow-tactical-card">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-extrabold uppercase tracking-wider text-white">Peak Activity Window</h2>
+      <span class="text-[10px] font-mono text-slate-500">24h distribution</span>
+    </div>
+    <div id="hourly-chart" class="h-36 flex items-end gap-1"></div>
+    <div class="flex justify-between text-[9px] font-mono text-slate-500 mt-2">
+      <span>00</span><span>06</span><span>12</span><span>18</span><span>23</span>
+    </div>
+  </div>
+</section>
+
+<section class="grid lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 glass tactical-border rounded-2xl p-6 shadow-tactical-card space-y-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div>
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-white">Corridor Map & Chronological Replay</h2>
+        <p id="map-timeline-label" class="text-xs text-amber-400 font-mono mt-0.5">Showing all historical telemetry</p>
+      </div>
+      <div class="flex items-center gap-1.5 bg-slate-900/95 p-1 rounded-xl border border-slate-800">
+        <button onclick="stepTimeline(-1)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition" title="Prev (←)">◀</button>
+        <button id="play-btn" onclick="togglePlayTimeline()" class="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-xs font-bold text-slate-950 transition shadow-sm" title="Play/Pause (Space)">▶ Play</button>
+        <button onclick="stepTimeline(1)" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition" title="Next (→)">▶</button>
+        <button onclick="toggleHeatmap()" id="heat-btn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition ml-1" title="Toggle heatmap">🔥 Heat</button>
+      </div>
+    </div>
+    <div id="map" class="shadow-inner"></div>
+    <div class="bg-slate-900/95 border border-slate-800 p-4 rounded-xl space-y-3 shadow-inner">
+      <div class="flex justify-between items-center text-xs font-mono text-slate-400">
+        <span id="slider-start-time" class="text-slate-300 font-medium">Start: —</span>
+        <span id="slider-curr-status" class="text-amber-400 font-bold uppercase tracking-wider text-[11px]">Ready</span>
+        <span id="slider-end-time" class="text-slate-300 font-medium">End: —</span>
+      </div>
+      <input type="range" id="timeline-slider" min="0" max="100" value="100" class="w-full h-2 bg-slate-950 rounded-lg cursor-pointer" oninput="onTimelineSliderInput(this.value)">
+    </div>
+  </div>
+
+  <div class="glass tactical-border rounded-2xl p-6 shadow-tactical-card flex flex-col justify-between space-y-4">
+    <div>
+      <div class="flex items-center gap-2.5 mb-5">
+        <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold text-xs">📊</div>
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-white">Activity Snapshot</h2>
+      </div>
+      <div id="stats-panel" class="text-xs space-y-3 text-slate-300 font-medium">
+        <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/60"><span class="text-slate-400">Total Records</span><span id="stat-count" class="text-white font-mono font-bold text-sm">0</span></div>
+        <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/60"><span class="text-slate-400">Deer Identified</span><span id="stat-deer" class="text-emerald-400 font-mono font-bold text-sm">0</span></div>
+        <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/60"><span class="text-slate-400">Bucks / Spikes</span><span id="stat-bucks" class="text-amber-400 font-mono font-bold text-sm">0</span></div>
+        <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/60"><span class="text-slate-400">Peak Window</span><span id="stat-peak" class="text-amber-300 font-mono font-semibold">—</span></div>
+        <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/60"><span class="text-slate-400">Latest Trigger</span><span id="stat-last" class="text-slate-200 font-mono">—</span></div>
+      </div>
+    </div>
+    <div id="contour-readout" class="text-xs text-slate-400 bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 font-mono text-center">Click map to sample elevation.</div>
+  </div>
+</section>
+
+<section class="glass tactical-border rounded-2xl p-6 shadow-tactical-card">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-5">
+    <div>
+      <h2 class="text-base font-extrabold text-white tracking-tight">Deer & Activity Telemetry Log</h2>
+      <p class="text-xs text-slate-400 mt-0.5">Local database · Persistent thumbs · Gemini class · Full export/import</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <input id="log-search" type="search" placeholder="Search name, class, camera, notes…" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/60 w-52" oninput="filterAndRenderTable()">
+      <select id="filter-class" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-500/60" onchange="filterAndRenderTable()">
+        <option value="">All classes</option>
+        <option value="Buck">Buck</option>
+        <option value="Spike">Spike</option>
+        <option value="Doe">Doe</option>
+        <option value="Fawn">Fawn</option>
+        <option value="Non-Deer">Non-Deer</option>
+      </select>
+      <select id="filter-camera" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-500/60" onchange="filterAndRenderTable()">
+        <option value="">All cameras</option>
+        <option value="Teardrop North Cam">North Cam</option>
+        <option value="Teardrop South Approach">South Approach</option>
+        <option value="Service Road Edge">Service Road Edge</option>
+      </select>
+      <button onclick="exportCSV()" class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">CSV</button>
+      <button onclick="exportJSON()" class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">JSON</button>
+      <label class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer">
+        Import<input type="file" accept=".json" class="hidden" onchange="importJSON(event)">
+      </label>
+      <button onclick="clearDatabase()" class="text-xs font-semibold px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-rose-950/80 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-900/50 transition">Clear</button>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto max-h-[30rem] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/40">
+    <table class="w-full text-left text-xs">
+      <thead>
+        <tr class="text-[10px] uppercase font-mono tracking-wider text-slate-400 border-b border-slate-800 sticky top-0 bg-slate-900/95 backdrop-blur-md z-10">
+          <th class="p-3.5 font-bold w-16">Thumb</th>
+          <th class="p-3.5 font-bold">Name</th>
+          <th class="p-3.5 font-bold">Class</th>
+          <th class="p-3.5 font-bold">Timestamp</th>
+          <th class="p-3.5 font-bold">Camera</th>
+          <th class="p-3.5 font-bold">Activity</th>
+          <th class="p-3.5 font-bold">Conf</th>
+          <th class="p-3.5 font-bold">Notes</th>
+          <th class="p-3.5 font-bold w-12"></th>
+        </tr>
+      </thead>
+      <tbody id="db-records" class="divide-y divide-slate-800/50">
+        <tr><td colspan="9" class="p-12 text-center text-slate-500 italic">No telemetry records. Drop photos above to begin.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer class="text-center text-xs text-slate-500 pt-8 border-t border-slate-900 space-y-1">
+  <div>Bucktracks Hub · Springhill Junction, Cumberland County, NS · Gemini vision conduit · Elite v7.0</div>
+  <div class="text-[10px] text-slate-600">Keyboard: ← → step timeline · Space play/pause · Records stay on this device; Gemini only sees resized stills when enabled</div>
+</footer>
+</main>
+
+<div id="lightbox" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/90 backdrop-blur-sm p-4" onclick="closeLightbox()">
+  <img id="lightbox-img" class="max-h-[90vh] max-w-[95vw] rounded-xl shadow-2xl border border-slate-700" alt="">
+</div>
+
+<script>
+/* ===================== STATE ===================== */
+let db = null, map = null, elevationMarker = null, heatLayer = null;
+let sightingMarkers = L.layerGroup(), transitVectorLayer = L.layerGroup();
+let activeMarkerHighlight = null, heatEnabled = false;
+let uploadQueue = [], totalBatchCount = 0, isProcessing = false;
+let currentCamera = localStorage.getItem('td_cam') || "Teardrop North Cam";
+let allTimelineRecords = [], timelineSliderIndex = 100, timelineTimer = null;
+let usedNames = new Set();
+
+const namePool = ["Rusty","Spike","Shadow","Oak","Willow","Ridge","Ash","Buckley","Nova","Cedar","Maple","Frost","Storm","Echo","Briar","Thorn","Hazel","Pine","Scout","Ranger","Daisy","Belle","Fawn","Clover","Sage","Ivy","Luna","Moss","Fern","Amber","Brooks","Ridgeback","Titan","Ghost","Copper","Atlas","Blaze"];
+const cameraCoords = {
+  "Teardrop North Cam": [45.6942, -64.1018],
+  "Teardrop South Approach": [45.6936, -64.1005],
+  "Service Road Edge": [45.6939, -64.1028]
+};
+
+const GEMINI_PROMPT = `You are classifying a Nova Scotia trail-camera still from the Teardrop Corridor near Springhill Junction.
+Return ONLY valid JSON with no markdown:
+{
+  "isDeer": true or false,
+  "deerClass": "Buck" | "Spike" | "Doe" | "Fawn" | "Non-Deer",
+  "confidence": 0-100,
+  "activity": "short phrase",
+  "notes": "antlers, count, vehicle, empty frame, IR quality"
+}
+Rules:
+- White-tailed deer only for isDeer.
+- Spike = short unbranched antlers.
+- Buck = visible branched antlers.
+- Fawn = spotted or clearly juvenile.
+- Night infrared and motion blur are normal.
+- Person, ATV, coyote, bear, bird, raccoon, empty woods → Non-Deer.
+- If unsure between Doe and Fawn, pick Doe and lower confidence.
+- If multiple deer, classify the most mature visible animal and mention the others in notes.`;
+
+/* ===================== UTILITIES ===================== */
+function toast(msg, type = 'info') {
+  const root = document.getElementById('toast-root');
+  const el = document.createElement('div');
+  const colors = { info: 'bg-slate-800 border-slate-600 text-slate-200', success: 'bg-emerald-950 border-emerald-700 text-emerald-300', warn: 'bg-amber-950 border-amber-700 text-amber-300' };
+  el.className = `toast pointer-events-auto px-4 py-2.5 rounded-xl border text-xs font-medium shadow-lg ${colors[type] || colors.info}`;
+  el.textContent = msg;
+  root.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(12px)'; setTimeout(() => el.remove(), 300); }, 3200);
+}
+
+function setCamera(camName) {
+  currentCamera = camName;
+  localStorage.setItem('td_cam', camName);
+  document.querySelectorAll('.cam-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.cam === camName));
+}
+
+function persistGeminiSettings() {
+  localStorage.setItem('td_gemini_key', document.getElementById('gemini-key').value.trim());
+  localStorage.setItem('td_gemini_model', document.getElementById('gemini-model').value);
+  localStorage.setItem('td_gemini_on', document.getElementById('gemini-enabled').checked ? '1' : '0');
+  updateGeminiStatus();
+}
+
+function loadGeminiSettings() {
+  document.getElementById('gemini-key').value = localStorage.getItem('td_gemini_key') || '';
+  document.getElementById('gemini-model').value = localStorage.getItem('td_gemini_model') || 'gemini-2.0-flash';
+  document.getElementById('gemini-enabled').checked = localStorage.getItem('td_gemini_on') === '1';
+  updateGeminiStatus();
+}
+
+function geminiReady() {
+  return document.getElementById('gemini-enabled').checked && !!document.getElementById('gemini-key').value.trim();
+}
+
+function updateGeminiStatus(extra) {
+  const el = document.getElementById('ai-status');
+  if (extra) {
+    el.textContent = extra;
+    el.className = "bg-amber-950/90 text-amber-300 px-3.5 py-2 rounded-xl border border-amber-800/50 font-bold shadow-inner";
+    return;
+  }
+  if (geminiReady()) {
+    el.textContent = "Gemini: Armed";
+    el.className = "bg-emerald-950/90 text-emerald-300 px-3.5 py-2 rounded-xl border border-emerald-800/50 font-bold shadow-inner";
+  } else if (document.getElementById('gemini-enabled').checked) {
+    el.textContent = "Gemini: Need API key";
+    el.className = "bg-amber-950/90 text-amber-300 px-3.5 py-2 rounded-xl border border-amber-800/50 font-bold shadow-inner";
+  } else {
+    el.textContent = "Gemini: Offline fallback";
+    el.className = "bg-slate-900 text-slate-300 px-3.5 py-2 rounded-xl border border-slate-700 font-bold shadow-inner";
+  }
+}
+
+async function loadWeather() {
+  try {
+    const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=45.6935&longitude=-64.1025&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m&timezone=America%2FHalifax');
+    const data = await res.json();
+    const c = data.current;
+    const codes = {0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Drizzle',61:'Rain',71:'Snow',80:'Showers',95:'Thunder'};
+    const desc = codes[c.weather_code] || 'Mixed';
+    const icon = c.weather_code <= 1 ? '☀️' : c.weather_code <= 3 ? '⛅' : c.weather_code < 60 ? '🌫️' : c.weather_code < 70 ? '🌧️' : '❄️';
+    document.getElementById('weather-icon').textContent = icon;
+    document.getElementById('weather-text').textContent = `Springhill Jct: ${Math.round(c.temperature_2m)}°C · ${desc} · Wind ${Math.round(c.wind_speed_10m)} km/h`;
+  } catch {
+    document.getElementById('weather-text').textContent = 'Springhill Jct: 14°C · Overcast (cached)';
+  }
+}
+
+/* ===================== DATABASE ===================== */
+const DB_NAME = "BucktracksCorridorDB", DB_VERSION = 7, STORE = "activity";
+function initDB() {
+  const r = indexedDB.open(DB_NAME, DB_VERSION);
+  r.onerror = e => console.error(e.target.error);
+  r.onsuccess = e => { db = e.target.result; loadRecords(); };
+  r.onupgradeneeded = e => {
+    const d = e.target.result;
+    if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+  };
+}
+
+function saveRecord(rec) {
+  return new Promise(resolve => {
+    if (!db) { setTimeout(() => saveRecord(rec).then(resolve), 60); return; }
+    try {
+      const tx = db.transaction([STORE], "readwrite");
+      tx.objectStore(STORE).add(rec).onsuccess = () => { loadRecords(); resolve(true); };
+    } catch (err) { console.error(err); resolve(false); }
+  });
+}
+
+function updateRecordNotes(id, notes) {
+  if (!db) return;
+  const tx = db.transaction([STORE], "readwrite");
+  const store = tx.objectStore(STORE);
+  const req = store.get(id);
+  req.onsuccess = () => {
+    const rec = req.result;
+    if (rec) { rec.notes = notes; store.put(rec); loadRecords(); }
+  };
+}
+
+function deleteRecord(id) {
+  if (!db || !confirm("Delete this telemetry record permanently?")) return;
+  db.transaction([STORE], "readwrite").objectStore(STORE).delete(id).onsuccess = () => {
+    loadRecords();
+    toast("Record deleted", "warn");
+  };
+}
+
+function clearDatabase() {
+  if (!db || !confirm("Permanently erase ALL local telemetry records?")) return;
+  db.transaction([STORE], "readwrite").objectStore(STORE).clear().onsuccess = () => {
+    sightingMarkers.clearLayers();
+    transitVectorLayer.clearLayers();
+    if (activeMarkerHighlight) { map.removeLayer(activeMarkerHighlight); activeMarkerHighlight = null; }
+    if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+    usedNames.clear();
+    allTimelineRecords = [];
+    stopTimeline();
+    loadRecords();
+    toast("Database cleared", "warn");
+  };
+}
+
+function loadRecords() {
+  if (!db) return;
+  const tx = db.transaction([STORE], "readonly");
+  tx.objectStore(STORE).getAll().onsuccess = e => {
+    const records = (e.target.result || []).sort((a, b) => new Date(a.whenISO) - new Date(b.whenISO));
+    usedNames.clear();
+    records.forEach(r => { if (r.name) usedNames.add(r.name); });
+    allTimelineRecords = records;
+    filterAndRenderTable();
+    updateStats(records);
+    updateAdvice(records);
+    updateHourlyChart(records);
+    updateMapTimelineUI();
+  };
+}
+
+/* ===================== CLASSIFICATION ===================== */
+function pickHumanName(isDeer) {
+  if (!isDeer) return 'Non-Deer Object';
+  const available = namePool.filter(n => !usedNames.has(n));
+  const pool = available.length ? available : namePool;
+  const name = pool[Math.floor(Math.random() * pool.length)];
+  usedNames.add(name);
+  return name;
+}
+
+function formatWhen(d) {
+  if (!(d instanceof Date) || isNaN(d)) return 'Unknown time';
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function classifyDeerFallback(fileName) {
+  const lower = (fileName || '').toLowerCase();
+  if (/buck|antler|rack|trophy|mature/.test(lower)) return { isDeer: true, deerClass: 'Buck', confidence: 62 };
+  if (/spike/.test(lower)) return { isDeer: true, deerClass: 'Spike', confidence: 62 };
+  if (/fawn|spot|yearling|button/.test(lower)) return { isDeer: true, deerClass: 'Fawn', confidence: 58 };
+  if (/doe|female|nanny/.test(lower)) return { isDeer: true, deerClass: 'Doe', confidence: 58 };
+  if (/atv|truck|quad|person|human|coyote|bear|empty/.test(lower)) return { isDeer: false, deerClass: 'Non-Deer', confidence: 55 };
+  return { isDeer: true, deerClass: 'Doe', confidence: 40 };
+}
+
+function parseGeminiText(raw) {
+  if (!raw) throw new Error('Empty Gemini response');
+  let text = String(raw).trim();
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fence) text = fence[1].trim();
+  const obj = JSON.parse(text);
+  const allowed = ['Buck','Spike','Doe','Fawn','Non-Deer'];
+  let deerClass = allowed.includes(obj.deerClass) ? obj.deerClass : (obj.isDeer ? 'Doe' : 'Non-Deer');
+  const isDeer = deerClass !== 'Non-Deer' && obj.isDeer !== false;
+  if (!isDeer) deerClass = 'Non-Deer';
+  const confidence = Math.max(0, Math.min(100, Number(obj.confidence) || 50));
+  return {
+    isDeer,
+    deerClass,
+    confidence,
+    activity: String(obj.activity || '').slice(0, 120),
+    notes: String(obj.notes || '').slice(0, 240)
+  };
+}
+
+async function fileToJpegDataUrl(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('read fail'));
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('image fail'));
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } }
+        else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
+        canvas.width = Math.max(1, Math.round(w));
+        canvas.height = Math.max(1, Math.round(h));
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function classifyWithGemini(dataUrl) {
+  const key = document.getElementById('gemini-key').value.trim();
+  const model = document.getElementById('gemini-model').value;
+  const b64 = dataUrl.split(',')[1];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: GEMINI_PROMPT },
+          { inlineData: { mimeType: 'image/jpeg', data: b64 } }
+        ]
+      }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 256 }
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Gemini HTTP ${res.status} ${errText.slice(0, 180)}`);
+  }
+  const json = await res.json();
+  const text = json?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('\n') || '';
+  return parseGeminiText(text);
+}
+
+async function readExif(file) {
+  let when = null, temp = null;
+  try {
+    if (typeof exifr !== 'undefined') {
+      const data = await exifr.parse(file, { pick: ['DateTimeOriginal','CreateDate','ModifyDate','DateTime','AmbientTemperature','Temperature'] });
+      if (data) {
+        when = data.DateTimeOriginal || data.CreateDate || data.ModifyDate || data.DateTime || null;
+        if (when && !(when instanceof Date)) when = new Date(when);
+        temp = data.AmbientTemperature ?? data.Temperature ?? null;
+      }
+    }
+  } catch {}
+  if (!when || isNaN(when)) when = new Date(file.lastModified || Date.now());
+  return { when, temp };
+}
+
+function defaultActivity(hour, temp) {
+  let activity = 'Corridor transit';
+  if (hour >= 5 && hour < 8) activity = 'Early morning transition';
+  else if (hour >= 8 && hour < 17) activity = 'Daytime movement';
+  else if (hour >= 17 && hour < 20) activity = 'Evening transition';
+  else activity = 'Night movement';
+  if (temp != null) activity = `Temp ${temp}° · ` + activity;
+  return activity;
+}
+
+async function processOneImage(file) {
+  const exif = await readExif(file);
+  const when = exif.when;
+  const whenISO = when.toISOString();
+  const whenDisplay = formatWhen(when);
+  const hour = when.getHours();
+
+  const thumb = await fileToJpegDataUrl(file, 160, 0.70).catch(() => '');
+  const queryStill = await fileToJpegDataUrl(file, 640, 0.72).catch(() => thumb);
+
+  if (thumb) {
+    const strip = document.getElementById('preview-strip');
+    if (strip.children.length > 36) strip.removeChild(strip.lastChild);
+    const el = document.createElement('div');
+    el.className = 'relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-slate-700 shadow-sm cursor-pointer';
+    el.innerHTML = `<img src="${thumb}" class="w-full h-full object-cover"/><div class="absolute bottom-0 inset-x-0 bg-slate-950/85 text-[8px] font-mono text-center text-slate-300 py-0.5 truncate">${whenDisplay.slice(5)}</div>`;
+    el.onclick = () => openLightbox(thumb);
+    strip.prepend(el);
+  }
+
+  let isDeer = true, deerClass = 'Doe', confNum = 40, gemNotes = '', gemActivity = '';
+  if (geminiReady() && queryStill) {
+    try {
+      updateGeminiStatus('Gemini: Classifying…');
+      const g = await classifyWithGemini(queryStill);
+      isDeer = g.isDeer;
+      deerClass = g.deerClass;
+      confNum = g.confidence;
+      gemNotes = g.notes;
+      gemActivity = g.activity;
+    } catch (err) {
+      console.warn(err);
+      toast('Gemini failed — using filename fallback', 'warn');
+      const fb = classifyDeerFallback(file.name);
+      isDeer = fb.isDeer; deerClass = fb.deerClass; confNum = fb.confidence;
+      gemNotes = String(err.message || 'gemini error').slice(0, 180);
+    }
+  } else {
+    const fb = classifyDeerFallback(file.name);
+    isDeer = fb.isDeer; deerClass = fb.deerClass; confNum = fb.confidence;
+  }
+
+  const name = pickHumanName(isDeer);
+  let activity = gemActivity || defaultActivity(hour, exif.temp);
+  if (exif.temp != null && gemActivity && !/temp/i.test(gemActivity)) activity = `Temp ${exif.temp}° · ${gemActivity}`;
+
+  const rec = {
+    name, isDeer, deerClass, species: isDeer ? 'White-tailed Deer' : 'Other',
+    whenISO, whenDisplay, camera: currentCamera,
+    activity, confidence: confNum + '%',
+    hour, fileName: file.name, thumb: thumb || null, notes: gemNotes,
+    classifier: geminiReady() ? 'gemini' : 'fallback'
+  };
+  await saveRecord(rec);
+  updateGeminiStatus();
+  return rec;
+}
+
+async function drainQueue() {
+  if (isProcessing) return;
+  isProcessing = true;
+  const container = document.getElementById('progress-container');
+  const status = document.getElementById('process-status');
+  const bar = document.getElementById('progress-bar');
+  const pctEl = document.getElementById('progress-pct');
+  container.classList.remove('hidden');
+  totalBatchCount = Math.max(totalBatchCount, uploadQueue.length);
+
+  while (uploadQueue.length) {
+    const file = uploadQueue.shift();
+    const completed = totalBatchCount - uploadQueue.length;
+    const pct = Math.round((completed / totalBatchCount) * 100);
+    status.textContent = `Classifying: ${completed} of ${totalBatchCount}…`;
+    bar.style.width = pct + '%';
+    pctEl.textContent = pct + '%';
+    try { await processOneImage(file); } catch (e) { console.error(e); }
+    await new Promise(r => setTimeout(r, geminiReady() ? 220 : 6));
+  }
+  status.textContent = `Batch of ${totalBatchCount} complete · Map & log synchronized`;
+  bar.style.width = '100%';
+  pctEl.textContent = '100%';
+  toast(`Ingested ${totalBatchCount} images`, 'success');
+  setTimeout(() => { container.classList.add('hidden'); totalBatchCount = 0; }, 3200);
+  isProcessing = false;
+  updateGeminiStatus();
+}
+
+/* ===================== UI BINDINGS ===================== */
+document.getElementById('imageInput').addEventListener('change', e => {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  uploadQueue.push(...files);
+  drainQueue();
+  e.target.value = '';
+});
+
+const dropZone = document.getElementById('drop-zone');
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('drop-active'); }));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('drop-active'); }));
+dropZone.addEventListener('drop', e => {
+  const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+  if (files.length) { uploadQueue.push(...files); drainQueue(); }
+});
+
+/* ===================== TABLE + FILTERS ===================== */
+function filterAndRenderTable() {
+  const search = (document.getElementById('log-search')?.value || '').toLowerCase().trim();
+  const cls = document.getElementById('filter-class')?.value || '';
+  const cam = document.getElementById('filter-camera')?.value || '';
+  let filtered = [...allTimelineRecords].reverse();
+  if (search) filtered = filtered.filter(r =>
+    (r.name||'').toLowerCase().includes(search) ||
+    (r.deerClass||'').toLowerCase().includes(search) ||
+    (r.camera||'').toLowerCase().includes(search) ||
+    (r.activity||'').toLowerCase().includes(search) ||
+    (r.notes||'').toLowerCase().includes(search)
+  );
+  if (cls) filtered = filtered.filter(r => r.deerClass === cls);
+  if (cam) filtered = filtered.filter(r => r.camera === cam);
+  renderTable(filtered);
+}
+
+function renderTable(records) {
+  const tbody = document.getElementById('db-records');
+  if (!records.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="p-12 text-center text-slate-500 italic">No matching telemetry records.</td></tr>`;
+    return;
+  }
+  const display = records.slice(0, 400);
+  tbody.innerHTML = display.map(r => {
+    let badge = "text-emerald-400 bg-emerald-950/70 border-emerald-800/70";
+    if (r.deerClass === 'Buck') badge = "text-amber-400 bg-amber-950/70 border-amber-800/70 font-bold";
+    if (r.deerClass === 'Spike') badge = "text-sky-400 bg-sky-950/70 border-sky-800/70";
+    if (r.deerClass === 'Fawn') badge = "text-pink-400 bg-pink-950/70 border-pink-800/70";
+    if (r.deerClass === 'Non-Deer') badge = "text-slate-400 bg-slate-900 border-slate-700";
+    const thumb = r.thumb
+      ? `<img src="${r.thumb}" class="w-12 h-12 object-cover rounded-lg border border-slate-700 cursor-pointer hover:ring-2 hover:ring-amber-500/60" onclick="openLightbox('${r.thumb}')" alt="">`
+      : `<div class="w-12 h-12 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-600 text-lg">🦌</div>`;
+    return `<tr class="hover:bg-slate-900/70 transition-colors">
+      <td class="p-2.5">${thumb}</td>
+      <td class="p-3.5 text-white font-bold">${r.name || '—'}</td>
+      <td class="p-3.5"><span class="px-2.5 py-1 rounded-md border text-[10px] font-semibold tracking-wide ${badge}">${r.deerClass}</span></td>
+      <td class="p-3.5 text-slate-300 font-mono whitespace-nowrap">${r.whenDisplay}</td>
+      <td class="p-3.5 text-slate-400 font-medium">${r.camera}</td>
+      <td class="p-3.5 text-amber-300/90">${r.activity}</td>
+      <td class="p-3.5 text-sky-400 font-mono">${r.confidence}</td>
+      <td class="p-3.5"><input type="text" value="${(r.notes||'').replace(/"/g,'&quot;')}" placeholder="Add note…" class="w-28 bg-slate-900/80 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-amber-500/50" onchange="updateRecordNotes(${r.id}, this.value)"></td>
+      <td class="p-3.5"><button onclick="deleteRecord(${r.id})" class="text-slate-500 hover:text-rose-400 transition text-xs" title="Delete">✕</button></td>
+    </tr>`;
+  }).join('') + (records.length > 400 ? `<tr><td colspan="9" class="p-3 text-center text-slate-500">Showing latest 400 of ${records.length}</td></tr>` : '');
+}
+
+function updateStats(records) {
+  document.getElementById('stat-count').textContent = records.length;
+  const deer = records.filter(r => r.isDeer);
+  document.getElementById('stat-deer').textContent = deer.length;
+  document.getElementById('stat-bucks').textContent = deer.filter(r => r.deerClass === 'Buck' || r.deerClass === 'Spike').length;
+  const newest = [...records].sort((a,b) => new Date(b.whenISO) - new Date(a.whenISO))[0];
+  document.getElementById('stat-last').textContent = newest ? newest.whenDisplay : '—';
+  const hours = Array(24).fill(0);
+  deer.forEach(r => {
+    const d = new Date(r.whenISO);
+    const h = d.getHours();
+    if (!isNaN(h) && h >= 0 && h < 24) hours[h]++;
+  });
+  let peakH = null, peakN = -1;
+  hours.forEach((count, h) => { if (count > peakN) { peakN = count; peakH = h; } });
+  document.getElementById('stat-peak').textContent = (peakH !== null && peakN > 0)
+    ? `${String(peakH).padStart(2,'0')}:00–${String((peakH+1)%24).padStart(2,'0')}:00`
+    : '—';
+}
+
+function updateAdvice(records) {
+  const panel = document.getElementById('advice-panel');
+  const term = document.getElementById('terminal-advice');
+  const weatherEl = document.getElementById('weather-text').textContent;
+  const weather = `<p class="text-amber-300 text-xs font-medium mb-3 pb-3 border-b border-slate-800/80 flex items-center gap-2"><span>🌤️</span><span><strong>Live Micro-Climate:</strong> ${weatherEl}. Ideal for dawn/dusk corridor checks.</span></p>`;
+  if (!records.length) {
+    panel.innerHTML = weather + `<p class="text-slate-500 italic">Upload trail camera SD batch images to generate movement metrics.</p>`;
+    term.textContent = "Waiting for initial batch ingestion…";
+    return;
+  }
+  const deer = records.filter(r => r.isDeer);
+  const bucks = deer.filter(r => r.deerClass === 'Buck').length;
+  const spikes = deer.filter(r => r.deerClass === 'Spike').length;
+  const does = deer.filter(r => r.deerClass === 'Doe').length;
+  const fawns = deer.filter(r => r.deerClass === 'Fawn').length;
+  const names = [...new Set(deer.map(r => r.name))];
+  const actions = [];
+  actions.push(`<strong class="text-white">${deer.length}</strong> deer logged (${bucks} Bucks, ${spikes} Spikes, ${does} Does, ${fawns} Fawns). Active tags: <span class="text-emerald-400 font-mono">${names.slice(0,8).join(', ')||'—'}</span>${names.length>8?'…':''}.`);
+  if (bucks > 0) actions.push(`🔥 <strong class="text-amber-400">Buck Alert:</strong> Mature buck telemetry confirmed on the teardrop corridor. Inspect scent lines and prevailing wind before entering the north approach.`);
+  actions.push(`<strong class="text-white">Tactical recommendation:</strong> Prime dawn/dusk transition movement is active. Maintain scent control and verify camera batteries.`);
+  panel.innerHTML = weather + actions.map(a => `<p class="leading-relaxed">${a}</p>`).join('');
+  term.textContent = `${deer.length} deer logged. Primary corridor traffic verified.`;
+}
+
+function updateHourlyChart(records) {
+  const deer = records.filter(r => r.isDeer);
+  const hours = Array(24).fill(0);
+  deer.forEach(r => {
+    const d = new Date(r.whenISO);
+    const h = d.getHours();
+    if (!isNaN(h) && h >= 0 && h < 24) hours[h]++;
+  });
+  const max = Math.max(...hours, 1);
+  const chart = document.getElementById('hourly-chart');
+  chart.innerHTML = hours.map((n, h) => {
+    const pct = (n / max) * 100;
+    const isPeak = n === max && n > 0;
+    return `<div class="flex-1 flex flex-col items-center justify-end group cursor-pointer" title="${String(h).padStart(2,'0')}:00 — ${n} events" onclick="filterByHour(${h})">
+      <div class="hour-bar w-full rounded-t-sm ${isPeak ? 'bg-amber-400 shadow-tactical-glow' : 'bg-slate-700/80 group-hover:bg-amber-500/80'}" style="height:${Math.max(4, pct)}%"></div>
+    </div>`;
+  }).join('');
+}
+
+function filterByHour(h) {
+  const select = document.getElementById('log-search');
+  if (select) {
+    select.value = `${String(h).padStart(2,'0')}:`;
+    filterAndRenderTable();
+    toast(`Filtered log for hour ${String(h).padStart(2,'0')}:00`, 'info');
+  }
+}
+
+/* ===================== MAP + TIMELINE ===================== */
+function updateMapTimelineUI() {
+  sightingMarkers.clearLayers();
+  transitVectorLayer.clearLayers();
+  if (activeMarkerHighlight) { map.removeLayer(activeMarkerHighlight); activeMarkerHighlight = null; }
+
+  const startEl = document.getElementById('slider-start-time');
+  const endEl = document.getElementById('slider-end-time');
+  const statusEl = document.getElementById('slider-curr-status');
+  const labelEl = document.getElementById('map-timeline-label');
+  const slider = document.getElementById('timeline-slider');
+
+  if (!allTimelineRecords.length) {
+    startEl.textContent = "Start: —"; endEl.textContent = "End: —";
+    statusEl.textContent = "No data"; labelEl.textContent = "Upload camera batches to populate the timeline";
+    if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+    return;
+  }
+
+  startEl.textContent = `Start: ${allTimelineRecords[0].whenDisplay}`;
+  endEl.textContent = `End: ${allTimelineRecords[allTimelineRecords.length-1].whenDisplay}`;
+
+  let visible = [];
+  if (timelineSliderIndex >= 100) {
+    visible = allTimelineRecords;
+    statusEl.textContent = `All ${allTimelineRecords.length} records`;
+    labelEl.textContent = "Full chronological corridor history";
+    slider.value = 100;
+  } else {
+    const sliceLen = Math.max(1, Math.round((timelineSliderIndex / 100) * allTimelineRecords.length));
+    visible = allTimelineRecords.slice(0, sliceLen);
+    const cur = visible[visible.length-1];
+    statusEl.textContent = `Step ${sliceLen}/${allTimelineRecords.length} · ${cur.whenDisplay}`;
+    labelEl.textContent = `Active: ${cur.name} (${cur.deerClass}) @ ${cur.camera}`;
+    slider.value = timelineSliderIndex;
+    const coords = cameraCoords[cur.camera];
+    if (coords && map) {
+      activeMarkerHighlight = L.circleMarker(coords, { radius: 17, color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.95, weight: 4 }).addTo(map);
+      map.setView(coords, 15, { animate: true });
+    }
+  }
+
+  const heatPoints = [];
+  visible.forEach((rec, idx) => {
+    const c = cameraCoords[rec.camera] || [45.6938, -64.1018];
+    heatPoints.push([c[0], c[1], 0.7]);
+    let color = '#10b981', fill = '#34d399';
+    if (rec.deerClass === 'Buck') { color = '#f59e0b'; fill = '#fbbf24'; }
+    else if (rec.deerClass === 'Spike') { color = '#38bdf8'; fill = '#7dd3fc'; }
+    else if (rec.deerClass === 'Fawn') { color = '#ec4899'; fill = '#f472b6'; }
+    const isLatest = (idx === visible.length-1) && (timelineSliderIndex < 100);
+    const radius = isLatest ? 13 : 8;
+    const popupContent = rec.thumb
+      ? `<div class="text-center"><img src="${rec.thumb}" class="w-full max-h-28 object-cover rounded-lg mb-2 border border-slate-700 cursor-pointer" onclick="openLightbox('${rec.thumb}')"/><b>${rec.name} (${rec.deerClass})</b><br>${rec.whenDisplay}<br>${rec.camera}<br><span class="text-amber-300">${rec.activity}</span>${rec.notes ? `<br><span class="text-slate-400 text-[10px]">${rec.notes}</span>` : ''}</div>`
+      : `<b>${rec.name} (${rec.deerClass})</b><br>${rec.whenDisplay}<br>${rec.camera}<br>${rec.activity}`;
+    L.circleMarker(c, { radius, color, fillColor: fill, fillOpacity: 0.9, weight: 2.5 })
+      .bindPopup(popupContent).addTo(sightingMarkers);
+  });
+
+  if (visible.length > 1) {
+    for (let i = 1; i < visible.length; i++) {
+      const prev = visible[i-1], curr = visible[i];
+      const p1 = cameraCoords[prev.camera], p2 = cameraCoords[curr.camera];
+      if (p1 && p2 && prev.camera !== curr.camera) {
+        L.polyline([p1, p2], { color: '#38bdf8', weight: 3, opacity: 0.8, dashArray: '6,6' })
+          .bindPopup(`<b>Route Vector</b><br>${prev.camera} → ${curr.camera}`)
+          .addTo(transitVectorLayer);
+      }
+    }
+  }
+
+  if (heatEnabled && heatPoints.length) {
+    if (heatLayer) map.removeLayer(heatLayer);
+    heatLayer = L.heatLayer(heatPoints, { radius: 28, blur: 22, maxZoom: 17, gradient: { 0.2: '#0ea5e9', 0.5: '#f59e0b', 0.8: '#ef4444' } }).addTo(map);
+  } else if (heatLayer) {
+    map.removeLayer(heatLayer);
+    heatLayer = null;
+  }
+}
+
+function onTimelineSliderInput(val) {
+  stopTimeline();
+  timelineSliderIndex = parseInt(val, 10);
+  updateMapTimelineUI();
+}
+
+function stepTimeline(dir) {
+  if (!allTimelineRecords.length) return;
+  stopTimeline();
+  if (timelineSliderIndex >= 100) timelineSliderIndex = 100;
+  const step = Math.max(1, Math.floor(100 / allTimelineRecords.length));
+  timelineSliderIndex = Math.max(0, Math.min(100, timelineSliderIndex + dir * step));
+  updateMapTimelineUI();
+}
+
+function togglePlayTimeline() {
+  const btn = document.getElementById('play-btn');
+  if (timelineTimer) { stopTimeline(); return; }
+  if (!allTimelineRecords.length) return;
+  if (timelineSliderIndex >= 100) timelineSliderIndex = 0;
+  btn.textContent = "⏸ Pause";
+  btn.className = "px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white transition shadow-sm";
+  timelineTimer = setInterval(() => {
+    const step = Math.max(1, Math.floor(100 / allTimelineRecords.length));
+    timelineSliderIndex += step;
+    if (timelineSliderIndex >= 100) { timelineSliderIndex = 100; stopTimeline(); }
+    updateMapTimelineUI();
+  }, 1300);
+}
+
+function stopTimeline() {
+  if (timelineTimer) { clearInterval(timelineTimer); timelineTimer = null; }
+  const btn = document.getElementById('play-btn');
+  if (btn) {
+    btn.textContent = "▶ Play";
+    btn.className = "px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-xs font-bold text-slate-950 transition shadow-sm";
+  }
+}
+
+function toggleHeatmap() {
+  heatEnabled = !heatEnabled;
+  const btn = document.getElementById('heat-btn');
+  btn.classList.toggle('bg-amber-600', heatEnabled);
+  btn.classList.toggle('text-slate-950', heatEnabled);
+  updateMapTimelineUI();
+  toast(heatEnabled ? "Heatmap enabled" : "Heatmap disabled", "info");
+}
+
+function exportCSV() {
+  if (!allTimelineRecords.length) { toast("No records to export", "warn"); return; }
+  const headers = ["id","name","deerClass","whenDisplay","camera","activity","confidence","fileName","notes","classifier"];
+  const rows = allTimelineRecords.map(r => headers.map(h => {
+    let v = r[h] ?? '';
+    if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) v = `"${v.replace(/"/g,'""')}"`;
+    return v;
+  }).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bucktracks-hub-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("CSV exported", "success");
+}
+
+function exportJSON() {
+  if (!allTimelineRecords.length) { toast("No records to export", "warn"); return; }
+  const blob = new Blob([JSON.stringify(allTimelineRecords, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bucktracks-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("JSON backup exported", "success");
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error("Invalid format");
+      let count = 0;
+      for (const rec of data) {
+        delete rec.id;
+        await saveRecord(rec);
+        count++;
+      }
+      toast(`Imported ${count} records`, "success");
+    } catch (err) {
+      toast("Import failed: invalid JSON", "warn");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function openLightbox(src) {
+  if (!src) return;
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.remove('hidden');
+  document.getElementById('lightbox').classList.add('flex');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+  document.getElementById('lightbox').classList.remove('flex');
+}
+
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView([45.6935, -64.1025], 15);
+  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OpenTopoMap' });
+  const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri' });
+  topo.addTo(map);
+  const serviceRoad = L.polyline([[45.6908,-64.1075],[45.6920,-64.1055],[45.6930,-64.1035],[45.6938,-64.1018]], { color: '#f59e0b', weight: 4, opacity: 0.95 });
+  const teardrop = L.polygon([[45.6946,-64.1025],[45.6945,-64.1010],[45.6938,-64.1002],[45.6932,-64.1008],[45.6933,-64.1022],[45.6938,-64.1030]], { color: '#f59e0b', weight: 1.5, dashArray: '3,4', fillColor: '#f59e0b', fillOpacity: 0.12 });
+  const opening = L.polyline([[45.6948,-64.1018],[45.6935,-64.1018],[45.6920,-64.1018]], { color: '#94a3b8', weight: 2.5, dashArray: '4,6', opacity: 0.75 });
+  L.layerGroup([serviceRoad, teardrop, opening]).addTo(map);
+  Object.entries(cameraCoords).forEach(([n, c]) => L.marker(c).addTo(map).bindPopup(`<b>${n}</b><br>Corridor node`));
+  sightingMarkers.addTo(map);
+  transitVectorLayer.addTo(map);
+  L.control.layers({ "Topography": topo, "Satellite": sat }).addTo(map);
+  map.on('click', async e => {
+    const lat = e.latlng.lat.toFixed(5), lng = e.latlng.lng.toFixed(5);
+    const out = document.getElementById('contour-readout');
+    out.textContent = `Sampling elevation at ${lat}, ${lng}…`;
+    if (elevationMarker) map.removeLayer(elevationMarker);
+    elevationMarker = L.circleMarker(e.latlng, { radius: 6, color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.85 }).addTo(map);
+    try {
+      const res = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`);
+      const data = await res.json();
+      let elev = data?.results?.[0]?.elevation;
+      if (elev == null) elev = Math.round(45 + (45.70 - e.latlng.lat) * 500);
+      out.innerHTML = `<span class="text-emerald-400 font-mono font-bold">${Math.round(elev)} m</span> · Corridor Elevation Sample`;
+    } catch {
+      out.textContent = 'Elevation service offline — use Topography layer.';
+    }
+  });
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlayTimeline(); }
+  if (e.code === 'ArrowLeft') stepTimeline(-1);
+  if (e.code === 'ArrowRight') stepTimeline(1);
+  if (e.code === 'Escape') closeLightbox();
+});
+
+setCamera(currentCamera);
+loadGeminiSettings();
+initDB();
+loadWeather();
+initMap();
+</script>
+</body>
+</html>
