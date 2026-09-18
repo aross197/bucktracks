@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bucktracks Dashboard</title>
-    <!-- Leaflet CSS for Mapping -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>GitHub Hosted Auth App</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -13,92 +11,64 @@
             --text-color: #f8fafc;
             --accent-color: #3b82f6;
             --accent-hover: #2563eb;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
             --border-color: #334155;
-            --muted-color: #94a3b8;
         }
 
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 1rem;
             display: flex;
             justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
 
         .container {
-            width: 100%;
-            max-width: 650px;
+            width: 90%;
+            max-width: 400px;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
             box-sizing: border-box;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
+        .form-box { display: none; }
+        .form-box.active { display: block; }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.75rem;
-        }
-
-        header p {
-            margin: 0.25rem 0 0;
-            color: var(--muted-color);
-            font-size: 0.875rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 1.25rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-        }
-
-        .card h3 {
+        h2 {
             margin-top: 0;
-            margin-bottom: 0.75rem;
-            font-size: 1.15rem;
-            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
         }
 
-        #map {
-            width: 100%;
-            height: 280px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            z-index: 1;
-        }
-
-        .form-group {
-            margin-bottom: 0.875rem;
-        }
+        .input-group { margin-bottom: 1rem; }
 
         label {
             display: block;
-            margin-bottom: 0.35rem;
-            font-size: 0.85rem;
-            color: var(--muted-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
         }
 
-        input, textarea {
+        input {
             width: 100%;
-            padding: 0.65rem;
+            padding: 0.75rem;
             background: #0f172a;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             color: var(--text-color);
-            font-size: 0.95rem;
+            font-size: 1rem;
             box-sizing: border-box;
         }
 
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
+        input:focus { outline: none; border-color: var(--accent-color); }
 
         button {
             width: 100%;
@@ -110,169 +80,190 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
+            margin-top: 1rem;
             transition: background 0.2s;
         }
 
         button:hover { background: var(--accent-hover); }
 
-        .log-item {
-            background: #0f172a;
-            border: 1px solid var(--border-color);
-            padding: 0.875rem;
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            font-size: 0.9rem;
+        .switch-text {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
         }
 
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            color: var(--muted-color);
-            font-size: 0.8rem;
-            margin-bottom: 0.35rem;
-        }
-
-        .delete-btn {
-            background: transparent;
-            color: #ef4444;
-            border: none;
-            padding: 0;
-            width: auto;
-            font-size: 0.8rem;
+        .switch-text span {
+            color: var(--accent-color);
             cursor: pointer;
+            font-weight: 600;
         }
-        .delete-btn:hover { text-decoration: underline; background: transparent; }
+
+        .switch-text span:hover { text-decoration: underline; }
+
+        .message {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            text-align: center;
+            min-height: 1.25rem;
+        }
+
+        .error { color: var(--error-color); }
+        .success { color: var(--success-color); }
+
+        #dashboard-view { text-align: center; }
+        #dashboard-view button { background: var(--error-color); }
+        #dashboard-view button:hover { background: #dc2626; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <header>
-            <h1>Bucktracks</h1>
-            <p>Mapping & Field Tracking System</p>
-        </header>
-
-        <!-- MAP VIEW CARD -->
-        <div class="card">
-            <h3>🗺️ Interactive Map (Tap to Pin)</h3>
-            <div id="map"></div>
-        </div>
-
-        <!-- QUICK FIELD LOG -->
-        <div class="card">
-            <h3>📝 Quick Field Log</h3>
-            <form id="log-form">
-                <div class="form-group">
-                    <label for="log-location">Location / Coordinates</label>
-                    <input type="text" id="log-location" placeholder="Tap map or enter location..." required>
+        <!-- LOGIN FORM -->
+        <div id="login-box" class="form-box active">
+            <h2>Welcome Back</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-email">Email Address</label>
+                    <input type="email" id="login-email" required>
                 </div>
-                <div class="form-group">
-                    <label for="log-notes">Observations / Notes</label>
-                    <textarea id="log-notes" rows="2" placeholder="Sign found, wind conditions, camera ID..." required></textarea>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required>
                 </div>
-                <button type="submit">Save Log Entry</button>
+                <button type="submit">Log In</button>
             </form>
+            <div id="login-msg" class="message"></div>
+            <div class="switch-text">
+                Don't have an account? <span onclick="switchForm('register')">Register here</span>
+            </div>
         </div>
 
-        <!-- LOG HISTORY -->
-        <div class="card">
-            <h3>📋 Saved History</h3>
-            <div id="logs-container">
-                <p style="color: var(--muted-color); font-size: 0.875rem; text-align: center;">No logs saved yet.</p>
+        <!-- REGISTER FORM -->
+        <div id="register-box" class="form-box">
+            <h2>Create Account</h2>
+            <form id="register-form">
+                <div class="input-group">
+                    <label for="reg-name">Full Name</label>
+                    <input type="text" id="reg-name" required>
+                </div>
+                <div class="input-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" required>
+                </div>
+                <div class="input-group">
+                    <label for="reg-password">Password</label>
+                    <input type="password" id="reg-password" required>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+            <div id="register-msg" class="message"></div>
+            <div class="switch-text">
+                Already have an account? <span onclick="switchForm('login')">Log in</span>
             </div>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="form-box">
+            <h2>Dashboard</h2>
+            <p>Welcome back, <span id="user-display-name" style="color: var(--accent-color); font-weight: bold;"></span>!</p>
+            <p style="color: #94a3b8; font-size: 0.875rem;">Hosted live on GitHub Pages.</p>
+            <button onclick="logout()">Log Out</button>
         </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize Map centered around Cumberland County / Nova Scotia region
-        const map = L.map('map').setView([45.5, -64.2], 9);
+        // Secure password hashing function for browser storage
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        let activeMarker = null;
-
-        // Tapping map drops/moves a pin and autofills the location form field
-        map.on('click', function(e) {
-            const lat = e.latlng.lat.toFixed(4);
-            const lng = e.latlng.lng.toFixed(4);
-            
-            if (activeMarker) {
-                map.removeLayer(activeMarker);
+        window.addEventListener('DOMContentLoaded', () => {
+            const activeUser = sessionStorage.getItem('logged_in_user');
+            if (activeUser) {
+                showDashboard(activeUser);
             }
-            
-            activeMarker = L.marker([lat, lng]).addTo(map)
-              .bindPopup(`Lat: ${lat}, Lng: ${lng}`).openPopup();
-            
-            document.getElementById('log-location').value = `Lat: ${lat}, Lng: ${lng}`;
         });
 
-        // Handle Form Storage & UI Loading
-        document.addEventListener('DOMContentLoaded', loadLogs);
+        function switchForm(formType) {
+            document.getElementById('login-box').classList.remove('active');
+            document.getElementById('register-box').classList.remove('active');
+            document.getElementById('login-msg').textContent = '';
+            document.getElementById('register-msg').textContent = '';
 
-        document.getElementById('log-form').addEventListener('submit', function(e) {
+            if (formType === 'login') {
+                document.getElementById('login-box').classList.add('active');
+            } else {
+                document.getElementById('register-box').classList.add('active');
+            }
+        }
+
+        // Handle Registration
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const location = document.getElementById('log-location').value.trim();
-            const notes = document.getElementById('log-notes').value.trim();
-            const dateStr = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value;
+            const msgEl = document.getElementById('register-msg');
 
-            if (!location || !notes) return;
-
-            const newEntry = { id: Date.now(), location, notes, date: dateStr };
-            let logs = JSON.parse(localStorage.getItem('bucktracks_map_logs') || '[]');
-            logs.unshift(newEntry);
-            localStorage.setItem('bucktracks_map_logs', JSON.stringify(logs));
-
-            document.getElementById('log-location').value = '';
-            document.getElementById('log-notes').value = '';
-            if (activeMarker) {
-                map.removeLayer(activeMarker);
-                activeMarker = null;
-            }
-            loadLogs();
-        });
-
-        function loadLogs() {
-            const container = document.getElementById('logs-container');
-            const logs = JSON.parse(localStorage.getItem('bucktracks_map_logs') || '[]');
-
-            if (logs.length === 0) {
-                container.innerHTML = '<p style="color: var(--muted-color); font-size: 0.875rem; text-align: center;">No logs saved yet.</p>';
+            let users = JSON.parse(localStorage.getItem('gh_users') || '[]');
+            
+            if (users.some(u => u.email === email)) {
+                msgEl.textContent = 'Email is already registered.';
+                msgEl.className = 'message error';
                 return;
             }
 
-            container.innerHTML = '';
-            logs.forEach(log => {
-                const div = document.createElement('div');
-                div.className = 'log-item';
-                div.innerHTML = `
-                    <div class="log-header">
-                        <span><strong>${escapeHTML(log.location)}</strong></span>
-                        <span>${log.date}</span>
-                    </div>
-                    <p style="margin: 0.25rem 0 0.5rem;">${escapeHTML(log.notes)}</p>
-                    <button class="delete-btn" onclick="deleteLog(${log.id})">Delete entry</button>
-                `;
-                container.appendChild(div);
-            });
+            const hashedPassword = await hashPassword(password);
+            users.push({ name, email, password: hashedPassword });
+            localStorage.setItem('gh_users', JSON.stringify(users));
+
+            msgEl.textContent = 'Registration successful! Redirecting...';
+            msgEl.className = 'message success';
+            setTimeout(() => {
+                switchForm('login');
+                document.getElementById('register-form').reset();
+                msgEl.textContent = '';
+            }, 1000);
+        });
+
+        // Handle Login
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+            const msgEl = document.getElementById('login-msg');
+
+            let users = JSON.parse(localStorage.getItem('gh_users') || '[]');
+            const hashedPassword = await hashPassword(password);
+
+            const user = users.find(u => u.email === email && u.password === hashedPassword);
+
+            if (user) {
+                sessionStorage.setItem('logged_in_user', user.name);
+                showDashboard(user.name);
+                document.getElementById('login-form').reset();
+                msgEl.textContent = '';
+            } else {
+                msgEl.textContent = 'Invalid email or password.';
+                msgEl.className = 'message error';
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem('logged_in_user');
+            document.getElementById('dashboard-view').classList.remove('active');
+            switchForm('login');
         }
 
-        function deleteLog(id) {
-            let logs = JSON.parse(localStorage.getItem('bucktracks_map_logs') || '[]');
-            logs = logs.filter(l => l.id !== id);
-            localStorage.setItem('bucktracks_map_logs', JSON.stringify(logs));
-            loadLogs();
-        }
-
-        // Basic helper to prevent layout break injections from text input
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
+        function showDashboard(name) {
+            document.getElementById('login-box').classList.remove('active');
+            document.getElementById('register-box').classList.remove('active');
+            document.getElementById('dashboard-view').classList.add('active');
+            document.getElementById('user-display-name').textContent = name;
         }
     </script>
 </body>
