@@ -377,9 +377,15 @@ function persistGeminiSettings() {
 }
 
 function loadGeminiSettings() {
-  document.getElementById('gemini-key').value = localStorage.getItem('td_gemini_key') || '';
+  const savedKey = localStorage.getItem('td_gemini_key');
+  document.getElementById('gemini-key').value = savedKey || 'AQ.Ab8RN6LWLYJZZJhUMsHENFOxrKKoLxZ1NJridpwKLcXqQOUPHw';
   document.getElementById('gemini-model').value = localStorage.getItem('td_gemini_model') || 'gemini-2.0-flash';
-  document.getElementById('gemini-enabled').checked = localStorage.getItem('td_gemini_on') === '1';
+  const savedOn = localStorage.getItem('td_gemini_on');
+  document.getElementById('gemini-enabled').checked = savedOn !== null ? savedOn === '1' : true;
+  if (!savedKey) {
+    localStorage.setItem('td_gemini_key', 'AQ.Ab8RN6LWLYJZZJhUMsHENFOxrKKoLxZ1NJridpwKLcXqQOUPHw');
+    localStorage.setItem('td_gemini_on', '1');
+  }
   updateGeminiStatus();
 }
 
