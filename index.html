@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#04070d">
 <meta name="description" content="Elite local trail-camera telemetry for the Teardrop Corridor, Springhill Junction, NS">
-<title>Teardrop Corridor Hub · Elite Field Telemetry</title>
+<title>Bucktracks · Teardrop Corridor Hub</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -86,7 +86,7 @@ input[type=range] { accent-color: #f59e0b; }
       </div>
       <div>
         <div class="text-sm font-extrabold tracking-tight text-white flex items-center gap-2.5">
-          Teardrop Corridor Hub
+          Bucktracks Hub
           <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold tracking-wider">Elite v6.0</span>
         </div>
         <div class="text-xs text-slate-400 font-medium tracking-wide">Springhill Junction Node · Cumberland County, NS</div>
@@ -293,7 +293,7 @@ input[type=range] { accent-color: #f59e0b; }
 </section>
 
 <footer class="text-center text-xs text-slate-500 pt-8 border-t border-slate-900 space-y-1">
-  <div>Teardrop Corridor Hub · Springhill Junction, Cumberland County, NS · Secure Local Telemetry · Elite v6.0</div>
+  <div>Bucktracks Hub · Springhill Junction, Cumberland County, NS · Secure Local Telemetry · Elite v6.0</div>
   <div class="text-[10px] text-slate-600">Keyboard: ← → step timeline · Space play/pause · All data stays on this device</div>
 </footer>
 </main>
@@ -369,7 +369,7 @@ async function loadWeather() {
 }
 
 /* ===================== DATABASE ===================== */
-const DB_NAME = "TeardropCorridorDB", DB_VERSION = 7, STORE = "activity";
+const DB_NAME = "BucktracksCorridorDB", DB_VERSION = 7, STORE = "activity";
 function initDB() {
   const r = indexedDB.open(DB_NAME, DB_VERSION);
   r.onerror = e => console.error(e.target.error);
@@ -854,7 +854,7 @@ function exportCSV() {
   const blob = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `teardrop-corridor-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `bucktracks-hub-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast("CSV exported", "success");
@@ -865,7 +865,7 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(allTimelineRecords, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `teardrop-corridor-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `bucktracks-backup-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast("JSON backup exported", "success");
