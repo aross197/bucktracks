@@ -665,11 +665,26 @@ function updateStats(records) {
   document.getElementById('stat-bucks').textContent = deer.filter(r => r.deerClass === 'Buck' || r.deerClass === 'Spike').length;
   const newest = [...records].sort((a,b) => new Date(b.whenISO) - new Date(a.whenISO))[0];
   document.getElementById('stat-last').textContent = newest ? newest.whenDisplay : '—';
-  const hours = {};
-  deer.forEach(r => { const h = new Date(r.whenISO).getHours(); hours[h] = (hours[h]||0)+1; });
-  let peakH = null, peakN = 0;
-  Object.entries(hours).forEach(([h,n]) => { if (n > peakN) { peakN = n; peakH = +h; } });
-  document.getElementById('stat-peak').textContent = peakH !== null
+  
+  // Robust peak window calculation
+  const hours = Array(24).fill(0);
+  deer.forEach(r => {
+    const d = new Date(r.whenISO);
+    const h = d.getHours();
+    if (!isNaN(h) && h >= 0 && h < 24) {
+      hours[h]++;
+    }
+  });
+
+  let peakH = null, peakN = -1;
+  hours.forEach((count, h) => {
+    if (count > peakN) {
+      peakN = count;
+      peakH = h;
+    }
+  });
+
+  document.getElementById('stat-peak').textContent = (peakH !== null && peakN > 0)
     ? `${String(peakH).padStart(2,'0')}:00–${String((peakH+1)%24).padStart(2,'0')}:00`
     : '—';
 }
@@ -701,16 +716,30 @@ function updateAdvice(records) {
 function updateHourlyChart(records) {
   const deer = records.filter(r => r.isDeer);
   const hours = Array(24).fill(0);
-  deer.forEach(r => hours[new Date(r.whenISO).getHours()]++);
+  deer.forEach(r => {
+    const d = new Date(r.whenISO);
+    const h = d.getHours();
+    if (!isNaN(h) && h >= 0 && h < 24) hours[h]++;
+  });
+  
   const max = Math.max(...hours, 1);
   const chart = document.getElementById('hourly-chart');
   chart.innerHTML = hours.map((n, h) => {
     const pct = (n / max) * 100;
     const isPeak = n === max && n > 0;
-    return `<div class="flex-1 flex flex-col items-center justify-end group" title="${String(h).padStart(2,'0')}:00 — ${n} events">
-      <div class="hour-bar w-full rounded-t-sm ${isPeak ? 'bg-amber-400' : 'bg-slate-600 group-hover:bg-amber-500/80'}" style="height:${Math.max(4, pct)}%"></div>
+    return `<div class="flex-1 flex flex-col items-center justify-end group cursor-pointer" title="${String(h).padStart(2,'0')}:00 — ${n} events" onclick="filterByHour(${h})">
+      <div class="hour-bar w-full rounded-t-sm ${isPeak ? 'bg-amber-400 shadow-tactical-glow' : 'bg-slate-700/80 group-hover:bg-amber-500/80'}" style="height:${Math.max(4, pct)}%"></div>
     </div>`;
   }).join('');
+}
+
+function filterByHour(h) {
+  const select = document.getElementById('log-search');
+  if (select) {
+    select.value = `${String(h).padStart(2,'0')}:`;
+    filterAndRenderTable();
+    toast(`Filtered log for hour ${String(h).padStart(2,'0')}:00`, 'info');
+  }
 }
 
 /* ===================== MAP + TIMELINE ===================== */
