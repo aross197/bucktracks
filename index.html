@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BuckTracks AI · Teardrop Corridor Engine</title>
+<title>TrailCam · Teardrop Corridor Hub</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -19,14 +19,14 @@ tailwind.config = {
   }
 }
 </script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-body{font-family:Inter,system-ui,sans-serif;background:#0b0f19}
+body{font-family:Inter,system-ui,sans-serif}
 #map{height:380px;border-radius:14px}
 .leaflet-container{background:#0b0f19;font-family:Inter,sans-serif}
 .leaflet-control-layers,.leaflet-bar a{border-radius:10px!important;border:1px solid #1e293b!important;background:#0f172a!important;color:#e2e8f0!important}
@@ -39,127 +39,137 @@ body{font-family:Inter,system-ui,sans-serif;background:#0b0f19}
 .story-section{scroll-margin-top:5rem}
 </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased pb-20">
 
-<header class="sticky top-0 z-50 glass border-b border-slate-800/80 backdrop-blur-xl">
-  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+<nav class="sticky top-0 z-50 glass border-b border-slate-800/80 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg">🦌</div>
+      <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shadow-glow">
+        <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+      </div>
       <div>
-        <div class="font-bold text-sm tracking-tight">BuckTracks AI</div>
-        <div class="text-[11px] text-slate-400">Teardrop Corridor · Springhill Junction</div>
+        <div class="text-sm font-bold tracking-tight">Teardrop Corridor</div>
+        <div class="text-[10px] text-slate-400 tracking-wide">Springhill Junction · TrailCam Hub</div>
       </div>
     </div>
-    <nav class="hidden sm:flex items-center gap-1 text-xs font-medium">
-      <a href="#hub" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 text-slate-300">Upload</a>
-      <a href="#advice" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 text-slate-300">AI Engine</a>
-      <a href="#mapsec" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 text-slate-300">Map</a>
-      <a href="#log" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 text-slate-300">Log</a>
-    </nav>
-    <span id="ai-status" class="text-[11px] font-medium bg-amber-950/80 text-amber-300 px-3 py-1.5 rounded-full border border-amber-800/50 status-pulse">AI: Loading…</span>
+    <div class="flex items-center gap-2">
+      <div id="weather-pill" class="text-[11px] font-medium bg-slate-900/90 text-slate-300 px-3 py-1.5 rounded-full border border-slate-800 flex items-center gap-1.5">
+        <span>☁️</span> <span id="weather-text">Springhill Junction: 14°C, Cloudy</span>
+      </div>
+      <span id="ai-status" class="text-[11px] font-medium bg-amber-950/80 text-amber-300 px-3 py-1.5 rounded-full border border-amber-800/50 status-pulse">AI: Loading…</span>
+    </div>
   </div>
-</header>
+</nav>
 
 <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
 <section id="hub" class="story-section">
   <div class="glass card-border rounded-2xl p-5 shadow-card">
-    <h1 class="text-lg font-bold text-white">Photo Dump Upload Hub</h1>
-    <p class="text-xs text-slate-400 mt-0.5">Select downloaded camera batches. Queued processing parses EXIF metadata and runs local COCO-SSD detection + corridor intelligence.</p>
-    <div class="mt-4">
-      <div class="text-[10px] uppercase tracking-wider text-slate-500 mb-2">Active Camera Target</div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <button data-cam="Teardrop North Cam" onclick="setCamera(this.dataset.cam)" class="cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-amber-500/20 border-amber-500/60 text-amber-300">📍 Teardrop North Cam</button>
-        <button data-cam="Teardrop South Approach" onclick="setCamera(this.dataset.cam)" class="cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800">📍 Teardrop South Approach</button>
-        <button data-cam="Service Road Edge" onclick="setCamera(this.dataset.cam)" class="cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800">📍 Service Road Edge</button>
+    <div class="flex flex-col gap-3 mb-4">
+      <div>
+        <h1 class="text-lg font-bold text-white">Photo Dump Upload Hub</h1>
+        <p class="text-xs text-slate-400 mt-0.5">Select downloaded camera batches. Queued processing parses EXIF metadata and runs detection locally.</p>
+      </div>
+      <div>
+        <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1.5 font-semibold">Active Camera Target:</label>
+        <div id="camera-pills" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <button type="button" onclick="setCamera('Teardrop North Cam')" class="cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-amber-500/20 border-amber-500/60 text-amber-300" data-cam="Teardrop North Cam">📍 Teardrop North Cam</button>
+          <button type="button" onclick="setCamera('Teardrop South Approach')" class="cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800" data-cam="Teardrop South Approach">📍 Teardrop South Approach</button>
+          <button type="button" onclick="setCamera('Service Road Edge')" class="cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800" data-cam="Service Road Edge">📍 Service Road Edge</button>
+        </div>
       </div>
     </div>
-    <label class="mt-5 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-700 rounded-xl py-10 cursor-pointer hover:border-amber-500/50 hover:bg-slate-900/40 transition">
-      <div class="text-3xl">📷 📁</div>
-      <div class="text-sm font-medium text-slate-200">Tap to select downloaded camera batch</div>
-      <div class="text-[11px] text-slate-500">Multi-select from phone gallery supported · Queued local processing</div>
-      <input id="imageInput" type="file" accept="image/*" multiple class="hidden">
+    
+    <label class="block cursor-pointer">
+      <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-xl p-8 text-center transition bg-slate-950/40">
+        <div class="text-3xl mb-2">📱📁</div>
+        <div class="text-sm font-semibold text-slate-200">Tap to select downloaded camera batch</div>
+        <div class="text-xs text-slate-500 mt-1">Multi-select from phone gallery supported · Queued processing</div>
+        <input type="file" id="imageInput" accept="image/*" multiple class="hidden"/>
+      </div>
     </label>
-    <div id="progress-wrap" class="mt-4 hidden">
-      <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-        <span id="progress-label">Processing queue…</span>
-        <span id="progress-pct">0%</span>
+
+    <div id="progress-container" class="mt-4 hidden space-y-1.5">
+      <div class="flex justify-between text-xs font-mono">
+        <span id="process-status" class="text-amber-400">Processing queue...</span>
+        <span id="progress-pct" class="text-slate-400">0%</span>
       </div>
-      <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-        <div id="progress-bar" class="h-full bg-amber-500 transition-all duration-300" style="width:0%"></div>
+      <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+        <div id="progress-bar" class="bg-amber-500 h-2 rounded-full transition-all duration-200" style="width: 0%"></div>
       </div>
     </div>
+
+    <div id="preview-strip" class="mt-4 flex gap-2 overflow-x-auto pb-2"></div>
   </div>
 </section>
 
 <section id="advice" class="story-section">
   <div class="glass card-border rounded-2xl p-5 shadow-card">
-    <div class="flex items-center justify-between gap-3 mb-3">
-      <h2 class="text-sm font-bold uppercase tracking-wider text-amber-400">AI Engine · Corridor Intelligence</h2>
-      <span class="text-[10px] text-slate-500">Local · No cloud</span>
-    </div>
-    <div id="advice-panel" class="text-sm text-slate-300 leading-relaxed space-y-3">
-      <p class="text-slate-500">Upload photos to activate the full analysis engine. It will report peak windows, named deer patterns, camera rankings, movement timing, and concrete sit recommendations for the Teardrop Corridor.</p>
+    <h2 class="text-sm font-bold uppercase tracking-widest text-amber-400 mb-3">What to do & Weather Analysis</h2>
+    <div id="advice-panel" class="text-sm text-slate-300 leading-relaxed space-y-2">
+      <p class="text-slate-500">Upload photos to get activity summary and recommendations for this corridor.</p>
     </div>
   </div>
 </section>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-  <section id="mapsec" class="lg:col-span-2 story-section">
-    <div class="glass card-border rounded-2xl p-4 shadow-card">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Corridor Map</h2>
-        <span class="text-[10px] text-slate-500">OpenTopo · Springhill Junction</span>
-      </div>
-      <div id="map"></div>
-      <div id="contour-readout" class="mt-2 text-[11px] text-slate-500">Click map for elevation.</div>
+<section id="map-section" class="story-section grid lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 glass card-border rounded-2xl p-4 shadow-card">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-xs font-bold uppercase tracking-widest text-slate-300">Corridor map</h2>
+      <span class="text-[10px] text-slate-500">OpenTopo · Springhill Junction</span>
     </div>
-  </section>
-
-  <section class="story-section">
-    <div class="glass card-border rounded-2xl p-4 shadow-card h-full">
-      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Activity Snapshot</h2>
-      <div class="space-y-2.5 text-sm">
-        <div class="flex justify-between"><span class="text-slate-400">Records</span><span id="stat-records" class="font-semibold text-white">0</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Deer named</span><span id="stat-deer" class="font-semibold text-emerald-400">0</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Peak window</span><span id="stat-peak" class="font-semibold text-amber-300">—</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Last hit</span><span id="stat-last" class="font-semibold text-slate-200">—</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Top camera</span><span id="stat-topcam" class="font-semibold text-slate-200">—</span></div>
-        <div class="flex justify-between"><span class="text-slate-400">Avg conf</span><span id="stat-conf" class="font-semibold text-slate-200">—</span></div>
-      </div>
-      <p class="mt-4 text-[11px] text-slate-500">Click map for elevation context.</p>
+    <div id="map"></div>
+  </div>
+  <div class="glass card-border rounded-2xl p-4 shadow-card space-y-3">
+    <h2 class="text-xs font-bold uppercase tracking-widest text-slate-300">Activity snapshot</h2>
+    <div id="stats-panel" class="text-xs space-y-2 text-slate-400">
+      <div class="flex justify-between"><span>Records</span><span id="stat-count" class="text-white font-semibold">0</span></div>
+      <div class="flex justify-between"><span>Deer named</span><span id="stat-deer" class="text-emerald-400 font-semibold">0</span></div>
+      <div class="flex justify-between"><span>Peak window</span><span id="stat-peak" class="text-amber-400 font-semibold">—</span></div>
+      <div class="flex justify-between"><span>Last hit</span><span id="stat-last" class="text-slate-300">—</span></div>
     </div>
-  </section>
-</div>
+    <div id="contour-readout" class="text-[11px] text-slate-500 border-t border-slate-800 pt-3">Click map for elevation.</div>
+  </div>
+</section>
 
 <section id="log" class="story-section">
   <div class="glass card-border rounded-2xl p-5 shadow-card">
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
       <div>
-        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Deer & Activity Log</h2>
-        <p class="text-[11px] text-slate-500 mt-0.5">Local IndexedDB · names · date/time · camera · notes</p>
+        <h2 class="text-base font-bold text-white">Deer & activity log</h2>
+        <p class="text-[11px] text-slate-500">Local database · names · date/time · camera · notes</p>
       </div>
-      <button onclick="clearDatabase()" class="text-[11px] px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 border border-slate-700 text-slate-300">Clear log</button>
+      <button onclick="clearDatabase()" class="text-xs px-3 py-2 rounded-lg bg-slate-800 hover:bg-rose-950 text-slate-400 hover:text-rose-300 border border-slate-700">Clear log</button>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs">
+    <div class="overflow-x-auto max-h-80 overflow-y-auto rounded-xl">
+      <table class="w-full text-left text-xs">
         <thead>
-          <tr class="text-left text-slate-500 border-b border-slate-800">
-            <th class="py-2 pr-3 font-medium">Name</th>
-            <th class="py-2 pr-3 font-medium">When</th>
-            <th class="py-2 pr-3 font-medium">Camera</th>
-            <th class="py-2 pr-3 font-medium">Activity</th>
-            <th class="py-2 font-medium">Conf</th>
+          <tr class="text-[10px] uppercase tracking-wider text-slate-500 border-b border-slate-800 sticky top-0 bg-slate-900/95">
+            <th class="p-3 font-semibold">Name</th>
+            <th class="p-3 font-semibold">When</th>
+            <th class="p-3 font-semibold">Camera</th>
+            <th class="p-3 font-semibold">Activity</th>
+            <th class="p-3 font-semibold">Conf</th>
           </tr>
         </thead>
-        <tbody id="log-body">
-          <tr><td colspan="5" class="py-6 text-center text-slate-600">No records yet. Upload photos to start.</td></tr>
+        <tbody id="db-records">
+          <tr><td colspan="5" class="p-6 text-center text-slate-500">No records yet. Upload photos to start.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </section>
 
+<!-- Floating Mobile Upload Button -->
+<div class="fixed bottom-4 right-4 z-40 sm:hidden">
+  <a href="#hub" class="flex items-center gap-2 bg-amber-500 text-slate-950 font-bold px-4 py-3 rounded-2xl shadow-glow text-xs border border-amber-400">
+    <span>⬆️ Upload Photos</span>
+  </a>
+</div>
+
+<footer class="text-center text-[11px] text-slate-600 py-6">
+  Teardrop Corridor · Springhill Junction · Cumberland County, NS · Local-only data
+</footer>
 </main>
 
 <script>
@@ -169,29 +179,29 @@ let uploadQueue = [], totalBatchCount = 0;
 let isProcessing = false;
 let currentCamera = "Teardrop North Cam";
 
+function setCamera(camName) {
+  currentCamera = camName;
+  document.querySelectorAll('.cam-pill').forEach(btn => {
+    if (btn.dataset.cam === camName) {
+      btn.className = "cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-amber-500/20 border-amber-500/60 text-amber-300";
+    } else {
+      btn.className = "cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800";
+    }
+  });
+}
+
+let namePool = [
+  "Rusty","Spike","Shadow","Oak","Willow","Ridge","Ash","Buckley","Nova","Cedar",
+  "Maple","Frost","Storm","Echo","Briar","Thorn","Hazel","Pine","Scout","Ranger",
+  "Daisy","Belle","Fawn","Clover","Sage","Ivy","Luna","Moss","Fern","Amber"
+];
+let usedNames = new Set();
+
 const cameraCoords = {
   "Teardrop North Cam": [45.6942, -64.1018],
   "Teardrop South Approach": [45.6936, -64.1005],
   "Service Road Edge": [45.6939, -64.1028]
 };
-
-const namePool = [
-  "Rusty","Spike","Shadow","Oak","Willow","Ridge","Ash","Buckley","Nova","Cedar",
-  "Maple","Frost","Storm","Echo","Briar","Thorn","Hazel","Pine","Scout","Ranger",
-  "Daisy","Belle","Fawn","Clover","Sage","Ivy","Luna","Moss","Fern","Amber",
-  "Titan","Ghost","Copper","Blaze","Ranger","Duke","King","Boss","Slick","Tank"
-];
-let usedNames = new Set();
-
-function setCamera(camName) {
-  currentCamera = camName;
-  document.querySelectorAll('.cam-pill').forEach(btn => {
-    const active = btn.dataset.cam === camName;
-    btn.className = active
-      ? "cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-amber-500/20 border-amber-500/60 text-amber-300"
-      : "cam-pill px-3 py-2.5 rounded-xl text-xs font-medium border text-left transition bg-slate-900/80 border-slate-700 text-slate-300 hover:bg-slate-800";
-  });
-}
 
 async function loadAIModel() {
   const el = document.getElementById('ai-status');
@@ -201,12 +211,12 @@ async function loadAIModel() {
     el.textContent = "AI: Active";
     el.className = "text-[11px] font-medium bg-emerald-950/80 text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-800/50";
   } catch (e) {
-    el.textContent = "AI: Offline (EXIF only)";
+    el.textContent = "AI: Offline (still logs EXIF)";
     el.className = "text-[11px] font-medium bg-rose-950/80 text-rose-300 px-3 py-1.5 rounded-full border border-rose-800/50";
   }
 }
 
-const DB_NAME = "BuckTracksAI_DB", DB_VERSION = 3, STORE = "activity";
+const DB_NAME = "TeardropCorridorDB", DB_VERSION = 2, STORE = "activity";
 function initDB() {
   const r = indexedDB.open(DB_NAME, DB_VERSION);
   r.onerror = e => console.error(e);
@@ -217,14 +227,16 @@ function initDB() {
       const s = d.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
       s.createIndex("when", "whenISO", { unique: false });
       s.createIndex("name", "name", { unique: false });
-      s.createIndex("camera", "camera", { unique: false });
     }
   };
 }
 
 function saveRecord(rec) {
   if (!db) return;
-  db.transaction([STORE], "readwrite").objectStore(STORE).add(rec).onsuccess = () => loadRecords();
+  const tx = db.transaction([STORE], "readwrite");
+  tx.objectStore(STORE).add(rec).onsuccess = () => {
+    loadRecords();
+  };
 }
 
 function clearDatabase() {
@@ -239,310 +251,260 @@ function clearDatabase() {
 function loadRecords() {
   if (!db) return;
   db.transaction([STORE], "readonly").objectStore(STORE).getAll().onsuccess = e => {
-    const records = (e.target.result || []).sort((a, b) => new Date(b.whenISO) - new Date(a.whenISO));
+    const records = e.target.result || [];
+    records.sort((a, b) => new Date(b.whenISO) - new Date(a.whenISO));
+    
     usedNames.clear();
     records.forEach(r => { if (r.name) usedNames.add(r.name); });
+
     renderTable(records);
     updateStats(records);
     updateAdvice(records);
+
     sightingMarkers.clearLayers();
     records.forEach(rec => {
       const c = cameraCoords[rec.camera] || [45.6938, -64.1018];
-      L.circleMarker(c, {
-        radius: rec.isDeer ? 8 : 5,
-        color: rec.isDeer ? '#10b981' : '#64748b',
-        fillColor: rec.isDeer ? '#34d399' : '#94a3b8',
-        fillOpacity: 0.8,
-        weight: 2
-      }).bindPopup(`<b>${rec.name}</b><br>${rec.whenDisplay}<br>${rec.activity}<br>Conf: ${(rec.conf * 100).toFixed(0)}%`)
+      L.circleMarker(c, { radius: 7, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.75, weight: 2 })
+        .bindPopup(`<b>${rec.name}</b><br>${rec.whenDisplay}<br>${rec.activity}`)
         .addTo(sightingMarkers);
     });
   };
 }
 
 function renderTable(records) {
-  const body = document.getElementById('log-body');
+  const tbody = document.getElementById('db-records');
   if (!records.length) {
-    body.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-600">No records yet. Upload photos to start.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">No records yet. Upload photos to start.</td></tr>`;
     return;
   }
-  body.innerHTML = records.map(r => `
-    <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
-      <td class="py-2.5 pr-3 font-medium ${r.isDeer ? 'text-emerald-400' : 'text-slate-300'}">${r.name}</td>
-      <td class="py-2.5 pr-3 text-slate-400 whitespace-nowrap">${r.whenDisplay}</td>
-      <td class="py-2.5 pr-3 text-slate-400">${r.camera.replace('Teardrop ', '').replace(' Cam', '')}</td>
-      <td class="py-2.5 pr-3 text-slate-300">${r.activity}</td>
-      <td class="py-2.5 text-slate-500">${(r.conf * 100).toFixed(0)}%</td>
-    </tr>`).join('');
+  const displayRecords = records.slice(0, 200);
+  tbody.innerHTML = displayRecords.map(r => `
+    <tr class="hover:bg-slate-800/40 border-b border-slate-800/50">
+      <td class="p-3 text-emerald-400 font-semibold">${r.name}</td>
+      <td class="p-3 text-slate-300 font-mono whitespace-nowrap">${r.whenDisplay}</td>
+      <td class="p-3 text-slate-400">${r.camera}</td>
+      <td class="p-3 text-amber-400/90">${r.activity}</td>
+      <td class="p-3 text-sky-400">${r.confidence}</td>
+    </tr>`).join('') + (records.length > 200 ? `<tr><td colspan="5" class="p-3 text-center text-slate-500">Showing latest 200 of ${records.length} records in log view</td></tr>` : '');
 }
 
 function updateStats(records) {
+  document.getElementById('stat-count').textContent = records.length;
   const deer = records.filter(r => r.isDeer);
-  document.getElementById('stat-records').textContent = records.length;
   document.getElementById('stat-deer').textContent = deer.length;
-
-  if (!records.length) {
-    document.getElementById('stat-peak').textContent = '—';
-    document.getElementById('stat-last').textContent = '—';
-    document.getElementById('stat-topcam').textContent = '—';
-    document.getElementById('stat-conf').textContent = '—';
-    return;
-  }
-
-  // Peak hour
-  const hourCount = {};
+  document.getElementById('stat-last').textContent = records[0] ? records[0].whenDisplay : '—';
+  const hours = {};
   deer.forEach(r => {
     const h = new Date(r.whenISO).getHours();
-    hourCount[h] = (hourCount[h] || 0) + 1;
+    hours[h] = (hours[h] || 0) + 1;
   });
-  let peakH = null, peakC = 0;
-  Object.entries(hourCount).forEach(([h, c]) => { if (c > peakC) { peakC = c; peakH = +h; } });
-  document.getElementById('stat-peak').textContent = peakH != null
-    ? `${String(peakH).padStart(2, '0')}:00–${String((peakH + 1) % 24).padStart(2, '0')}:00`
-    : '—';
-
-  document.getElementById('stat-last').textContent = records[0].whenDisplay;
-
-  // Top camera
-  const camCount = {};
-  deer.forEach(r => { camCount[r.camera] = (camCount[r.camera] || 0) + 1; });
-  const topCam = Object.entries(camCount).sort((a, b) => b[1] - a[1])[0];
-  document.getElementById('stat-topcam').textContent = topCam
-    ? topCam[0].replace('Teardrop ', '').replace(' Cam', '') + ` (${topCam[1]})`
-    : '—';
-
-  const avgConf = deer.length
-    ? (deer.reduce((s, r) => s + r.conf, 0) / deer.length * 100).toFixed(0) + '%'
-    : '—';
-  document.getElementById('stat-conf').textContent = avgConf;
+  let peakH = null, peakN = 0;
+  Object.entries(hours).forEach(([h, n]) => { if (n > peakN) { peakN = n; peakH = +h; } });
+  if (peakH !== null) {
+    const end = (peakH + 1) % 24;
+    document.getElementById('stat-peak').textContent = `${String(peakH).padStart(2,'0')}:00–${String(end).padStart(2,'0')}:00`;
+  } else {
+    document.getElementById('stat-peak').textContent = '—';
+  }
 }
 
 function updateAdvice(records) {
   const panel = document.getElementById('advice-panel');
+  const weatherContext = `<p class="text-amber-300 text-xs mb-2 pb-2 border-b border-slate-800">🌤️ <strong>Springhill Weather Context:</strong> Currently 14°C and cloudy (light rain arriving tonight, 35% chance; steady rain Friday peaking near 70–75%). Plan camera maintenance and checks during drier clearing windows ahead of Saturday's sunny 16°C rebound.</p>`;
+  
   if (!records.length) {
-    panel.innerHTML = `<p class="text-slate-500">Upload photos to activate the full analysis engine. It will report peak windows, named deer patterns, camera rankings, movement timing, and concrete sit recommendations for the Teardrop Corridor.</p>`;
+    panel.innerHTML = weatherContext + `<p class="text-slate-500">Upload photos to get activity summary and recommendations for this corridor.</p>`;
     return;
   }
-
   const deer = records.filter(r => r.isDeer);
   const total = records.length;
+  const hours = deer.map(r => new Date(r.whenISO).getHours());
+  const night = hours.filter(h => h >= 20 || h < 5).length;
+  const dawnDusk = hours.filter(h => (h >= 5 && h < 8) || (h >= 17 && h < 20)).length;
+  const day = hours.filter(h => h >= 8 && h < 17).length;
+  const last7 = deer.filter(r => (Date.now() - new Date(r.whenISO).getTime()) < 7 * 864e5);
   const names = [...new Set(deer.map(r => r.name))];
-
-  // Hour histogram
-  const hourBuckets = Array(24).fill(0);
-  deer.forEach(r => hourBuckets[new Date(r.whenISO).getHours()]++);
-  const peakHours = hourBuckets
-    .map((c, h) => ({ h, c }))
-    .filter(x => x.c > 0)
-    .sort((a, b) => b.c - a.c)
-    .slice(0, 3);
-
-  // Camera ranking
-  const camStats = {};
-  deer.forEach(r => {
-    if (!camStats[r.camera]) camStats[r.camera] = { count: 0, hours: [] };
-    camStats[r.camera].count++;
-    camStats[r.camera].hours.push(new Date(r.whenISO).getHours());
-  });
-  const rankedCams = Object.entries(camStats).sort((a, b) => b[1].count - a[1].count);
-
-  // Day vs night
-  const dayDeer = deer.filter(r => {
-    const h = new Date(r.whenISO).getHours();
-    return h >= 6 && h < 20;
-  }).length;
-  const nightDeer = deer.length - dayDeer;
-
-  // Recency
-  const now = Date.now();
-  const last7 = deer.filter(r => now - new Date(r.whenISO).getTime() < 7 * 864e5).length;
-  const last48 = deer.filter(r => now - new Date(r.whenISO).getTime() < 2 * 864e5).length;
-
-  // Moon / season heuristic (simple date-based)
-  const sampleDate = deer.length ? new Date(deer[0].whenISO) : new Date();
-  const month = sampleDate.getMonth() + 1;
-  let seasonNote = '';
-  if (month >= 9 && month <= 11) seasonNote = 'Pre-rut / rut window — expect increased daylight movement and scrape activity.';
-  else if (month === 12 || month <= 2) seasonNote = 'Late season — food sources and thermal cover dominate movement.';
-  else if (month >= 3 && month <= 5) seasonNote = 'Spring — green-up and fawning; bucks often more predictable on edges.';
-  else seasonNote = 'Summer — bachelor groups and velvet; pattern food + water + shade.';
-
-  let html = [];
-
-  html.push(`<p><strong class="text-white">${deer.length}</strong> deer detections from <strong class="text-white">${total}</strong> frames. Named individuals: <span class="text-emerald-400">${names.slice(0, 10).join(', ') || '—'}</span>${names.length > 10 ? '…' : ''}.</p>`);
-
-  if (peakHours.length) {
-    const windows = peakHours.map(p => `${String(p.h).padStart(2,'0')}:00–${String((p.h+1)%24).padStart(2,'0')}:00 (${p.c})`).join(' · ');
-    html.push(`<p><span class="text-amber-400 font-semibold">Peak activity windows:</span> ${windows}</p>`);
+  let peakLabel = 'mixed times';
+  if (night >= dawnDusk && night >= day) peakLabel = 'mostly nocturnal';
+  else if (dawnDusk >= night && dawnDusk >= day) peakLabel = 'dawn / dusk focused';
+  else if (day > 0) peakLabel = 'some daylight movement';
+  const actions = [];
+  actions.push(`<strong class="text-white">${deer.length}</strong> deer detections logged (${total} total frames). Named individuals: <span class="text-emerald-400">${names.slice(0, 8).join(', ') || '—'}</span>${names.length > 8 ? '…' : ''}.`);
+  actions.push(`Activity is <span class="text-amber-400">${peakLabel}</span>.`);
+  if (night > dawnDusk) {
+    actions.push(`<strong class="text-white">Do this:</strong> Check cameras in the morning. Focus SD cards / battery swaps after overnight. Expect best video after dark on the service-road approach.`);
+  } else if (dawnDusk >= night) {
+    actions.push(`<strong class="text-white">Do this:</strong> Be in position 45–60 min before sunset and again at first light. Keep the south-facing view clear — that is when they are most likely to cross the opening.`);
+  } else {
+    actions.push(`<strong class="text-white">Do this:</strong> Pattern is mixed. Keep cameras running 24/7 and review every 2–3 days so you do not miss a shift in timing.`);
   }
-
-  if (rankedCams.length) {
-    const camList = rankedCams.map(([cam, s]) => `${cam.replace('Teardrop ','').replace(' Cam','')} <span class="text-slate-500">(${s.count})</span>`).join(' → ');
-    html.push(`<p><span class="text-amber-400 font-semibold">Camera ranking:</span> ${camList}</p>`);
+  if (last7.length >= 3) {
+    actions.push(`Recent pressure is up (${last7.length} deer hits in the last week). Stay consistent on the teardrop cameras; the E–W corridor is active.`);
+  } else if (deer.length && last7.length === 0) {
+    actions.push(`No deer in the last 7 days in this log. Confirm cameras are still aimed south down the opening and batteries are good.`);
   }
-
-  html.push(`<p>Daylight hits: <strong>${dayDeer}</strong> · Night hits: <strong>${nightDeer}</strong> · Last 48 h: <strong>${last48}</strong> · Last 7 d: <strong>${last7}</strong></p>`);
-
-  html.push(`<p class="text-slate-400 text-xs">${seasonNote}</p>`);
-
-  // Actionable recommendations
-  html.push(`<div class="mt-3 pt-3 border-t border-slate-800 space-y-2">`);
-  html.push(`<p class="text-amber-400 font-semibold text-xs uppercase tracking-wider">Recommendations</p>`);
-
-  if (peakHours.length && peakHours[0].c >= 2) {
-    const h = peakHours[0].h;
-    html.push(`<p>• Primary sit window: <strong class="text-white">${String(h).padStart(2,'0')}:00–${String((h+2)%24).padStart(2,'0')}:00</strong>. Prioritize the top camera during this block.</p>`);
-  }
-
-  if (rankedCams.length) {
-    const best = rankedCams[0][0];
-    html.push(`<p>• Highest confidence camera is <strong class="text-white">${best}</strong>. Hang or check stands covering the opening and service-road funnel first.</p>`);
-  }
-
-  if (last48 === 0 && deer.length > 0) {
-    html.push(`<p>• No hits in last 48 h — consider shifting 1 camera or checking wind/pressure change. Pattern may have shifted slightly.</p>`);
-  } else if (last48 >= 3) {
-    html.push(`<p>• Strong recent activity. Favor the current top camera and the teardrop opening for the next 2–3 sits under matching wind.</p>`);
-  }
-
-  if (dayDeer > nightDeer * 1.5) {
-    html.push(`<p>• Daylight-heavy pattern. Focus morning and late-afternoon sits; midday is secondary.</p>`);
-  } else if (nightDeer > dayDeer * 1.5) {
-    html.push(`<p>• Primarily nocturnal. Look for the first and last legal light; consider pressure reduction or better entry/exit routes.</p>`);
-  }
-
-  html.push(`<p>• Corridor geometry: Teardrop opening + service road creates a classic funnel. Wind from SW–NW favors the North Cam for most approaches.</p>`);
-  html.push(`</div>`);
-
-  panel.innerHTML = html.join('');
+  actions.push(`Corridor rule: movement is east–west on the service road into/across the teardrop. Keep cameras north of the opening, looking south.`);
+  panel.innerHTML = weatherContext + actions.map(a => `<p>${a}</p>`).join('');
 }
 
 function pickHumanName(isDeer) {
-  const pool = isDeer ? namePool : namePool.slice(0, 20);
-  for (const n of pool) {
-    if (!usedNames.has(n)) {
-      usedNames.add(n);
-      return n;
-    }
-  }
-  return isDeer ? `Deer-${usedNames.size + 1}` : `Animal-${usedNames.size + 1}`;
+  if (!isDeer) return 'Unknown';
+  const available = namePool.filter(n => !usedNames.has(n));
+  const pool = available.length ? available : namePool;
+  const name = pool[Math.floor(Math.random() * pool.length)];
+  usedNames.add(name);
+  return name;
 }
 
 function formatWhen(d) {
-  if (!(d instanceof Date) || isNaN(d)) return 'Unknown';
-  return d.toLocaleString(undefined, {
-    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
-  });
+  if (!(d instanceof Date) || isNaN(d)) return 'Unknown time';
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function activityFromHour(h, isDeer) {
-  if (!isDeer) return 'Passer-by / other';
-  if (h >= 5 && h < 9) return 'Dawn movement';
-  if (h >= 9 && h < 16) return 'Daytime bed/feed';
-  if (h >= 16 && h < 20) return 'Evening cruise';
+  if (!isDeer) return 'Non-deer / other';
+  if (h >= 5 && h < 8) return 'Dawn travel';
+  if (h >= 8 && h < 17) return 'Daytime move';
+  if (h >= 17 && h < 20) return 'Dusk travel';
   return 'Night travel';
 }
 
 async function readExif(file) {
+  let when = null, temp = null, lat = null, lng = null;
   try {
-    const data = await exifr.parse(file, {
-      pick: ['DateTimeOriginal', 'CreateDate', 'ModifyDate', 'GPSLatitude', 'GPSLongitude']
-    });
-    let date = data?.DateTimeOriginal || data?.CreateDate || data?.ModifyDate;
-    if (date && !(date instanceof Date)) date = new Date(date);
-    if (!date || isNaN(date)) date = new Date(file.lastModified);
-    return { date, lat: data?.GPSLatitude, lng: data?.GPSLongitude };
-  } catch {
-    return { date: new Date(file.lastModified), lat: null, lng: null };
-  }
+    if (typeof exifr !== 'undefined') {
+      const data = await exifr.parse(file, {
+        pick: ['DateTimeOriginal', 'CreateDate', 'ModifyDate', 'DateTime',
+               'GPSLatitude', 'GPSLongitude', 'OffsetTimeOriginal',
+               'AmbientTemperature', 'Temperature']
+      });
+      if (data) {
+        when = data.DateTimeOriginal || data.CreateDate || data.ModifyDate || data.DateTime || null;
+        if (when && !(when instanceof Date)) when = new Date(when);
+        temp = data.AmbientTemperature ?? data.Temperature ?? null;
+        if (data.GPSLatitude != null && data.GPSLongitude != null) {
+          lat = data.GPSLatitude;
+          lng = data.GPSLongitude;
+        }
+      }
+    }
+  } catch (e) { console.warn('EXIF', e); }
+  if (!when || isNaN(when)) when = new Date(file.lastModified || Date.now());
+  return { when, temp, lat, lng };
 }
 
 async function processOneImage(file) {
-  const { date } = await readExif(file);
-  const whenISO = date.toISOString();
-  const whenDisplay = formatWhen(date);
-  const hour = date.getHours();
+  const exif = await readExif(file);
+  const when = exif.when;
+  const whenISO = when.toISOString();
+  const whenDisplay = formatWhen(when);
+  const hour = when.getHours();
+  
+  const dataUrl = await new Promise(res => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 120;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } }
+        else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        res(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 
-  let detected = 'unknown', conf = 0.35, isDeer = false;
+  const strip = document.getElementById('preview-strip');
+  if (strip.children.length > 50) strip.removeChild(strip.lastChild);
+  const thumb = document.createElement('div');
+  thumb.className = 'relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-slate-700';
+  thumb.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover"/><div class="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] text-center text-white py-0.5 truncate">${whenDisplay.slice(5)}</div>`;
+  strip.prepend(thumb);
 
+  let detected = 'unknown', conf = 0.5, isDeer = false;
   if (aiModel) {
     try {
-      const img = await createImageBitmap(file);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const preds = await aiModel.detect(canvas);
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+      const preds = await aiModel.detect(img);
       if (preds && preds.length) {
-        // Prefer animal-like classes
-        const animal = preds.find(p => /deer|sheep|horse|cow|dog|cat|bear|bird|animal/i.test(p.class));
-        const top = animal || preds[0];
-        detected = top.class;
-        conf = top.score;
+        preds.sort((a, b) => b.score - a.score);
+        detected = preds[0].class;
+        conf = preds[0].score;
       }
-      img.close?.();
-    } catch (e) {
-      console.warn('Detection failed', e);
-    }
+    } catch (e) { console.warn(e); }
   }
-
-  const animalish = /deer|animal|sheep|horse|dog|cow|bear|bird|cat/i.test(detected) || conf < 0.4;
-  isDeer = /deer/i.test(detected) || (animalish && conf < 0.65);
+  const animalish = /deer|animal|sheep|horse|dog|cow|bear|bird|cat/i.test(detected) || conf < 0.45;
+  isDeer = /deer/i.test(detected) || (animalish && conf < 0.7);
   if (animalish && !/deer/i.test(detected)) {
+    isDeer = true;
     detected = 'deer (likely)';
-    conf = Math.max(conf, 0.45);
+    conf = Math.max(conf, 0.7);
   }
-
   const name = pickHumanName(isDeer);
   const activity = activityFromHour(hour, isDeer);
-
+  const camera = currentCamera;
+  let note = '';
+  if (exif.temp != null) note += `Temp ${exif.temp}° · `;
+  note += activity;
   const rec = {
-    name, isDeer, species: detected, whenISO, whenDisplay, camera: currentCamera,
-    activity, conf: Math.min(1, Math.max(0.1, conf)), notes: ''
+    name, isDeer, species: detected, whenISO, whenDisplay, camera,
+    activity: note.trim(), confidence: (conf * 100).toFixed(0) + '%', hour, fileName: file.name
   };
   saveRecord(rec);
   return rec;
 }
 
 async function drainQueue() {
-  if (isProcessing || !uploadQueue.length) return;
+  if (isProcessing) return;
   isProcessing = true;
-  const wrap = document.getElementById('progress-wrap');
-  const bar = document.getElementById('progress-bar');
-  const label = document.getElementById('progress-label');
-  const pct = document.getElementById('progress-pct');
-  wrap.classList.remove('hidden');
-
-  if (totalBatchCount === 0) totalBatchCount = uploadQueue.length;
-  let done = totalBatchCount - uploadQueue.length;
-
+  const container = document.getElementById('progress-container');
+  const status = document.getElementById('process-status');
+  const progressBar = document.getElementById('progress-bar');
+  const progressPct = document.getElementById('progress-pct');
+  container.classList.remove('hidden');
+  
+  const initialCount = uploadQueue.length + (totalBatchCount - uploadQueue.length > 0 ? 0 : uploadQueue.length);
+  totalBatchCount = Math.max(totalBatchCount, uploadQueue.length);
+  
   while (uploadQueue.length) {
     const file = uploadQueue.shift();
-    label.textContent = `Processing ${file.name}…`;
-    try {
-      await processOneImage(file);
-    } catch (e) {
-      console.error(e);
+    const completed = totalBatchCount - uploadQueue.length;
+    const pct = Math.round((completed / totalBatchCount) * 100);
+    
+    status.textContent = `Processing batch: ${completed} of ${totalBatchCount} photos...`;
+    progressBar.style.width = `${pct}%`;
+    progressPct.textContent = `${pct}%`;
+    
+    try { 
+      await processOneImage(file); 
+    } catch (e) { 
+      console.error(e); 
     }
-    done++;
-    const p = Math.round((done / totalBatchCount) * 100);
-    bar.style.width = p + '%';
-    pct.textContent = p + '%';
+    await new Promise(r => setTimeout(r, 10));
   }
-
-  label.textContent = 'Complete';
+  
+  status.textContent = `Batch upload of ${totalBatchCount} photos complete!`;
+  progressBar.style.width = `100%`;
+  progressPct.textContent = `100%`;
+  setTimeout(() => {
+    container.classList.add('hidden');
+    totalBatchCount = 0;
+  }, 4000);
   isProcessing = false;
-  totalBatchCount = 0;
-  setTimeout(() => wrap.classList.add('hidden'), 1800);
 }
 
 document.getElementById('imageInput').addEventListener('change', e => {
   const files = [...e.target.files];
   if (!files.length) return;
   uploadQueue.push(...files);
-  if (totalBatchCount === 0) totalBatchCount = files.length;
-  else totalBatchCount += files.length;
   drainQueue();
   e.target.value = '';
 });
@@ -552,18 +514,15 @@ function initMap() {
   const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'OpenTopoMap' });
   const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri' });
   topo.addTo(map);
-
   const serviceRoad = L.polyline([[45.6908,-64.1075],[45.6920,-64.1055],[45.6930,-64.1035],[45.6938,-64.1018]], { color: '#f59e0b', weight: 4, opacity: 0.95 });
   const teardrop = L.polygon([[45.6946,-64.1025],[45.6945,-64.1010],[45.6938,-64.1002],[45.6932,-64.1008],[45.6933,-64.1022],[45.6938,-64.1030]], { color: '#f59e0b', weight: 1.5, dashArray: '3,4', fillColor: '#f59e0b', fillOpacity: 0.12 });
   const opening = L.polyline([[45.6948,-64.1018],[45.6935,-64.1018],[45.6920,-64.1018]], { color: '#94a3b8', weight: 2.5, dashArray: '4,6', opacity: 0.75 });
   L.layerGroup([serviceRoad, teardrop, opening]).addTo(map);
-
   Object.entries(cameraCoords).forEach(([n, c]) => {
-    L.marker(c).addTo(map).bindPopup(`<b>${n}</b>`);
+    L.marker(c).addTo(map).bindPopup(`<b>${n}</b><br>North side · looking south down opening`);
   });
   sightingMarkers.addTo(map);
   L.control.layers({ "Topography": topo, "Satellite": sat }).addTo(map);
-
   map.on('click', async e => {
     const lat = e.latlng.lat.toFixed(5), lng = e.latlng.lng.toFixed(5);
     const out = document.getElementById('contour-readout');
