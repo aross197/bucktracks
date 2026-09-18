@@ -173,7 +173,6 @@
     </div>
 
     <script>
-        // Secure password hashing function for browser storage
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -212,7 +211,7 @@
             let users = JSON.parse(localStorage.getItem('gh_users') || '[]');
             
             if (users.some(u => u.email === email)) {
-                msgEl.textContent = 'Email is already registered.';
+                msgEl.textContent = 'Email is already registered. Try logging in.';
                 msgEl.className = 'message error';
                 return;
             }
@@ -221,13 +220,13 @@
             users.push({ name, email, password: hashedPassword });
             localStorage.setItem('gh_users', JSON.stringify(users));
 
-            msgEl.textContent = 'Registration successful! Redirecting...';
+            msgEl.textContent = 'Registration successful! Switching to login...';
             msgEl.className = 'message success';
             setTimeout(() => {
                 switchForm('login');
                 document.getElementById('register-form').reset();
                 msgEl.textContent = '';
-            }, 1000);
+            }, 1200);
         });
 
         // Handle Login
@@ -238,8 +237,14 @@
             const msgEl = document.getElementById('login-msg');
 
             let users = JSON.parse(localStorage.getItem('gh_users') || '[]');
-            const hashedPassword = await hashPassword(password);
+            
+            if (users.length === 0) {
+                msgEl.textContent = 'No accounts found. Please register first.';
+                msgEl.className = 'message error';
+                return;
+            }
 
+            const hashedPassword = await hashPassword(password);
             const user = users.find(u => u.email === email && u.password === hashedPassword);
 
             if (user) {
