@@ -68,18 +68,6 @@
             gap: 0.5rem;
         }
 
-        ul.strategy-list {
-            margin: 0;
-            padding-left: 1.25rem;
-            color: var(--text-color);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-
-        ul.strategy-list li {
-            margin-bottom: 0.5rem;
-        }
-
         .form-group {
             margin-bottom: 0.875rem;
         }
@@ -159,24 +147,13 @@
             <p>Field Intelligence & Movement Log</p>
         </header>
 
-        <!-- STRATEGY & NOTES CARD -->
-        <div class="card">
-            <h3>📍 Southern Slope Strategy (Mike Higgs Notes)</h3>
-            <ul class="strategy-list">
-                <li><strong>Service Road:</strong> High potential for smart mature bucks utilizing the contour.</li>
-                <li><strong>Wind Behavior:</strong> Traveling with wind on their backs; relying heavily on eyes and ears.</li>
-                <li><strong>Directional Pattern:</strong> Consistent east-to-west movement down the road.</li>
-                <li><strong>Timing:</strong> Target positioning $\ge 1$ hour before daylight.</li>
-            </ul>
-        </div>
-
         <!-- QUICK LOG ENTRY CARD -->
         <div class="card">
             <h3>📝 Quick Field Log</h3>
             <form id="log-form">
                 <div class="form-group">
                     <label for="log-location">Location / Stand</label>
-                    <input type="text" id="log-location" value="Southern Slope Service Road" required>
+                    <input type="text" id="log-location" placeholder="Enter location..." required>
                 </div>
                 <div class="form-group">
                     <label for="log-wind">Wind / Conditions</label>
@@ -213,9 +190,11 @@
             const newEntry = { id: Date.now(), location, wind, notes, date: dateStr };
 
             let logs = JSON.parse(localStorage.getItem('bucktracks_logs') || '[]');
-            logs.unshift(newEntry); // Add to top
+            logs.unshift(newEntry);
             localStorage.setItem('bucktracks_logs', JSON.stringify(logs));
 
+            document.getElementById('log-location').value = '';
+            document.getElementById('log-wind').value = '';
             document.getElementById('log-notes').value = '';
             loadLogs();
         });
@@ -242,7 +221,6 @@
                     <p style="margin: 0.25rem 0 0.5rem;">${log.notes}</p>
                     <button class="delete-btn" onclick="deleteLog(${log.id})">Delete entry</button>
                 `;
-                container.appendChild(log.logItem || div);
                 container.appendChild(div);
             });
         }
