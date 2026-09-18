@@ -68,7 +68,7 @@ body{font-family:Inter,system-ui,sans-serif}
     <div class="flex flex-col gap-3 mb-4">
       <div>
         <h1 class="text-lg font-bold text-white">Photo Dump Upload Hub</h1>
-        <p class="text-xs text-slate-400 mt-0.5">Select downloaded camera batches. Queued processing parses EXIF metadata and runs detection locally.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Select downloaded camera batches. Live route tracking builds route vectors as items are processed.</p>
       </div>
       <div>
         <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1.5 font-semibold">Active Camera Target:</label>
@@ -84,7 +84,7 @@ body{font-family:Inter,system-ui,sans-serif}
       <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-amber-500/50 rounded-xl p-8 text-center transition bg-slate-950/40">
         <div class="text-3xl mb-2">📱📁</div>
         <div class="text-sm font-semibold text-slate-200">Tap to select downloaded camera batch</div>
-        <div class="text-xs text-slate-500 mt-1">Multi-select from phone gallery supported · Queued processing</div>
+        <div class="text-xs text-slate-500 mt-1">Multi-select from phone gallery supported · Live route tracking</div>
         <input type="file" id="imageInput" accept="image/*" multiple class="hidden"/>
       </div>
     </label>
@@ -100,6 +100,26 @@ body{font-family:Inter,system-ui,sans-serif}
     </div>
 
     <div id="preview-strip" class="mt-4 flex gap-2 overflow-x-auto pb-2"></div>
+  </div>
+</section>
+
+<!-- Time-Lapse & Live Route Replay Section -->
+<section id="timelapse-section" class="story-section">
+  <div class="glass card-border rounded-2xl p-5 shadow-card">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+      <div>
+        <h2 class="text-sm font-bold uppercase tracking-widest text-amber-400">Live Route Stitching & Replay</h2>
+        <p class="text-xs text-slate-400">Watch routes draw live during processing or step through sequential sightings.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="stepTimelapse(-1)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">◀ Prev</button>
+        <button id="play-btn" onclick="togglePlayTimelapse()" class="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-xs font-bold text-slate-950">▶ Play Replay</button>
+        <button onclick="stepTimelapse(1)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700">Next ▶</button>
+      </div>
+    </div>
+    <div id="timelapse-status" class="text-xs font-mono bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800 text-slate-300">
+      Ready for upload. Route vectors will stitch live as records are logged.
+    </div>
   </div>
 </section>
 
@@ -175,9 +195,17 @@ body{font-family:Inter,system-ui,sans-serif}
 <script>
 let aiModel = null, db = null, map = null, elevationMarker = null;
 let sightingMarkers = L.layerGroup();
+let transitVectorLayer = L.layerGroup();
+let liveRoutePolyline = null;
 let uploadQueue = [], totalBatchCount = 0;
 let isProcessing = false;
 let currentCamera = "Teardrop North Cam";
+
+// Time-Lapse state variables
+let timelapseRecords = [];
+let timelapseIndex = 0;
+let timelapseTimer = null;
+let activeMarkerHighlight = null;
 
 function setCamera(camName) {
   currentCamera = camName;
@@ -231,11 +259,12 @@ function initDB() {
   };
 }
 
-function saveRecord(rec) {
+function saveRecord(rec, callback) {
   if (!db) return;
   const tx = db.transaction([STORE], "readwrite");
-  tx.objectStore(STORE).add(rec).onsuccess = () => {
+  tx.objectStore(STORE).add(rec).onsuccess = e => {
     loadRecords();
+    if (callback) callback(e.target.result);
   };
 }
 
@@ -243,7 +272,12 @@ function clearDatabase() {
   if (!db || !confirm("Clear all local records?")) return;
   db.transaction([STORE], "readwrite").objectStore(STORE).clear().onsuccess = () => {
     sightingMarkers.clearLayers();
+    transitVectorLayer.clearLayers();
+    if (liveRoutePolyline) { map.removeLayer(liveRoutePolyline); liveRoutePolyline = null; }
     usedNames.clear();
+    timelapseRecords = [];
+    timelapseIndex = 0;
+    stopTimelapse();
     loadRecords();
   };
 }
@@ -252,22 +286,35 @@ function loadRecords() {
   if (!db) return;
   db.transaction([STORE], "readonly").objectStore(STORE).getAll().onsuccess = e => {
     const records = e.target.result || [];
-    records.sort((a, b) => new Date(b.whenISO) - new Date(a.whenISO));
+    records.sort((a, b) => new Date(a.whenISO) - new Date(b.whenISO));
     
     usedNames.clear();
     records.forEach(r => { if (r.name) usedNames.add(r.name); });
 
-    renderTable(records);
+    timelapseRecords = records;
+    if (timelapseIndex >= timelapseRecords.length) timelapseIndex = Math.max(0, timelapseRecords.length - 1);
+
+    const revRecords = [...records].reverse();
+    renderTable(revRecords);
     updateStats(records);
     updateAdvice(records);
+    updateTimelapseDisplay();
 
     sightingMarkers.clearLayers();
+    const routePoints = [];
     records.forEach(rec => {
       const c = cameraCoords[rec.camera] || [45.6938, -64.1018];
+      routePoints.push(c);
       L.circleMarker(c, { radius: 7, color: '#10b981', fillColor: '#34d399', fillOpacity: 0.75, weight: 2 })
         .bindPopup(`<b>${rec.name}</b><br>${rec.whenDisplay}<br>${rec.activity}`)
         .addTo(sightingMarkers);
     });
+
+    // Update live route polyline stitching across all loaded records
+    if (liveRoutePolyline) map.removeLayer(liveRoutePolyline);
+    if (routePoints.length > 1) {
+      liveRoutePolyline = L.polyline(routePoints, { color: '#38bdf8', weight: 3, opacity: 0.8, dashArray: '4,4' }).addTo(map);
+    }
   };
 }
 
@@ -292,7 +339,8 @@ function updateStats(records) {
   document.getElementById('stat-count').textContent = records.length;
   const deer = records.filter(r => r.isDeer);
   document.getElementById('stat-deer').textContent = deer.length;
-  document.getElementById('stat-last').textContent = records[0] ? records[0].whenDisplay : '—';
+  const newestFirst = [...records].sort((a,b) => new Date(b.whenISO) - new Date(a.whenISO));
+  document.getElementById('stat-last').textContent = newestFirst[0] ? newestFirst[0].whenDisplay : '—';
   const hours = {};
   deer.forEach(r => {
     const h = new Date(r.whenISO).getHours();
@@ -345,6 +393,72 @@ function updateAdvice(records) {
   }
   actions.push(`Corridor rule: movement is east–west on the service road into/across the teardrop. Keep cameras north of the opening, looking south.`);
   panel.innerHTML = weatherContext + actions.map(a => `<p>${a}</p>`).join('');
+}
+
+function updateTimelapseDisplay() {
+  const statusEl = document.getElementById('timelapse-status');
+  if (!timelapseRecords.length) {
+    statusEl.textContent = "Ready for upload. Route vectors will stitch live as records are logged.";
+    return;
+  }
+  const cur = timelapseRecords[timelapseIndex];
+  statusEl.innerHTML = `⏱️ <strong>Replay Step ${timelapseIndex + 1} of ${timelapseRecords.length}</strong>: <span class="text-emerald-400">${cur.name}</span> detected at <span class="text-amber-400">${cur.camera}</span> on <span class="font-mono text-white">${cur.whenDisplay}</span> (${cur.activity})`;
+
+  transitVectorLayer.clearLayers();
+  const coords = cameraCoords[cur.camera];
+  if (coords && map) {
+    if (activeMarkerHighlight) map.removeLayer(activeMarkerHighlight);
+    activeMarkerHighlight = L.circleMarker(coords, { radius: 12, color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.9, weight: 3 }).addTo(map);
+    map.setView(coords, 15, { animate: true });
+
+    if (timelapseIndex > 0) {
+      const prev = timelapseRecords[timelapseIndex - 1];
+      const prevCoords = cameraCoords[prev.camera];
+      if (prevCoords && prev.camera !== cur.camera) {
+        const timeDiffMins = Math.round((new Date(cur.whenISO) - new Date(prev.whenISO)) / 60000);
+        L.polyline([prevCoords, coords], { color: '#f59e0b', weight: 3, dashArray: '5,5' })
+          .bindPopup(`<b>Live Route Vector</b><br>${prev.camera} ➔ ${cur.camera}<br>Time delta: ~${timeDiffMins} mins`)
+          .addTo(transitVectorLayer);
+      }
+    }
+  }
+}
+
+function stepTimelapse(dir) {
+  if (!timelapseRecords.length) return;
+  timelapseIndex = (timelapseIndex + dir + timelapseRecords.length) % timelapseRecords.length;
+  updateTimelapseDisplay();
+}
+
+function togglePlayTimelapse() {
+  const btn = document.getElementById('play-btn');
+  if (timelapseTimer) {
+    stopTimelapse();
+  } else {
+    if (!timelapseRecords.length) return;
+    btn.textContent = "⏸ Pause Replay";
+    btn.className = "px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white";
+    timelapseTimer = setInterval(() => {
+      if (timelapseIndex >= timelapseRecords.length - 1) {
+        timelapseIndex = 0;
+      } else {
+        timelapseIndex++;
+      }
+      updateTimelapseDisplay();
+    }, 1800);
+  }
+}
+
+function stopTimelapse() {
+  if (timelapseTimer) {
+    clearInterval(timelapseTimer);
+    timelapseTimer = null;
+  }
+  const btn = document.getElementById('play-btn');
+  if (btn) {
+    btn.textContent = "▶ Play Replay";
+    btn.className = "px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-xs font-bold text-slate-950";
+  }
 }
 
 function pickHumanName(isDeer) {
@@ -442,7 +556,6 @@ async function processOneImage(file) {
     } catch (e) { console.warn(e); }
   }
 
-  // Expanded sensitive wildlife fallback for COCO-SSD object classes
   const animalish = /deer|animal|sheep|horse|dog|cow|bear|bird|cat|giraffe|elephant/i.test(detected) || conf < 0.5;
   isDeer = /deer/i.test(detected) || (animalish && conf < 0.75);
   
@@ -462,7 +575,9 @@ async function processOneImage(file) {
     name, isDeer, species: detected, whenISO, whenDisplay, camera,
     activity: note.trim(), confidence: (conf * 100).toFixed(0) + '%', hour, fileName: file.name
   };
-  saveRecord(rec);
+  
+  // Save record and update live route overlay immediately upon insertion
+  await new Promise(resolve => saveRecord(rec, resolve));
   return rec;
 }
 
@@ -475,7 +590,6 @@ async function drainQueue() {
   const progressPct = document.getElementById('progress-pct');
   container.classList.remove('hidden');
   
-  const initialCount = uploadQueue.length + (totalBatchCount - uploadQueue.length > 0 ? 0 : uploadQueue.length);
   totalBatchCount = Math.max(totalBatchCount, uploadQueue.length);
   
   while (uploadQueue.length) {
@@ -483,7 +597,7 @@ async function drainQueue() {
     const completed = totalBatchCount - uploadQueue.length;
     const pct = Math.round((completed / totalBatchCount) * 100);
     
-    status.textContent = `Processing batch: ${completed} of ${totalBatchCount} photos...`;
+    status.textContent = `Processing and stitching live route: ${completed} of ${totalBatchCount} photos...`;
     progressBar.style.width = `${pct}%`;
     progressPct.textContent = `${pct}%`;
     
@@ -495,7 +609,7 @@ async function drainQueue() {
     await new Promise(r => setTimeout(r, 10));
   }
   
-  status.textContent = `Batch upload of ${totalBatchCount} photos complete!`;
+  status.textContent = `Batch upload of ${totalBatchCount} photos complete! Route fully stitched.`;
   progressBar.style.width = `100%`;
   progressPct.textContent = `100%`;
   setTimeout(() => {
@@ -526,6 +640,7 @@ function initMap() {
     L.marker(c).addTo(map).bindPopup(`<b>${n}</b><br>North side · looking south down opening`);
   });
   sightingMarkers.addTo(map);
+  transitVectorLayer.addTo(map);
   L.control.layers({ "Topography": topo, "Satellite": sat }).addTo(map);
   map.on('click', async e => {
     const lat = e.latlng.lat.toFixed(5), lng = e.latlng.lng.toFixed(5);
