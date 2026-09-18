@@ -175,7 +175,9 @@ input[type=range] { accent-color: #f59e0b; }
           <option value="gemini-1.5-flash">gemini-1.5-flash</option>
         </select>
       </label>
-      <p class="text-[10px] text-slate-500 leading-relaxed">Key never leaves this device except as the Google API query. Stills are resized before upload. Leave the box unchecked to classify from filename + time only.</p>
+      <p class="text-[10px] text-slate-500 leading-relaxed">Key never leaves this device except as the Google API query. Stills are resized before upload. Unchecked = no Gemini call; class will show FALLBACK so you can tell it is not vision.</p>
+      <button type="button" onclick="testGeminiConduit()" class="w-full text-xs font-semibold px-3 py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-700/50 transition">Test Gemini (text-only ping)</button>
+      <pre id="gemini-trace" class="text-[10px] text-slate-400 bg-slate-950 border border-slate-800 rounded-lg p-2 max-h-28 overflow-auto whitespace-pre-wrap font-mono">No Gemini call yet.</pre>
     </div>
 
     <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
@@ -295,12 +297,13 @@ input[type=range] { accent-color: #f59e0b; }
           <th class="p-3.5 font-bold">Camera</th>
           <th class="p-3.5 font-bold">Activity</th>
           <th class="p-3.5 font-bold">Conf</th>
+          <th class="p-3.5 font-bold">Source</th>
           <th class="p-3.5 font-bold">Notes</th>
           <th class="p-3.5 font-bold w-12"></th>
         </tr>
       </thead>
       <tbody id="db-records" class="divide-y divide-slate-800/50">
-        <tr><td colspan="9" class="p-12 text-center text-slate-500 italic">No telemetry records. Drop photos above to begin.</td></tr>
+        <tr><td colspan="10" class="p-12 text-center text-slate-500 italic">No telemetry records. Drop photos above to begin.</td></tr>
       </tbody>
     </table>
   </div>
@@ -377,15 +380,9 @@ function persistGeminiSettings() {
 }
 
 function loadGeminiSettings() {
-  const savedKey = localStorage.getItem('td_gemini_key');
-  document.getElementById('gemini-key').value = savedKey || 'AQ.Ab8RN6LWLYJZZJhUMsHENFOxrKKoLxZ1NJridpwKLcXqQOUPHw';
+  document.getElementById('gemini-key').value = localStorage.getItem('td_gemini_key') || '';
   document.getElementById('gemini-model').value = localStorage.getItem('td_gemini_model') || 'gemini-2.0-flash';
-  const savedOn = localStorage.getItem('td_gemini_on');
-  document.getElementById('gemini-enabled').checked = savedOn !== null ? savedOn === '1' : true;
-  if (!savedKey) {
-    localStorage.setItem('td_gemini_key', 'AQ.Ab8RN6LWLYJZZJhUMsHENFOxrKKoLxZ1NJridpwKLcXqQOUPHw');
-    localStorage.setItem('td_gemini_on', '1');
-  }
+  document.getElementById('gemini-enabled').checked = localStorage.getItem('td_gemini_on') === '1';
   updateGeminiStatus();
 }
 
@@ -522,7 +519,13 @@ function classifyDeerFallback(fileName) {
   if (/fawn|spot|yearling|button/.test(lower)) return { isDeer: true, deerClass: 'Fawn', confidence: 58 };
   if (/doe|female|nanny/.test(lower)) return { isDeer: true, deerClass: 'Doe', confidence: 58 };
   if (/atv|truck|quad|person|human|coyote|bear|empty/.test(lower)) return { isDeer: false, deerClass: 'Non-Deer', confidence: 55 };
-  return { isDeer: true, deerClass: 'Doe', confidence: 40 };
+  /* Do not invent a deer. Unlabeled files stay Non-Deer until Gemini answers. */
+  return { isDeer: false, deerClass: 'Non-Deer', confidence: 0 };
+}
+
+function setGeminiTrace(msg) {
+  const el = document.getElementById('gemini-trace');
+  if (el) el.textContent = msg;
 }
 
 function parseGeminiText(raw) {
@@ -568,11 +571,46 @@ async function fileToJpegDataUrl(file, maxDim, quality) {
   });
 }
 
+async function testGeminiConduit() {
+  persistGeminiSettings();
+  const key = document.getElementById('gemini-key').value.trim();
+  const model = document.getElementById('gemini-model').value;
+  if (!key) {
+    setGeminiTrace('No API key. Paste a key from aistudio.google.com/apikey first.');
+    toast('No Gemini key', 'warn');
+    return;
+  }
+  setGeminiTrace(`Pinging ${model}…\nWatch DevTools → Network → generativelanguage`);
+  updateGeminiStatus('Gemini: Pinging…');
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Reply with exactly: {"ok":true,"model":"alive"}' }] }],
+        generationConfig: { temperature: 0, maxOutputTokens: 64 }
+      })
+    });
+    const body = await res.text();
+    setGeminiTrace(`HTTP ${res.status} ${res.statusText}\n${body.slice(0, 700)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    toast('Gemini answered — conduit is live', 'success');
+    document.getElementById('gemini-enabled').checked = true;
+    persistGeminiSettings();
+  } catch (err) {
+    setGeminiTrace(`PING FAILED: ${err.message}\nIf you opened this as file:// and the request is blocked, serve the folder over http.`);
+    toast('Gemini ping failed — see trace box', 'warn');
+  }
+  updateGeminiStatus();
+}
+
 async function classifyWithGemini(dataUrl) {
   const key = document.getElementById('gemini-key').value.trim();
   const model = document.getElementById('gemini-model').value;
   const b64 = dataUrl.split(',')[1];
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+  setGeminiTrace(`POST ${model} (${Math.round((b64||'').length/1024)} KB still)`);
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -641,7 +679,7 @@ async function processOneImage(file) {
     strip.prepend(el);
   }
 
-  let isDeer = true, deerClass = 'Doe', confNum = 40, gemNotes = '', gemActivity = '';
+  let isDeer = false, deerClass = 'Non-Deer', confNum = 0, gemNotes = '', gemActivity = '', source = 'fallback';
   if (geminiReady() && queryStill) {
     try {
       updateGeminiStatus('Gemini: Classifying…');
@@ -651,16 +689,22 @@ async function processOneImage(file) {
       confNum = g.confidence;
       gemNotes = g.notes;
       gemActivity = g.activity;
+      source = 'gemini';
+      setGeminiTrace(`OK ${file.name}\n${deerClass} ${confNum}%\n${gemNotes || gemActivity}`);
     } catch (err) {
       console.warn(err);
-      toast('Gemini failed — using filename fallback', 'warn');
+      toast('Gemini failed — using fallback (not vision)', 'warn');
       const fb = classifyDeerFallback(file.name);
       isDeer = fb.isDeer; deerClass = fb.deerClass; confNum = fb.confidence;
       gemNotes = String(err.message || 'gemini error').slice(0, 180);
+      source = 'fallback-error';
+      setGeminiTrace(`FAIL ${file.name}\n${err.message}`);
     }
   } else {
     const fb = classifyDeerFallback(file.name);
     isDeer = fb.isDeer; deerClass = fb.deerClass; confNum = fb.confidence;
+    source = 'fallback';
+    setGeminiTrace(geminiReady() ? 'Gemini on but still encode failed — fallback.' : 'Gemini checkbox/key off — no network call. This row is FALLBACK, not vision.');
   }
 
   const name = pickHumanName(isDeer);
@@ -672,7 +716,7 @@ async function processOneImage(file) {
     whenISO, whenDisplay, camera: currentCamera,
     activity, confidence: confNum + '%',
     hour, fileName: file.name, thumb: thumb || null, notes: gemNotes,
-    classifier: geminiReady() ? 'gemini' : 'fallback'
+    classifier: source
   };
   await saveRecord(rec);
   updateGeminiStatus();
@@ -746,7 +790,7 @@ function filterAndRenderTable() {
 function renderTable(records) {
   const tbody = document.getElementById('db-records');
   if (!records.length) {
-    tbody.innerHTML = `<tr><td colspan="9" class="p-12 text-center text-slate-500 italic">No matching telemetry records.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="p-12 text-center text-slate-500 italic">No matching telemetry records.</td></tr>`;
     return;
   }
   const display = records.slice(0, 400);
@@ -767,6 +811,7 @@ function renderTable(records) {
       <td class="p-3.5 text-slate-400 font-medium">${r.camera}</td>
       <td class="p-3.5 text-amber-300/90">${r.activity}</td>
       <td class="p-3.5 text-sky-400 font-mono">${r.confidence}</td>
+      <td class="p-3.5 font-mono text-[10px] ${r.classifier==='gemini'?'text-emerald-400':'text-slate-500'}">${r.classifier||'legacy'}</td>
       <td class="p-3.5"><input type="text" value="${(r.notes||'').replace(/"/g,'&quot;')}" placeholder="Add note…" class="w-28 bg-slate-900/80 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-300 focus:outline-none focus:border-amber-500/50" onchange="updateRecordNotes(${r.id}, this.value)"></td>
       <td class="p-3.5"><button onclick="deleteRecord(${r.id})" class="text-slate-500 hover:text-rose-400 transition text-xs" title="Delete">✕</button></td>
     </tr>`;
