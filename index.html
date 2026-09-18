@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Hosted Auth App</title>
+    <title>Register & Login System</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -17,7 +17,7 @@
         }
 
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -28,18 +28,22 @@
         }
 
         .container {
-            width: 90%;
+            width: 100%;
             max-width: 400px;
             background: var(--card-bg);
             padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
             border: 1px solid var(--border-color);
-            box-sizing: border-box;
         }
 
-        .form-box { display: none; }
-        .form-box.active { display: block; }
+        .form-box {
+            display: none;
+        }
+
+        .form-box.active {
+            display: block;
+        }
 
         h2 {
             margin-top: 0;
@@ -48,7 +52,9 @@
             text-align: center;
         }
 
-        .input-group { margin-bottom: 1rem; }
+        .input-group {
+            margin-bottom: 1rem;
+        }
 
         label {
             display: block;
@@ -68,7 +74,10 @@
             box-sizing: border-box;
         }
 
-        input:focus { outline: none; border-color: var(--accent-color); }
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
 
         button {
             width: 100%;
@@ -84,7 +93,9 @@
             transition: background 0.2s;
         }
 
-        button:hover { background: var(--accent-hover); }
+        button:hover {
+            background: var(--accent-hover);
+        }
 
         .switch-text {
             text-align: center;
@@ -99,7 +110,9 @@
             font-weight: 600;
         }
 
-        .switch-text span:hover { text-decoration: underline; }
+        .switch-text span:hover {
+            text-decoration: underline;
+        }
 
         .message {
             margin-top: 1rem;
@@ -111,9 +124,17 @@
         .error { color: var(--error-color); }
         .success { color: var(--success-color); }
 
-        #dashboard-view { text-align: center; }
-        #dashboard-view button { background: var(--error-color); }
-        #dashboard-view button:hover { background: #dc2626; }
+        /* Dashboard View */
+        #dashboard-view {
+            text-align: center;
+        }
+        
+        #dashboard-view button {
+            background: var(--error-color);
+        }
+        #dashboard-view button:hover {
+            background: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -163,26 +184,19 @@
             </div>
         </div>
 
-        <!-- DASHBOARD VIEW -->
+        <!-- DASHBOARD (SHOWN AFTER SUCCESSFUL LOGIN) -->
         <div id="dashboard-view" class="form-box">
             <h2>Dashboard</h2>
             <p>Welcome back, <span id="user-display-name" style="color: var(--accent-color); font-weight: bold;"></span>!</p>
-            <p style="color: #94a3b8; font-size: 0.875rem;">Hosted live on GitHub Pages.</p>
+            <p style="color: #94a3b8; font-size: 0.875rem;">You have successfully authenticated into the client session.</p>
             <button onclick="logout()">Log Out</button>
         </div>
     </div>
 
     <script>
-        // Secure password hashing function for browser storage
-        async function hashPassword(password) {
-            const msgBuffer = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
+        // Check if a user is already logged in on page load
         window.addEventListener('DOMContentLoaded', () => {
-            const activeUser = sessionStorage.getItem('logged_in_user');
+            const activeUser = localStorage.getItem('activeUser');
             if (activeUser) {
                 showDashboard(activeUser);
             }
@@ -202,27 +216,29 @@
         }
 
         // Handle Registration
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
+        document.getElementById('register-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.trim().toLowerCase();
             const password = document.getElementById('reg-password').value;
             const msgEl = document.getElementById('register-msg');
 
-            let users = JSON.parse(localStorage.getItem('gh_users') || '[]');
-            
-            if (users.some(u => u.email === email)) {
-                msgEl.textContent = 'Email is already registered.';
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+
+            // Check if email already registered
+            if (users.some(user => user.email === email)) {
+                msgEl.textContent = 'Email is already registered!';
                 msgEl.className = 'message error';
                 return;
             }
 
-            const hashedPassword = await hashPassword(password);
-            users.push({ name, email, password: hashedPassword });
-            localStorage.setItem('gh_users', JSON.stringify(users));
+            // Save new user
+            users.push({ name, email, password });
+            localStorage.setItem('users', JSON.stringify(users));
 
             msgEl.textContent = 'Registration successful! Redirecting...';
             msgEl.className = 'message success';
+
             setTimeout(() => {
                 switchForm('login');
                 document.getElementById('register-form').reset();
@@ -231,19 +247,18 @@
         });
 
         // Handle Login
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
+        document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value.trim().toLowerCase();
             const password = document.getElementById('login-password').value;
             const msgEl = document.getElementById('login-msg');
 
-            let users = JSON.parse(localStorage.getItem('gh_users') || '[]');
-            const hashedPassword = await hashPassword(password);
+            let users = JSON.parse(localStorage.getItem('users')) || [];
 
-            const user = users.find(u => u.email === email && u.password === hashedPassword);
+            const user = users.find(u => u.email === email && u.password === password);
 
             if (user) {
-                sessionStorage.setItem('logged_in_user', user.name);
+                localStorage.setItem('activeUser', user.name);
                 showDashboard(user.name);
                 document.getElementById('login-form').reset();
                 msgEl.textContent = '';
@@ -253,17 +268,17 @@
             }
         });
 
-        function logout() {
-            sessionStorage.removeItem('logged_in_user');
-            document.getElementById('dashboard-view').classList.remove('active');
-            switchForm('login');
-        }
-
         function showDashboard(name) {
             document.getElementById('login-box').classList.remove('active');
             document.getElementById('register-box').classList.remove('active');
             document.getElementById('dashboard-view').classList.add('active');
             document.getElementById('user-display-name').textContent = name;
+        }
+
+        function logout() {
+            localStorage.removeItem('activeUser');
+            document.getElementById('dashboard-view').classList.remove('active');
+            switchForm('login');
         }
     </script>
 </body>
