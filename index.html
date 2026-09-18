@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bucktracks Field Dashboard</title>
+    <title>Bucktracks Dashboard</title>
+    <!-- Leaflet CSS for Mapping -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --bg-color: #0f172a;
@@ -11,7 +13,6 @@
             --text-color: #f8fafc;
             --accent-color: #3b82f6;
             --accent-hover: #2563eb;
-            --success-color: #22c55e;
             --border-color: #334155;
             --muted-color: #94a3b8;
         }
@@ -28,7 +29,7 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
             box-sizing: border-box;
         }
 
@@ -40,7 +41,6 @@
         header h1 {
             margin: 0;
             font-size: 1.75rem;
-            color: var(--text-color);
         }
 
         header p {
@@ -63,9 +63,14 @@
             margin-bottom: 0.75rem;
             font-size: 1.15rem;
             color: var(--accent-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        }
+
+        #map {
+            width: 100%;
+            height: 280px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            z-index: 1;
         }
 
         .form-group {
@@ -79,7 +84,7 @@
             color: var(--muted-color);
         }
 
-        input, textarea, select {
+        input, textarea {
             width: 100%;
             padding: 0.65rem;
             background: #0f172a;
@@ -90,7 +95,7 @@
             box-sizing: border-box;
         }
 
-        input:focus, textarea:focus, select:focus {
+        input:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-color);
         }
@@ -144,67 +149,99 @@
     <div class="container">
         <header>
             <h1>Bucktracks</h1>
-            <p>Field Intelligence & Movement Log</p>
+            <p>Mapping & Field Tracking System</p>
         </header>
 
-        <!-- QUICK LOG ENTRY CARD -->
+        <!-- MAP VIEW CARD -->
+        <div class="card">
+            <h3>🗺️ Interactive Map (Tap to Pin)</h3>
+            <div id="map"></div>
+        </div>
+
+        <!-- QUICK FIELD LOG -->
         <div class="card">
             <h3>📝 Quick Field Log</h3>
             <form id="log-form">
                 <div class="form-group">
-                    <label for="log-location">Location / Stand</label>
-                    <input type="text" id="log-location" placeholder="Enter location..." required>
+                    <label for="log-location">Location / Coordinates</label>
+                    <input type="text" id="log-location" placeholder="Tap map or enter location..." required>
                 </div>
                 <div class="form-group">
-                    <label for="log-wind">Wind / Conditions</label>
-                    <input type="text" id="log-wind" placeholder="e.g., Wind at back, calm, crisp" required>
+                    <label for="log-notes">Observations / Notes</label>
+                    <textarea id="log-notes" rows="2" placeholder="Sign found, wind conditions, camera ID..." required></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="log-notes">Observation Notes</label>
-                    <textarea id="log-notes" rows="3" placeholder="Timing, movement direction, behavior..." required></textarea>
-                </div>
-                <button type="submit">Save Entry</button>
+                <button type="submit">Save Log Entry</button>
             </form>
         </div>
 
-        <!-- LOG HISTORY CARD -->
+        <!-- LOG HISTORY -->
         <div class="card">
-            <h3>📋 Log History</h3>
+            <h3>📋 Saved History</h3>
             <div id="logs-container">
-                <p style="color: var(--muted-color); font-size: 0.875rem; text-align: center;">No logs saved yet. Add your first entry above!</p>
+                <p style="color: var(--muted-color); font-size: 0.875rem; text-align: center;">No logs saved yet.</p>
             </div>
         </div>
     </div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // Initialize Map centered around Cumberland County / Nova Scotia region
+        const map = L.map('map').setView([45.5, -64.2], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        let activeMarker = null;
+
+        // Tapping map drops/moves a pin and autofills the location form field
+        map.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+            
+            if (activeMarker) {
+                map.removeLayer(activeMarker);
+            }
+            
+            activeMarker = L.marker([lat, lng]).addTo(map)
+              .bindPopup(`Lat: ${lat}, Lng: ${lng}`).openPopup();
+            
+            document.getElementById('log-location').value = `Lat: ${lat}, Lng: ${lng}`;
+        });
+
+        // Handle Form Storage & UI Loading
         document.addEventListener('DOMContentLoaded', loadLogs);
 
         document.getElementById('log-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const location = document.getElementById('log-location').value;
-            const wind = document.getElementById('log-wind').value;
-            const notes = document.getElementById('log-notes').value;
+            const location = document.getElementById('log-location').value.trim();
+            const notes = document.getElementById('log-notes').value.trim();
             const dateStr = new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 
-            const newEntry = { id: Date.now(), location, wind, notes, date: dateStr };
+            if (!location || !notes) return;
 
-            let logs = JSON.parse(localStorage.getItem('bucktracks_logs') || '[]');
+            const newEntry = { id: Date.now(), location, notes, date: dateStr };
+            let logs = JSON.parse(localStorage.getItem('bucktracks_map_logs') || '[]');
             logs.unshift(newEntry);
-            localStorage.setItem('bucktracks_logs', JSON.stringify(logs));
+            localStorage.setItem('bucktracks_map_logs', JSON.stringify(logs));
 
             document.getElementById('log-location').value = '';
-            document.getElementById('log-wind').value = '';
             document.getElementById('log-notes').value = '';
+            if (activeMarker) {
+                map.removeLayer(activeMarker);
+                activeMarker = null;
+            }
             loadLogs();
         });
 
         function loadLogs() {
             const container = document.getElementById('logs-container');
-            const logs = JSON.parse(localStorage.getItem('bucktracks_logs') || '[]');
+            const logs = JSON.parse(localStorage.getItem('bucktracks_map_logs') || '[]');
 
             if (logs.length === 0) {
-                container.innerHTML = '<p style="color: var(--muted-color); font-size: 0.875rem; text-align: center;">No logs saved yet. Add your first entry above!</p>';
+                container.innerHTML = '<p style="color: var(--muted-color); font-size: 0.875rem; text-align: center;">No logs saved yet.</p>';
                 return;
             }
 
@@ -214,11 +251,10 @@
                 div.className = 'log-item';
                 div.innerHTML = `
                     <div class="log-header">
-                        <span><strong>${log.location}</strong></span>
+                        <span><strong>${escapeHTML(log.location)}</strong></span>
                         <span>${log.date}</span>
                     </div>
-                    <p style="margin: 0.25rem 0;"><strong>Conditions:</strong> ${log.wind}</p>
-                    <p style="margin: 0.25rem 0 0.5rem;">${log.notes}</p>
+                    <p style="margin: 0.25rem 0 0.5rem;">${escapeHTML(log.notes)}</p>
                     <button class="delete-btn" onclick="deleteLog(${log.id})">Delete entry</button>
                 `;
                 container.appendChild(div);
@@ -226,10 +262,17 @@
         }
 
         function deleteLog(id) {
-            let logs = JSON.parse(localStorage.getItem('bucktracks_logs') || '[]');
+            let logs = JSON.parse(localStorage.getItem('bucktracks_map_logs') || '[]');
             logs = logs.filter(l => l.id !== id);
-            localStorage.setItem('bucktracks_logs', JSON.stringify(logs));
+            localStorage.setItem('bucktracks_map_logs', JSON.stringify(logs));
             loadLogs();
+        }
+
+        // Basic helper to prevent layout break injections from text input
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
         }
     </script>
 </body>
