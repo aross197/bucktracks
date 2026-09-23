@@ -3,195 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deerbook - Hunter's Social & Scouting Network</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+    <title>DeerBook - Log In or Sign Up</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <style>
-        body { background-color: #111827; color: #f3f4f6; }
-        .map-container { height: 400px; width: 100%; border-radius: 0.5rem; }
-        #three-container { height: 400px; width: 100%; border-radius: 0.5rem; overflow: hidden; }
+        body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
 
-    <!-- Header -->
-    <header class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-            <span class="text-2xl font-bold text-emerald-500">🦌 Deerbook</span>
-            <span class="text-xs bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded-full">Alpha v1.0</span>
-        </div>
-        <nav class="space-x-4 text-sm font-medium text-gray-300">
-            <a href="#feed" class="hover:text-emerald-400">Feed</a>
-            <a href="#map" class="hover:text-emerald-400">Scout Map</a>
-            <a href="#terrain" class="hover:text-emerald-400">3D Terrain</a>
-            <a href="#ai-guide" class="hover:text-emerald-400">AI Guide</a>
-        </nav>
-    </header>
+    <!-- ================= AUTHENTICATION WRAPPER ================= -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-12">
+            
+            <!-- Left Side: Branding & Logo -->
+            <div class="space-y-4 text-center md:text-left px-4">
+                <div class="flex justify-center md:justify-start items-center space-x-3">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg p-2">
+                        <svg viewBox="0 0 512 512" class="w-full h-full text-white fill-current">
+                            <path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm82.8 141.2c-15.6 12.3-33.1 21.6-51.5 27.6-6.8-19.1-16.1-37-27.4-53.1 32.7-5.5 61.9-8.4 78.9 25.5zm-165.6 0c17-33.9 46.2-31 78.9-25.5-11.3 16.1-20.6 34-27.4 53.1-18.4-6-35.9-15.3-51.5-27.6zm82.8 243.6c-54.8 0-101.4-23.7-128-60.8 13.9-2.3 28.1-3.5 42.5-3.5 17.5 0 34.6 1.9 51.2 5.5 11.6 2.5 23.8 6.5 34.3 12.1 10.5-5.6 22.7-9.6 34.3-12.1 16.6-3.6 33.7-5.5 51.2-5.5 14.4 0 28.6 1.2 42.5 3.5-26.6 37.1-73.2 60.8-128 60.8zm114.7-97.4c-12.5-1.9-25.3-2.9-38.3-2.9-17.5 0-34.6 2-51.2 5.6-9.6 2.1-19.7 5.3-28.9 9.5-9.2-4.2-19.3-7.4-28.9-9.5-16.6-3.6-33.7-5.6-51.2-5.6-13 0-25.8 1-38.3 2.9-20.9 3.2-39.7 10.9-55.8 22.1 17.7 28.3 49.3 47.7 85.3 52.8 1.4-12.4 5.3-24.1 11.2-34.6 9.2-16.5 22.5-30.8 38.6-41.5 11.1-7.4 23.6-12.8 37-16.1 4.2-1.1 8.5-1.9 12.9-2.6 4.4.7 8.7 1.5 12.9 2.6 13.4 3.3 25.9 8.7 37 16.1 16.1 10.7 29.4 25 38.6 41.5 5.9 10.5 9.8 22.2 11.2 34.6 36-5.1 67.6-24.5 85.3-52.8-16.1-11.2-34.9-18.9-55.8-22.1z"/>
+                        </svg>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-blue-600 tracking-tight">DeerBook</h1>
+                </div>
+                <p class="text-xl text-gray-600 leading-snug">
+                    Connect with fellow hunters, share real-time trail cam sightings, and track the rut together.
+                </p>
+            </div>
 
-    <!-- Main Content Grid -->
-    <main class="flex-1 p-4 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left Column: Social Feed & Firebase Activity -->
-        <section id="feed" class="lg:col-span-2 space-y-6">
-            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-3 text-emerald-400">Share Your Sightings</h2>
-                <textarea id="post-input" rows="3" placeholder="Saw a fresh scrape or heavy buck activity near the ridge..." class="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg text-sm focus:outline-none focus:border-emerald-500"></textarea>
-                <div class="flex justify-between items-center mt-3">
-                    <span class="text-xs text-gray-400">Status: <span id="firebase-status" class="text-yellow-500">Connecting to Firebase...</span></span>
-                    <button onclick="createPost()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Post Update</button>
+            <!-- Right Side: Login Box -->
+            <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 w-full max-w-md mx-auto space-y-4">
+                <div class="space-y-3">
+                    <input id="login-email" type="text" placeholder="Email or Username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    <input id="login-pass" type="password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    <button onclick="loginUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md text-base">Log In</button>
+                </div>
+                
+                <div class="text-center">
+                    <a href="#" onclick="alert('Password reset link sent to your registered email.')" class="text-blue-600 text-sm hover:underline">Forgot password?</a>
+                </div>
+
+                <hr class="border-gray-200 my-2">
+
+                <div class="text-center pt-2">
+                    <button onclick="openSignupModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition text-sm shadow">Create new account</button>
                 </div>
             </div>
 
-            <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-4 text-emerald-400">Campfire Feed</h2>
-                <div id="posts-container" class="space-y-4">
-                    <!-- Dynamic posts injected here -->
-                    <div class="p-3 bg-gray-900 rounded border border-gray-700 text-sm">
-                        <p class="font-semibold text-emerald-300">BuckMaster99</p>
-                        <p class="text-gray-300 mt-1">Found fresh rubs along the creek bottom. Rut is starting to heat up!</p>
-                        <span class="text-xs text-gray-500 mt-2 block">2 hours ago</span>
+        </div>
+    </div>
+
+
+    <!-- ================= MAIN APP INTERFACE (HIDDEN UNTIL LOGIN) ================= -->
+    <div id="main-app" class="hidden flex-col min-h-screen">
+
+        <!-- Top Facebook-style Navbar -->
+        <header class="bg-white border-b border-gray-300 px-4 h-14 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md p-1">
+                    <svg viewBox="0 0 512 512" class="w-full h-full text-white fill-current">
+                        <path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm82.8 141.2c-15.6 12.3-33.1 21.6-51.5 27.6-6.8-19.1-16.1-37-27.4-53.1 32.7-5.5 61.9-8.4 78.9 25.5zm-165.6 0c17-33.9 46.2-31 78.9-25.5-11.3 16.1-20.6 34-27.4 53.1-18.4-6-35.9-15.3-51.5-27.6zm82.8 243.6c-54.8 0-101.4-23.7-128-60.8 13.9-2.3 28.1-3.5 42.5-3.5 17.5 0 34.6 1.9 51.2 5.5 11.6 2.5 23.8 6.5 34.3 12.1 10.5-5.6 22.7-9.6 34.3-12.1 16.6-3.6 33.7-5.5 51.2-5.5 14.4 0 28.6 1.2 42.5 3.5-26.6 37.1-73.2 60.8-128 60.8zm114.7-97.4c-12.5-1.9-25.3-2.9-38.3-2.9-17.5 0-34.6 2-51.2 5.6-9.6 2.1-19.7 5.3-28.9 9.5-9.2-4.2-19.3-7.4-28.9-9.5-16.6-3.6-33.7-5.6-51.2-5.6-13 0-25.8 1-38.3 2.9-20.9 3.2-39.7 10.9-55.8 22.1 17.7 28.3 49.3 47.7 85.3 52.8 1.4-12.4 5.3-24.1 11.2-34.6 9.2-16.5 22.5-30.8 38.6-41.5 11.1-7.4 23.6-12.8 37-16.1 4.2-1.1 8.5-1.9 12.9-2.6 4.4.7 8.7 1.5 12.9 2.6 13.4 3.3 25.9 8.7 37 16.1 16.1 10.7 29.4 25 38.6 41.5 5.9 10.5 9.8 22.2 11.2 34.6 36-5.1 67.6-24.5 85.3-52.8-16.1-11.2-34.9-18.9-55.8-22.1z"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold text-blue-600 tracking-tight">DeerBook</span>
+            </div>
+
+            <!-- Center Navigation Tabs -->
+            <nav class="hidden md:flex space-x-2 h-full">
+                <button class="px-8 border-b-4 border-blue-600 text-blue-600 flex items-center justify-center h-full transition"><svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
+                <button class="px-8 text-gray-500 hover:bg-gray-100 flex items-center justify-center h-full rounded-lg transition"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></button>
+                <button class="px-8 text-gray-500 hover:bg-gray-100 flex items-center justify-center h-full rounded-lg transition"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></button>
+            </nav>
+
+            <!-- User Menu & Logout -->
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm shadow-inner" id="user-initials">ME</div>
+                <button onclick="logoutUser()" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded-md font-semibold text-gray-700 transition">Log Out</button>
+            </div>
+        </header>
+
+        <!-- Main Feed Layout -->
+        <div class="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 p-4 gap-6">
+            
+            <!-- Left Sidebar -->
+            <aside class="hidden md:block md:col-span-1 space-y-2 text-sm font-medium text-gray-700">
+                <a href="#" class="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded-lg transition">
+                    <span class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">🦌</span>
+                    <span>Scout Feed</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded-lg transition">
+                    <span class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">🗺️</span>
+                    <span>Property Maps</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded-lg transition">
+                    <span class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">⛅</span>
+                    <span>Rut & Weather Forecast</span>
+                </a>
+            </aside>
+
+            <!-- Center Content Column -->
+            <main class="col-span-1 md:col-span-3 lg:col-span-2 space-y-4">
+                
+                <!-- Post Creation Box -->
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
+                    <div class="flex space-x-3 items-center">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center" id="post-avatar">ME</div>
+                        <input id="post-text-input" type="text" placeholder="What's happening in the woods today?" class="flex-1 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-full text-sm outline-none transition">
+                    </div>
+                    <hr class="border-gray-100">
+                    <div class="flex justify-between px-2">
+                        <button onclick="alert('Photo uploader ready!')" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
+                            <span class="text-green-500 text-lg">📷</span> <span>Photo</span>
+                        </button>
+                        <button onclick="alert('Stand tagger ready!')" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
+                            <span class="text-blue-500 text-lg">📍</span> <span>Tag Stand</span>
+                        </button>
+                        <button onclick="addNewPost()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">Post</button>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Right Column: Maps, 3D Terrain & AI Guide -->
-        <aside class="space-y-6">
-            
-            <!-- Leaflet Map Section -->
-            <div id="map-section" class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-3 text-emerald-400">Interactive Scouting Map</h2>
-                <div id="map" class="map-container"></div>
-            </div>
-
-            <!-- Three.js 3D Terrain Section -->
-            <div id="terrain" class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-3 text-emerald-400">3D Terrain Visualizer</h2>
-                <div id="three-container"></div>
-            </div>
-
-            <!-- Gemini AI Hunting Guide -->
-            <div id="ai-guide" class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-3 text-emerald-400">AI Hunting Guide</h2>
-                <div id="ai-chat-box" class="h-32 bg-gray-900 p-3 rounded border border-gray-700 overflow-y-auto text-xs space-y-2 mb-3">
-                    <p class="text-emerald-400"><strong>AI Guide:</strong> Ask me about wind direction strategies, scent control, or rut behaviors!</p>
+                <!-- Live Stream Feed -->
+                <div id="feed-stream" class="space-y-4">
+                    <div class="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div class="flex space-x-3 items-center">
+                                <div class="w-10 h-10 rounded-full bg-emerald-700 text-white font-bold flex items-center justify-center text-sm">JD</div>
+                                <div>
+                                    <h3 class="font-semibold text-sm text-gray-900">John Doe</h3>
+                                    <p class="text-xs text-gray-500">2 hrs ago • 📍 South Ridge Stand</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-800">Fresh rub line appearing along the cedar thicket. Rub heights look to be about 3 feet up. Getting excited for the weekend shift!</p>
+                        <div class="flex justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
+                            <button onclick="likePost(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">👍 Like (<span class="like-count">14</span>)</button>
+                            <button onclick="alert('Comments panel')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (3)</button>
+                            <button class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <input id="ai-input" type="text" placeholder="Ask a question..." class="flex-1 p-2 bg-gray-900 border border-gray-700 rounded text-xs focus:outline-none focus:border-emerald-500">
-                    <button onclick="askAIGuide()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded text-xs font-medium">Ask</button>
+            </main>
+
+            <!-- Right Sidebar -->
+            <aside class="hidden lg:block lg:col-span-1 space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
+                    <h3 class="text-xs font-bold uppercase text-gray-500 tracking-wider">Scouting Weather</h3>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm space-y-1">
+                        <div class="flex justify-between font-bold text-blue-900">
+                            <span>Oxford, NS</span>
+                            <span>4°C</span>
+                        </div>
+                        <p class="text-xs text-blue-700">Wind: 12 km/h NW • Pressure: Rising</p>
+                        <p class="text-xs font-semibold text-emerald-700 pt-1">Rut Activity Index: High</p>
+                    </div>
                 </div>
+            </aside>
+        </div>
+    </div>
+
+
+    <!-- ================= SIGNUP MODAL ================= -->
+    <div id="signup-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 relative">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-xl font-bold text-gray-900">Sign Up for DeerBook</h3>
+                <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
             </div>
+            <div class="space-y-3">
+                <input id="su-name" type="text" placeholder="Full Name" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input id="su-email" type="email" placeholder="Email address" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input id="su-pass" type="password" placeholder="New password" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <button onclick="registerUser()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg transition shadow text-sm">Register Account</button>
+            </div>
+        </div>
+    </div>
 
-        </aside>
-    </main>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-    <!-- Application Logic Script -->
+    <!-- ================= APPLICATION LOGIC ================= -->
     <script>
-        // 1. Initialize Leaflet Map
-        const map = L.map('map').setView([45.4215, -75.6972], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+        let currentUser = "Hunter";
 
-        // Add dummy Stand marker
-        const marker = L.marker([45.4215, -75.6972]).addTo(map)
-            .bindPopup("<b>North Ridge Stand</b><br>Wind favorable for West winds.")
-            .openPopup();
-
-        // 2. Initialize Three.js 3D Terrain Simulation
-        const container = document.getElementById('three-container');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        container.appendChild(renderer.domElement);
-
-        // Simple procedural terrain plane
-        const geometry = new THREE.PlaneGeometry(10, 10, 16, 16);
-        const pos = geometry.attributes.position;
-        for (let i = 0; i < pos.count; i++) {
-            // Create minor hills/valleys
-            pos.setZ(i, Math.sin(pos.getX(i)) * Math.cos(pos.getY(i)) * 0.8);
+        function loginUser() {
+            const email = document.getElementById('login-email').value.trim();
+            if(!email) {
+                alert("Please enter your email or username.");
+                return;
+            }
+            currentUser = email.split('@')[0];
+            initAppSession();
         }
-        geometry.computeVertexNormals();
 
-        const material = new THREE.MeshLambertMaterial({ color: 0x2d5a27, wireframe: false, side: THREE.DoubleSide });
-        const terrainMesh = new THREE.Mesh(geometry, material);
-        terrainMesh.rotation.x = -Math.PI / 2;
-        scene.add(terrainMesh);
-
-        // Add lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(5, 10, 7);
-        scene.add(directionalLight);
-
-        camera.position.set(0, 5, 7);
-        camera.lookAt(0, 0, 0);
-
-        // Render loop for 3D view
-        function animateTerrain() {
-            requestAnimationFrame(animateTerrain);
-            terrainMesh.rotation.z += 0.002; // Gentle rotation for visual presentation
-            renderer.render(scene, camera);
+        function registerUser() {
+            const name = document.getElementById('su-name').value.trim();
+            if(!name) {
+                alert("Please fill in your name.");
+                return;
+            }
+            currentUser = name;
+            closeSignupModal();
+            initAppSession();
         }
-        animateTerrain();
 
-        // 3. Simulated Firebase Post Functions
-        document.getElementById('firebase-status').innerText = "Connected (Mock)";
-        document.getElementById('firebase-status').className = "text-emerald-400";
+        function initAppSession() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('flex');
+            
+            const initials = currentUser.substring(0,2).toUpperCase();
+            document.getElementById('user-initials').innerText = initials;
+            document.getElementById('post-avatar').innerText = initials;
+        }
 
-        function createPost() {
-            const text = document.getElementById('post-input').value;
-            if(!text.trim()) return;
+        function logoutUser() {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('flex');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-pass').value = '';
+        }
 
-            const containerPosts = document.getElementById('posts-container');
+        function openSignupModal() {
+            document.getElementById('signup-modal').classList.remove('hidden');
+        }
+
+        function closeSignupModal() {
+            document.getElementById('signup-modal').classList.add('hidden');
+        }
+
+        function addNewPost() {
+            const input = document.getElementById('post-text-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const stream = document.getElementById('feed-stream');
+            const initials = currentUser.substring(0,2).toUpperCase();
             const newPostHTML = `
-                <div class="p-3 bg-gray-900 rounded border border-gray-700 text-sm animate-pulse">
-                    <p class="font-semibold text-emerald-300">You (Scout)</p>
-                    <p class="text-gray-300 mt-1">${escapeHtml(text)}</p>
-                    <span class="text-xs text-gray-500 mt-2 block">Just now</span>
+                <div class="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3 animate-pulse">
+                    <div class="flex justify-between items-center">
+                        <div class="flex space-x-3 items-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm">${initials}</div>
+                            <div>
+                                <h3 class="font-semibold text-sm text-gray-900">${escapeHtml(currentUser)}</h3>
+                                <p class="text-xs text-gray-500">Just now • 📍 Active Stand</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-800">${escapeHtml(text)}</p>
+                    <div class="flex justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
+                        <button onclick="likePost(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">👍 Like (<span class="like-count">0</span>)</button>
+                        <button onclick="alert('Comments panel')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (0)</button>
+                        <button class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
+                    </div>
                 </div>
             `;
-            containerPosts.insertAdjacentHTML('afterbegin', newPostHTML);
-            document.getElementById('post-input').value = '';
+            stream.insertAdjacentHTML('afterbegin', newPostHTML);
+            input.value = '';
         }
 
-        // 4. Gemini AI Hunting Guide Handler
-        function askAIGuide() {
-            const inputField = document.getElementById('ai-input');
-            const chatBox = document.getElementById('ai-chat-box');
-            const query = inputField.value.trim();
-            if(!query) return;
-
-            // User prompt log
-            chatBox.innerHTML += `<p class="text-gray-300"><strong>You:</strong> ${escapeHtml(query)}</p>`;
-            inputField.value = '';
-
-            // Simulate intelligent response contextually
-            setTimeout(() => {
-                let response = "Based on current temperature trends and pressure shifts, focus on downwind side ridges.";
-                if(query.toLowerCase().includes('rut')) {
-                    response = "The rut triggers heavy buck cruising between 9:00 AM and 2:00 PM. Target bottleneck funnels.";
-                } else if(query.toLowerCase().includes('wind')) {
-                    response = "Always approach your stand from downwind, utilizing creek beds to mask sound and scent.";
-                }
-                chatBox.innerHTML += `<p class="text-emerald-400"><strong>AI Guide:</strong> ${response}</p>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 600);
+        function likePost(btn) {
+            const span = btn.querySelector('.like-count');
+            span.innerText = parseInt(span.innerText) + 1;
+            btn.classList.add('text-blue-600');
         }
 
         function escapeHtml(str) {
