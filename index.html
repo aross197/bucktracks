@@ -16,18 +16,15 @@
     <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
         <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-12">
             
-            <!-- Left Side: Branding & Logo -->
-            <div class="space-y-4 text-center md:text-left px-4">
-                <div class="flex justify-center md:justify-start items-center space-x-3">
-                    <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg p-2">
-                        <svg viewBox="0 0 512 512" class="w-full h-full text-white fill-current">
-                            <path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm82.8 141.2c-15.6 12.3-33.1 21.6-51.5 27.6-6.8-19.1-16.1-37-27.4-53.1 32.7-5.5 61.9-8.4 78.9 25.5zm-165.6 0c17-33.9 46.2-31 78.9-25.5-11.3 16.1-20.6 34-27.4 53.1-18.4-6-35.9-15.3-51.5-27.6zm82.8 243.6c-54.8 0-101.4-23.7-128-60.8 13.9-2.3 28.1-3.5 42.5-3.5 17.5 0 34.6 1.9 51.2 5.5 11.6 2.5 23.8 6.5 34.3 12.1 10.5-5.6 22.7-9.6 34.3-12.1 16.6-3.6 33.7-5.5 51.2-5.5 14.4 0 28.6 1.2 42.5 3.5-26.6 37.1-73.2 60.8-128 60.8zm114.7-97.4c-12.5-1.9-25.3-2.9-38.3-2.9-17.5 0-34.6 2-51.2 5.6-9.6 2.1-19.7 5.3-28.9 9.5-9.2-4.2-19.3-7.4-28.9-9.5-16.6-3.6-33.7-5.6-51.2-5.6-13 0-25.8 1-38.3 2.9-20.9 3.2-39.7 10.9-55.8 22.1 17.7 28.3 49.3 47.7 85.3 52.8 1.4-12.4 5.3-24.1 11.2-34.6 9.2-16.5 22.5-30.8 38.6-41.5 11.1-7.4 23.6-12.8 37-16.1 4.2-1.1 8.5-1.9 12.9-2.6 4.4.7 8.7 1.5 12.9 2.6 13.4 3.3 25.9 8.7 37 16.1 16.1 10.7 29.4 25 38.6 41.5 5.9 10.5 9.8 22.2 11.2 34.6 36-5.1 67.6-24.5 85.3-52.8-16.1-11.2-34.9-18.9-55.8-22.1z"/>
-                        </svg>
-                    </div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-blue-600 tracking-tight">DeerBook</h1>
+            <!-- Left Side: Exact Logo & Branding -->
+            <div class="space-y-4 text-center md:text-left px-4 flex flex-col items-center md:items-start">
+                <!-- Using your actual uploaded logo image -->
+                <div class="w-32 h-32 rounded-3xl shadow-xl overflow-hidden bg-blue-600 flex items-center justify-center border-4 border-white">
+                    <img src="image_3.png" alt="DeerBook Logo" class="w-full h-full object-cover">
                 </div>
+                <h1 class="text-4xl md:text-5xl font-bold text-blue-600 tracking-tight pt-2">DeerBook</h1>
                 <p class="text-xl text-gray-600 leading-snug">
-                    Connect with fellow hunters, share real-time trail cam sightings, and track the rut together.
+                    Connect with fellow hunters, share real-time trail cam sightings, and track the rut together[span_2](start_span)[span_2](end_span).
                 </p>
             </div>
 
@@ -40,7 +37,7 @@
                 </div>
                 
                 <div class="text-center">
-                    <a href="#" onclick="alert('Password reset link sent to your registered email.')" class="text-blue-600 text-sm hover:underline">Forgot password?</a>
+                    <a href="#" onclick="alert('Password reset instructions sent to your email.'); return false;" class="text-blue-600 text-sm hover:underline">Forgot password?</a>
                 </div>
 
                 <hr class="border-gray-200 my-2">
@@ -60,10 +57,8 @@
         <!-- Top Facebook-style Navbar -->
         <header class="bg-white border-b border-gray-300 px-4 h-14 flex justify-between items-center sticky top-0 z-50 shadow-sm">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md p-1">
-                    <svg viewBox="0 0 512 512" class="w-full h-full text-white fill-current">
-                        <path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm82.8 141.2c-15.6 12.3-33.1 21.6-51.5 27.6-6.8-19.1-16.1-37-27.4-53.1 32.7-5.5 61.9-8.4 78.9 25.5zm-165.6 0c17-33.9 46.2-31 78.9-25.5-11.3 16.1-20.6 34-27.4 53.1-18.4-6-35.9-15.3-51.5-27.6zm82.8 243.6c-54.8 0-101.4-23.7-128-60.8 13.9-2.3 28.1-3.5 42.5-3.5 17.5 0 34.6 1.9 51.2 5.5 11.6 2.5 23.8 6.5 34.3 12.1 10.5-5.6 22.7-9.6 34.3-12.1 16.6-3.6 33.7-5.5 51.2-5.5 14.4 0 28.6 1.2 42.5 3.5-26.6 37.1-73.2 60.8-128 60.8zm114.7-97.4c-12.5-1.9-25.3-2.9-38.3-2.9-17.5 0-34.6 2-51.2 5.6-9.6 2.1-19.7 5.3-28.9 9.5-9.2-4.2-19.3-7.4-28.9-9.5-16.6-3.6-33.7-5.6-51.2-5.6-13 0-25.8 1-38.3 2.9-20.9 3.2-39.7 10.9-55.8 22.1 17.7 28.3 49.3 47.7 85.3 52.8 1.4-12.4 5.3-24.1 11.2-34.6 9.2-16.5 22.5-30.8 38.6-41.5 11.1-7.4 23.6-12.8 37-16.1 4.2-1.1 8.5-1.9 12.9-2.6 4.4.7 8.7 1.5 12.9 2.6 13.4 3.3 25.9 8.7 37 16.1 16.1 10.7 29.4 25 38.6 41.5 5.9 10.5 9.8 22.2 11.2 34.6 36-5.1 67.6-24.5 85.3-52.8-16.1-11.2-34.9-18.9-55.8-22.1z"/>
-                    </svg>
+                <div class="w-9 h-9 rounded-xl overflow-hidden shadow bg-blue-600 flex items-center justify-center">
+                    <img src="image_3.png" alt="Logo" class="w-full h-full object-cover">
                 </div>
                 <span class="text-xl font-bold text-blue-600 tracking-tight">DeerBook</span>
             </div>
@@ -112,10 +107,10 @@
                     </div>
                     <hr class="border-gray-100">
                     <div class="flex justify-between px-2">
-                        <button onclick="alert('Photo uploader ready!')" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
+                        <button onclick="alert('Photo uploader active!')" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
                             <span class="text-green-500 text-lg">📷</span> <span>Photo</span>
                         </button>
-                        <button onclick="alert('Stand tagger ready!')" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
+                        <button onclick="alert('Stand tagger active!')" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
                             <span class="text-blue-500 text-lg">📍</span> <span>Tag Stand</span>
                         </button>
                         <button onclick="addNewPost()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">Post</button>
@@ -137,7 +132,7 @@
                         <p class="text-sm text-gray-800">Fresh rub line appearing along the cedar thicket. Rub heights look to be about 3 feet up. Getting excited for the weekend shift!</p>
                         <div class="flex justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
                             <button onclick="likePost(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">👍 Like (<span class="like-count">14</span>)</button>
-                            <button onclick="alert('Comments panel')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (3)</button>
+                            <button onclick="alert('Comments panel opened')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (3)</button>
                             <button class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
                         </div>
                     </div>
@@ -179,14 +174,14 @@
     </div>
 
 
-    <!-- ================= APPLICATION LOGIC ================= -->
+    <!-- ================= APPLICATION SCRIPT ================= -->
     <script>
         let currentUser = "Hunter";
 
         function loginUser() {
             const email = document.getElementById('login-email').value.trim();
             if(!email) {
-                alert("Please enter your email or username.");
+                alert("Please enter your email or username to log in.");
                 return;
             }
             currentUser = email.split('@')[0];
@@ -196,7 +191,7 @@
         function registerUser() {
             const name = document.getElementById('su-name').value.trim();
             if(!name) {
-                alert("Please fill in your name.");
+                alert("Please enter your full name.");
                 return;
             }
             currentUser = name;
@@ -238,7 +233,7 @@
             const stream = document.getElementById('feed-stream');
             const initials = currentUser.substring(0,2).toUpperCase();
             const newPostHTML = `
-                <div class="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3 animate-pulse">
+                <div class="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3">
                     <div class="flex justify-between items-center">
                         <div class="flex space-x-3 items-center">
                             <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm">${initials}</div>
@@ -251,7 +246,7 @@
                     <p class="text-sm text-gray-800">${escapeHtml(text)}</p>
                     <div class="flex justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
                         <button onclick="likePost(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">👍 Like (<span class="like-count">0</span>)</button>
-                        <button onclick="alert('Comments panel')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (0)</button>
+                        <button onclick="alert('Comments panel opened')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (0)</button>
                         <button class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
                     </div>
                 </div>
