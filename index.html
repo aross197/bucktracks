@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeerBook - The Hunter's Network</title>
-    <!-- Tailwind CSS -->
+    <title>DeerBook</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -14,46 +13,28 @@
 
     <!-- ================= AUTHENTICATION SCREEN ================= -->
     <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-12">
-            
-            <!-- Left Side: Branding & Logo -->
-            <div class="space-y-4 text-center md:text-left px-4 flex flex-col items-center md:items-start">
-                <div class="w-32 h-32 rounded-3xl shadow-xl overflow-hidden bg-blue-600 flex items-center justify-center border-4 border-white">
+        <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div class="space-y-4 text-center md:text-left flex flex-col items-center md:items-start">
+                <div class="w-28 h-28 rounded-3xl shadow-xl overflow-hidden bg-blue-600 flex items-center justify-center border-4 border-white">
                     <img src="image_3.png" alt="DeerBook Logo" class="w-full h-full object-cover">
                 </div>
-                <h1 class="text-4xl md:text-5xl font-bold text-blue-600 tracking-tight pt-2">DeerBook</h1>
-                <p class="text-xl text-gray-600 leading-snug">
-                    Connect with fellow hunters, share real-time trail cam sightings, and track the rut together.
-                </p>
+                <h1 class="text-4xl font-bold text-blue-600 tracking-tight">DeerBook</h1>
+                <p class="text-lg text-gray-600">Connect with your hunting party, share status updates, like, comment, and chat live.</p>
             </div>
 
-            <!-- Right Side: Login Box -->
-            <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 w-full max-w-md mx-auto space-y-4">
+            <div class="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 w-full max-w-md space-y-4">
                 <div class="space-y-3">
-                    <input id="login-email" type="text" placeholder="Email or Username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                    <input id="login-pass" type="password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
-                    <button onclick="loginUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md text-base">Log In</button>
-                </div>
-                
-                <div class="text-center">
-                    <a href="#" onclick="alert('Password reset instructions sent to your email.'); return false;" class="text-blue-600 text-sm hover:underline">Forgot password?</a>
-                </div>
-
-                <hr class="border-gray-200 my-2">
-
-                <div class="text-center pt-2">
-                    <button onclick="openSignupModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-lg transition text-sm shadow">Create new account</button>
+                    <input id="login-username" type="text" placeholder="Your Name or Username" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+                    <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md text-base">Log In / Join</button>
                 </div>
             </div>
-
         </div>
     </div>
 
-
     <!-- ================= MAIN APP INTERFACE ================= -->
     <div id="main-app" class="hidden flex-col min-h-screen">
-
-        <!-- Top Facebook-style Navbar -->
+        
+        <!-- Facebook-Style Navbar -->
         <header class="bg-white border-b border-gray-300 px-4 h-14 flex justify-between items-center sticky top-0 z-50 shadow-sm">
             <div class="flex items-center space-x-3">
                 <div class="w-9 h-9 rounded-xl overflow-hidden shadow bg-blue-600 flex items-center justify-center">
@@ -61,341 +42,183 @@
                 </div>
                 <span class="text-xl font-bold text-blue-600 tracking-tight">DeerBook</span>
             </div>
-
-            <!-- Center Navigation Tabs -->
-            <nav class="hidden md:flex space-x-2 h-full">
-                <button onclick="switchTab('feed')" id="nav-tab-feed" class="px-8 border-b-4 border-blue-600 text-blue-600 flex items-center justify-center h-full transition"><svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
-                <button onclick="switchTab('maps')" id="nav-tab-maps" class="px-8 text-gray-500 hover:bg-gray-100 flex items-center justify-center h-full rounded-lg transition"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></button>
-            </nav>
-
-            <!-- User Menu & Logout -->
             <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm shadow-inner" id="user-initials">ME</div>
-                <button onclick="logoutUser()" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded-md font-semibold text-gray-700 transition">Log Out</button>
+                <span class="text-sm font-semibold text-gray-700" id="current-username-display"></span>
+                <button onclick="handleLogout()" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded-md font-semibold text-gray-700 transition">Log Out</button>
             </div>
         </header>
 
         <!-- Main Workspace Layout -->
-        <div class="flex-1 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 p-4 gap-6">
+        <div class="flex-1 max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-3 p-4 gap-6">
             
-            <!-- Left Sidebar -->
-            <aside class="hidden md:block md:col-span-1 space-y-2 text-sm font-medium text-gray-700">
-                <a href="#" onclick="switchTab('feed'); return false;" class="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded-lg transition">
-                    <span class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold">🦌</span>
-                    <span>Scout Feed</span>
-                </a>
-                <a href="#" onclick="switchTab('maps'); return false;" class="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded-lg transition">
-                    <span class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold">🗺️</span>
-                    <span>Property Maps & Stands</span>
-                </a>
-                <a href="#" onclick="alert('Weather Forecast: High rut activity predicted over the next 48 hours with incoming cold front.'); return false;" class="flex items-center space-x-3 p-2 hover:bg-gray-200 rounded-lg transition">
-                    <span class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">⛅</span>
-                    <span>Rut & Weather Forecast</span>
-                </a>
-            </aside>
+            <!-- Center Feed Column (Facebook News Feed) -->
+            <div class="md:col-span-2 space-y-4">
+                <!-- Status Creation Box -->
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
+                    <div class="flex space-x-3 items-center">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm" id="user-avatar-initials"></div>
+                        <textarea id="status-input" rows="2" placeholder="What's happening in the woods today?" class="flex-1 bg-gray-100 p-3 rounded-2xl text-sm outline-none resize-none focus:bg-white focus:ring-1 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="flex justify-end pt-1 border-t border-gray-100">
+                        <button onclick="postStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition shadow-sm">Post</button>
+                    </div>
+                </div>
 
-            <!-- Center Content Area (Dynamic Views) -->
-            <main class="col-span-1 md:col-span-3 lg:col-span-2 space-y-4">
+                <!-- News Feed Stream -->
+                <div id="status-stream" class="space-y-4">
+                    <!-- Dynamic posts injected here -->
+                </div>
+            </div>
+
+            <!-- Right Column (Live Campfire Chat) -->
+            <div class="bg-white rounded-xl shadow border border-gray-200 flex flex-col h-[550px] sticky top-20">
+                <div class="p-3 border-b border-gray-200 bg-gray-50 rounded-t-xl flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-gray-800">Campfire Chat</h3>
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                </div>
                 
-                <!-- VIEW 1: SOCIAL FEED -->
-                <div id="view-feed" class="space-y-4">
-                    <!-- Post Creation Box -->
-                    <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
-                        <div class="flex space-x-3 items-center">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center" id="post-avatar">ME</div>
-                            <input id="post-text-input" type="text" placeholder="What's happening in the woods today?" class="flex-1 bg-gray-100 hover:bg-gray-200 px-4 py-2.5 rounded-full text-sm outline-none transition">
-                        </div>
-                        <div class="text-xs text-gray-500 px-1" id="selected-stand-tag">Tag: No stand selected</div>
-                        <hr class="border-gray-100">
-                        <div class="flex justify-between px-2">
-                            <button onclick="triggerPhotoUpload()" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
-                                <span class="text-green-500 text-lg">📷</span> <span>Photo</span>
-                            </button>
-                            <button onclick="openStandModal()" class="flex items-center space-x-2 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-sm font-semibold transition">
-                                <span class="text-blue-500 text-lg">📍</span> <span>Tag Stand</span>
-                            </button>
-                            <button onclick="addNewPost()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 rounded-lg text-sm font-semibold transition shadow-sm">Post</button>
-                        </div>
-                    </div>
-
-                    <!-- Live Stream Feed Container -->
-                    <div id="feed-stream" class="space-y-4">
-                        <!-- Default Sample Post -->
-                        <div class="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3 post-card">
-                            <div class="flex justify-between items-center">
-                                <div class="flex space-x-3 items-center">
-                                    <div class="w-10 h-10 rounded-full bg-emerald-700 text-white font-bold flex items-center justify-center text-sm">JD</div>
-                                    <div>
-                                        <h3 class="font-semibold text-sm text-gray-900">John Doe</h3>
-                                        <p class="text-xs text-gray-500">2 hrs ago • 📍 South Ridge Stand</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="text-sm text-gray-800">Fresh rub line appearing along the cedar thicket. Rub heights look to be about 3 feet up. Getting excited for the weekend shift!</p>
-                            
-                            <!-- Engagement metrics bar -->
-                            <div class="flex justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
-                                <button onclick="likePost(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">👍 Like (<span class="like-count">14</span>)</button>
-                                <button onclick="toggleComments(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (<span class="comment-count">1</span>)</button>
-                                <button onclick="alert('Post shared to your hunting party!')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
-                            </div>
-
-                            <!-- Comment Section (Collapsible/Active) -->
-                            <div class="comment-section space-y-2 pt-2 border-t border-gray-100 hidden">
-                                <div class="comment-list space-y-1 text-xs">
-                                    <div class="bg-gray-50 p-2 rounded-lg"><span class="font-semibold text-gray-900">Sarah Lane:</span> Absolute monster buck area. Good luck!</div>
-                                </div>
-                                <div class="flex space-x-2 pt-1">
-                                    <input type="text" placeholder="Write a comment..." class="comment-input flex-1 bg-gray-100 px-3 py-1.5 rounded-lg text-xs outline-none border border-gray-200">
-                                    <button onclick="submitComment(this)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700">Reply</button>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Chat Messages Stream -->
+                <div id="chat-messages" class="flex-1 p-3 overflow-y-auto space-y-2 text-sm flex flex-col">
+                    <div class="bg-gray-100 p-2 rounded-lg max-w-[85%] self-start">
+                        <span class="font-bold text-xs text-blue-600 block">System</span>
+                        Welcome to the camp chat. Say hello to your party!
                     </div>
                 </div>
 
-                <!-- VIEW 2: PROPERTY MAPS & STANDS -->
-                <div id="view-maps" class="space-y-4 hidden">
-                    <div class="bg-white p-5 rounded-xl shadow border border-gray-200 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-bold text-gray-900">Property & Stand Manager</h2>
-                            <button onclick="alert('New stand location created on active map.')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">Add New Stand</button>
-                        </div>
-                        <p class="text-xs text-gray-500">Click a stand below to view active wind direction requirements and trail camera logs for that specific location.</p>
-                        
-                        <div class="space-y-2">
-                            <div onclick="selectStand('South Ridge Stand')" class="p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg cursor-pointer transition flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-semibold text-sm text-gray-800">📍 South Ridge Stand</h4>
-                                    <p class="text-xs text-gray-500">Best Wind: West / Northwest • Last Sighted: Yesterday</p>
-                                </div>
-                                <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-medium">Active</span>
-                            </div>
-                            <div onclick="selectStand('Creek Bottom Stand')" class="p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg cursor-pointer transition flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-semibold text-sm text-gray-800">📍 Creek Bottom Stand</h4>
-                                    <p class="text-xs text-gray-500">Best Wind: South / Southwest • Last Sighted: 3 days ago</p>
-                                </div>
-                                <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded font-medium">Standby</span>
-                            </div>
-                            <div onclick="selectStand('North Timberline')" class="p-3 bg-gray-50 hover:bg-blue-50 border border-gray-200 rounded-lg cursor-pointer transition flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-semibold text-sm text-gray-800">📍 North Timberline</h4>
-                                    <p class="text-xs text-gray-500">Best Wind: North / East • Last Sighted: Morning Shift</p>
-                                </div>
-                                <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded font-medium">Standby</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Chat Input Bar -->
+                <div class="p-3 border-t border-gray-200 flex space-x-2 bg-white rounded-b-xl">
+                    <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 bg-gray-100 px-3 py-2 rounded-lg text-sm outline-none focus:ring-1 focus:ring-blue-500" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                    <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">Send</button>
                 </div>
+            </div>
 
-            </main>
-
-            <!-- Right Sidebar -->
-            <aside class="hidden lg:block lg:col-span-1 space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
-                    <h3 class="text-xs font-bold uppercase text-gray-500 tracking-wider">Scouting Weather</h3>
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm space-y-1">
-                        <div class="flex justify-between font-bold text-blue-900">
-                            <span>Oxford, NS</span>
-                            <span>4°C</span>
-                        </div>
-                        <p class="text-xs text-blue-700">Wind: 12 km/h NW • Pressure: Rising</p>
-                        <p class="text-xs font-semibold text-emerald-700 pt-1">Rut Activity Index: High</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3">
-                    <h3 class="text-xs font-bold uppercase text-gray-500 tracking-wider">Hunting Camp Contacts</h3>
-                    <div class="space-y-2 text-xs font-semibold text-gray-700">
-                        <div class="flex items-center space-x-2"><div class="w-2.5 h-2.5 rounded-full bg-green-500"></div><span>John Doe</span></div>
-                        <div class="flex items-center space-x-2"><div class="w-2.5 h-2.5 rounded-full bg-green-500"></div><span>Sarah Lane</span></div>
-                        <div class="flex items-center space-x-2"><div class="w-2.5 h-2.5 rounded-full bg-gray-300"></div><span class="text-gray-400">Mike Tracker</span></div>
-                    </div>
-                </div>
-            </aside>
         </div>
     </div>
 
-
-    <!-- ================= SIGNUP MODAL ================= -->
-    <div id="signup-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 relative">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-xl font-bold text-gray-900">Sign Up for DeerBook</h3>
-                <button onclick="closeSignupModal()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
-            </div>
-            <div class="space-y-3">
-                <input id="su-name" type="text" placeholder="Full Name" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <input id="su-email" type="email" placeholder="Email address" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <input id="su-pass" type="password" placeholder="New password" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <button onclick="registerUser()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg transition shadow text-sm">Register Account</button>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- ================= STAND SELECTOR MODAL ================= -->
-    <div id="stand-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-3">
-            <h3 class="font-bold text-gray-900">Select Stand Location</h3>
-            <div class="space-y-2 text-sm">
-                <button onclick="assignStand('South Ridge Stand')" class="w-full text-left p-2.5 bg-gray-50 hover:bg-blue-50 rounded-lg font-medium transition">📍 South Ridge Stand</button>
-                <button onclick="assignStand('Creek Bottom Stand')" class="w-full text-left p-2.5 bg-gray-50 hover:bg-blue-50 rounded-lg font-medium transition">📍 Creek Bottom Stand</button>
-                <button onclick="assignStand('North Timberline')" class="w-full text-left p-2.5 bg-gray-50 hover:bg-blue-50 rounded-lg font-medium transition">📍 North Timberline</button>
-            </div>
-            <button onclick="closeStandModal()" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold mt-2">Cancel</button>
-        </div>
-    </div>
-
-
-    <!-- ================= FULLY WORKING APP SCRIPT ================= -->
+    <!-- ================= FULL FUNCTIONALITY SCRIPT ================= -->
     <script>
-        let currentUser = "Hunter";
-        let activeStandTag = "General Woods";
-        let attachedPhotoActive = false;
+        let loggedInUser = "";
 
-        function loginUser() {
-            const email = document.getElementById('login-email').value.trim();
-            if(!email) { alert("Please enter your email or username."); return; }
-            currentUser = email.split('@')[0];
-            initAppSession();
-        }
-
-        function registerUser() {
-            const name = document.getElementById('su-name').value.trim();
-            if(!name) { alert("Please enter your name."); return; }
-            currentUser = name;
-            closeSignupModal();
-            initAppSession();
-        }
-
-        function initAppSession() {
+        function handleLogin() {
+            const usernameInput = document.getElementById('login-username').value.trim();
+            if (!usernameInput) {
+                alert("Please enter a username.");
+                return;
+            }
+            loggedInUser = usernameInput;
+            document.getElementById('current-username-display').innerText = loggedInUser;
+            document.getElementById('user-avatar-initials').innerText = loggedInUser.substring(0, 2).toUpperCase();
+            
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('main-app').classList.add('flex');
-            
-            const initials = currentUser.substring(0,2).toUpperCase();
-            document.getElementById('user-initials').innerText = initials;
-            document.getElementById('post-avatar').innerText = initials;
         }
 
-        function logoutUser() {
+        function handleLogout() {
+            loggedInUser = "";
+            document.getElementById('login-username').value = "";
             document.getElementById('main-app').classList.add('hidden');
             document.getElementById('main-app').classList.remove('flex');
             document.getElementById('auth-screen').classList.remove('hidden');
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-pass').value = '';
         }
 
-        function openSignupModal() { document.getElementById('signup-modal').classList.remove('hidden'); }
-        function closeSignupModal() { document.getElementById('signup-modal').classList.add('hidden'); }
-
-        function openStandModal() { document.getElementById('stand-modal').classList.remove('hidden'); }
-        function closeStandModal() { document.getElementById('stand-modal').classList.add('hidden'); }
-
-        function assignStand(standName) {
-            activeStandTag = standName;
-            document.getElementById('selected-stand-tag').innerText = "Tag: 📍 " + standName;
-            closeStandModal();
-        }
-
-        function selectStand(standName) {
-            alert("Viewing scouting history and optimal wind directions for: " + standName);
-        }
-
-        function triggerPhotoUpload() {
-            attachedPhotoActive = true;
-            alert("Trail cam photo attached successfully to your upcoming post!");
-        }
-
-        function switchTab(tabName) {
-            const feedView = document.getElementById('view-feed');
-            const mapsView = document.getElementById('view-maps');
-            const tabFeed = document.getElementById('nav-tab-feed');
-            const tabMaps = document.getElementById('nav-tab-maps');
-
-            if(tabName === 'feed') {
-                feedView.classList.remove('hidden');
-                mapsView.classList.add('hidden');
-                tabFeed.className = "px-8 border-b-4 border-blue-600 text-blue-600 flex items-center justify-center h-full transition";
-                tabMaps.className = "px-8 text-gray-500 hover:bg-gray-100 flex items-center justify-center h-full rounded-lg transition";
-            } else {
-                feedView.classList.add('hidden');
-                mapsView.classList.remove('hidden');
-                tabMaps.className = "px-8 border-b-4 border-blue-600 text-blue-600 flex items-center justify-center h-full transition";
-                tabFeed.className = "px-8 text-gray-500 hover:bg-gray-100 flex items-center justify-center h-full rounded-lg transition";
-            }
-        }
-
-        function addNewPost() {
-            const input = document.getElementById('post-text-input');
+        function postStatus() {
+            const input = document.getElementById('status-input');
             const text = input.value.trim();
-            if(!text && !attachedPhotoActive) return;
+            if (!text) return;
 
-            const stream = document.getElementById('feed-stream');
-            const initials = currentUser.substring(0,2).toUpperCase();
+            const stream = document.getElementById('status-stream');
+            const initials = loggedInUser.substring(0, 2).toUpperCase();
             
-            let photoHtml = attachedPhotoActive ? `<div class="bg-gray-100 rounded-lg h-44 flex items-center justify-center text-gray-500 text-xs font-semibold border border-gray-200">📸 [Attached Trail Cam Photo]</div>` : '';
-
-            const newPostHTML = `
-                <div class="bg-white rounded-xl shadow border border-gray-200 p-4 space-y-3 post-card">
-                    <div class="flex justify-between items-center">
-                        <div class="flex space-x-3 items-center">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center text-sm">${initials}</div>
-                            <div>
-                                <h3 class="font-semibold text-sm text-gray-900">${escapeHtml(currentUser)}</h3>
-                                <p class="text-xs text-gray-500">Just now • 📍 ${escapeHtml(activeStandTag)}</p>
-                            </div>
+            const postHTML = `
+                <div class="bg-white p-4 rounded-xl shadow border border-gray-200 space-y-3 post-card">
+                    <!-- Post Header -->
+                    <div class="flex items-center space-x-2">
+                        <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
+                            ${initials}
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-gray-900">${escapeHtml(loggedInUser)}</h4>
+                            <span class="text-xs text-gray-400">Just now</span>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-800">${escapeHtml(text || "Shared a trail update.")}</p>
-                    ${photoHtml}
-                    <div class="flex justify-between text-xs text-gray-500 pt-1 border-t border-gray-100">
+                    <!-- Post Content -->
+                    <p class="text-sm text-gray-800">${escapeHtml(text)}</p>
+                    
+                    <!-- Facebook Engagement Bar -->
+                    <div class="flex justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
                         <button onclick="likePost(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">👍 Like (<span class="like-count">0</span>)</button>
                         <button onclick="toggleComments(this)" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">💬 Comment (<span class="comment-count">0</span>)</button>
-                        <button onclick="alert('Post shared!')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
+                        <button onclick="alert('Post shared successfully!')" class="hover:text-blue-600 font-semibold py-1 flex-1 text-center transition">↗️ Share</button>
                     </div>
+
+                    <!-- Comment Section (Initially Hidden) -->
                     <div class="comment-section space-y-2 pt-2 border-t border-gray-100 hidden">
-                        <div class="comment-list space-y-1 text-xs"></div>
+                        <div class="comment-list space-y-1.5 text-xs"></div>
                         <div class="flex space-x-2 pt-1">
-                            <input type="text" placeholder="Write a comment..." class="comment-input flex-1 bg-gray-100 px-3 py-1.5 rounded-lg text-xs outline-none border border-gray-200">
-                            <button onclick="submitComment(this)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700">Reply</button>
+                            <input type="text" placeholder="Write a comment..." class="comment-input flex-1 bg-gray-100 px-3 py-1.5 rounded-lg text-xs outline-none border border-gray-200 focus:bg-white focus:ring-1 focus:ring-blue-500" onkeypress="if(event.key === 'Enter') submitComment(this)">
+                            <button onclick="submitCommentFromButton(this)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-blue-700">Reply</button>
                         </div>
                     </div>
                 </div>
             `;
-            stream.insertAdjacentHTML('afterbegin', newPostHTML);
-            input.value = '';
-            attachedPhotoActive = false;
-            activeStandTag = "General Woods";
-            document.getElementById('selected-stand-tag').innerText = "Tag: No stand selected";
+            stream.insertAdjacentHTML('afterbegin', postHTML);
+            input.value = "";
         }
 
         function likePost(btn) {
-            const span = btn.querySelector('.like-count');
-            span.innerText = parseInt(span.innerText) + 1;
-            btn.classList.add('text-blue-600');
+            const countSpan = btn.querySelector('.like-count');
+            let count = parseInt(countSpan.innerText);
+            countSpan.innerText = count + 1;
+            btn.classList.add('text-blue-600', 'font-bold');
         }
 
         function toggleComments(btn) {
             const card = btn.closest('.post-card');
-            const section = card.querySelector('.comment-section');
-            section.classList.toggle('hidden');
+            const commentSection = card.querySelector('.comment-section');
+            commentSection.classList.toggle('hidden');
         }
 
-        function submitComment(btn) {
-            const card = btn.closest('.post-card');
-            const input = card.querySelector('.comment-input');
-            const val = input.value.trim();
-            if(!val) return;
+        function submitComment(inputElement) {
+            const val = inputElement.value.trim();
+            if (!val) return;
 
+            const card = inputElement.closest('.post-card');
             const list = card.querySelector('.comment-list');
-            list.insertAdjacentHTML('beforeend', `<div class="bg-gray-50 p-2 rounded-lg"><span class="font-semibold text-gray-900">${escapeHtml(currentUser)}:</span> ${escapeHtml(val)}</div>`);
             
+            const commentHTML = `
+                <div class="bg-gray-50 p-2 rounded-lg flex space-x-2 items-start">
+                    <span class="font-bold text-gray-900">${escapeHtml(loggedInUser)}:</span>
+                    <span class="text-gray-800 flex-1">${escapeHtml(val)}</span>
+                </div>
+            `;
+            list.insertAdjacentHTML('beforeend', commentHTML);
+
             const countSpan = card.querySelector('.comment-count');
             countSpan.innerText = parseInt(countSpan.innerText) + 1;
-            input.value = '';
+            inputElement.value = "";
+        }
+
+        function submitCommentFromButton(btn) {
+            const input = btn.previousElementSibling;
+            submitComment(input);
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const chatContainer = document.getElementById('chat-messages');
+            const messageHTML = `
+                <div class="bg-blue-50 border border-blue-100 p-2 rounded-lg max-w-[85%] self-end">
+                    <span class="font-bold text-xs text-blue-800 block">${escapeHtml(loggedInUser)}</span>
+                    <span class="text-gray-800">${escapeHtml(text)}</span>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', messageHTML);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            input.value = "";
         }
 
         function escapeHtml(str) {
