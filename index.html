@@ -3,141 +3,206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>DeerBook</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231877f2'/><path fill='white' d='M30 55c0-12 8-22 20-25 4-8 12-12 18-8 2 1 3 4 2 6-1 3-4 4-6 3-3-1-5 1-4 4l8 18c1 3-1 6-4 6h-8c-3 0-5-2-6-5l-4-12c-1-3-4-4-6-2-3 2-4 6-2 9 4 6 12 10 20 10 14 0 25-10 25-24 0-8-4-15-10-19'/><path fill='%23ff6b35' d='M62 22c4-2 10-1 12 4 1 3-1 5-3 5-3 0-5-2-6-4-1-2-2-4-3-5z'/></svg>">
+<title>DeerBook — Calm by design</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a5f4a'/><path fill='white' d='M30 55c0-12 8-22 20-25 4-8 12-12 18-8 2 1 3 4 2 6-1 3-4 4-6 3-3-1-5 1-4 4l8 18c1 3-1 6-4 6h-8c-3 0-5-2-6-5l-4-12c-1-3-4-4-6-2-3 2-4 6-2 9 4 6 12 10 20 10 14 0 25-10 25-24 0-8-4-15-10-19'/><path fill='%23e8a87c' d='M62 22c4-2 10-1 12 4 1 3-1 5-3 5-3 0-5-2-6-4-1-2-2-4-3-5z'/></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script>tailwind.config={theme:{extend:{colors:{fb:{bg:'#18191a',card:'#242526',border:'#393a3b',hover:'#3a3b3c',text:'#e4e6eb',secondary:'#b0b3b8',primary:'#1877f2'}}}}}</script>
+<script>tailwind.config={theme:{extend:{colors:{db:{bg:'#0f1410',card:'#1a211c',border:'#2a332c',hover:'#243028',text:'#e8ebe6',muted:'#8a9a8e',accent:'#3d8b6e',warm:'#e8a87c'}}}}}</script>
 <style>
-body,html{height:100%;margin:0;background:#18191a;color:#e4e6eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.hide-scrollbar::-webkit-scrollbar{display:none}
-.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-.story-ring{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
-.like-active{color:#1877f2!important;font-weight:700}
+body,html{height:100%;margin:0;background:#0f1410;color:#e8ebe6;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.hide-scroll::-webkit-scrollbar{display:none}.hide-scroll{-ms-overflow-style:none;scrollbar-width:none}
+.story-ring{background:linear-gradient(135deg,#3d8b6e,#e8a87c)}
 input,textarea{user-select:text;-webkit-user-select:text}
-.logo-box{background:#1877f2;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.logo-box{background:#1a5f4a;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.fade-in{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 </head>
-<body class="bg-fb-bg text-fb-text flex flex-col h-screen overflow-hidden">
+<body class="bg-db-bg text-db-text flex flex-col h-screen overflow-hidden">
 
-<div id="auth-screen" class="fixed inset-0 z-[5000] bg-fb-bg flex flex-col items-center justify-center p-4">
-  <div class="w-full max-w-md">
+<div id="auth-screen" class="fixed inset-0 z-[5000] bg-db-bg flex flex-col items-center justify-center p-4">
+  <div class="w-full max-w-sm">
     <div class="flex flex-col items-center mb-8">
-      <div class="logo-box w-20 h-20 mb-3">
-        <svg width="52" height="52" viewBox="0 0 100 100" fill="none">
+      <div class="logo-box w-20 h-20 mb-4">
+        <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
           <path fill="white" d="M28 58c2-14 12-26 26-28 3-9 12-14 20-10 3 1 4 5 2 7-2 3-5 4-7 3-4-1-6 2-5 5l9 20c2 3-1 7-5 7H58c-3 0-6-3-7-6l-5-14c-1-3-5-5-7-2-3 3-4 7-1 10 5 7 14 12 24 12 16 0 29-12 29-28 0-9-4-17-11-22"/>
-          <path fill="#ff6b35" d="M68 20c5-3 12-1 14 5 1 3-1 6-4 6-3 0-6-3-7-5-1-2-2-5-3-6z"/>
+          <path fill="#e8a87c" d="M68 20c5-3 12-1 14 5 1 3-1 6-4 6-3 0-6-3-7-5-1-2-2-5-3-6z"/>
         </svg>
       </div>
-      <h1 class="text-3xl font-bold tracking-tight">Deer<span class="text-fb-primary">Book</span></h1>
-      <p class="text-fb-secondary text-sm mt-1">The Hunter's Social Network</p>
+      <h1 class="text-3xl font-bold tracking-tight">DeerBook</h1>
+      <p class="text-db-muted text-sm mt-2 text-center">A quieter place for hunters.<br>No algorithms. No ads. Just your people.</p>
     </div>
-    <div id="login-form" class="bg-fb-card p-6 rounded-xl space-y-4 border border-fb-border">
-      <h2 class="text-xl font-bold text-center">Log In</h2>
-      <div><label class="text-xs text-fb-secondary">Email</label><input id="login-email" type="email" class="w-full mt-1 bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-primary" placeholder="you@example.com" autocomplete="email"></div>
-      <div><label class="text-xs text-fb-secondary">Password</label><input id="login-password" type="password" class="w-full mt-1 bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-primary" placeholder="••••••••" autocomplete="current-password"></div>
+    <div id="login-form" class="bg-db-card p-6 rounded-2xl space-y-4 border border-db-border">
+      <h2 class="text-lg font-semibold text-center">Welcome back</h2>
+      <div><label class="text-xs text-db-muted">Email</label><input id="login-email" type="email" class="w-full mt-1 bg-db-hover border border-db-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-db-accent" placeholder="you@example.com" autocomplete="email"></div>
+      <div><label class="text-xs text-db-muted">Password</label><input id="login-password" type="password" class="w-full mt-1 bg-db-hover border border-db-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-db-accent" placeholder="••••••••" autocomplete="current-password"></div>
       <p id="login-error" class="text-red-400 text-xs hidden"></p>
-      <button onclick="handleLogin()" class="w-full bg-fb-primary hover:bg-blue-600 text-white font-semibold py-2.5 rounded-lg transition">Log In</button>
-      <p class="text-center text-sm text-fb-secondary">Don't have an account? <button onclick="showRegister()" class="text-fb-primary font-semibold">Sign Up</button></p>
+      <button onclick="handleLogin()" class="w-full bg-db-accent hover:opacity-90 text-white font-semibold py-2.5 rounded-xl transition">Log In</button>
+      <p class="text-center text-sm text-db-muted">New here? <button onclick="showRegister()" class="text-db-accent font-semibold">Create account</button></p>
     </div>
-    <div id="register-form" class="bg-fb-card p-6 rounded-xl space-y-4 border border-fb-border hidden">
-      <h2 class="text-xl font-bold text-center">Create Account</h2>
-      <div><label class="text-xs text-fb-secondary">Display Name</label><input id="reg-name" type="text" class="w-full mt-1 bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-primary" placeholder="Nova Scotia Hunter"></div>
-      <div><label class="text-xs text-fb-secondary">Camp / Location</label><input id="reg-camp" type="text" class="w-full mt-1 bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-primary" placeholder="North Mountain Camp"></div>
-      <div><label class="text-xs text-fb-secondary">Email</label><input id="reg-email" type="email" class="w-full mt-1 bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-primary" placeholder="you@example.com" autocomplete="email"></div>
-      <div><label class="text-xs text-fb-secondary">Password (min 6 chars)</label><input id="reg-password" type="password" class="w-full mt-1 bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-primary" placeholder="••••••••" autocomplete="new-password"></div>
+    <div id="register-form" class="bg-db-card p-6 rounded-2xl space-y-4 border border-db-border hidden">
+      <h2 class="text-lg font-semibold text-center">Join the camp</h2>
+      <div><label class="text-xs text-db-muted">Display Name</label><input id="reg-name" type="text" class="w-full mt-1 bg-db-hover border border-db-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-db-accent" placeholder="Your name"></div>
+      <div><label class="text-xs text-db-muted">Camp / Area</label><input id="reg-camp" type="text" class="w-full mt-1 bg-db-hover border border-db-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-db-accent" placeholder="e.g. North Mountain"></div>
+      <div><label class="text-xs text-db-muted">Email</label><input id="reg-email" type="email" class="w-full mt-1 bg-db-hover border border-db-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-db-accent" placeholder="you@example.com" autocomplete="email"></div>
+      <div><label class="text-xs text-db-muted">Password (6+ chars)</label><input id="reg-password" type="password" class="w-full mt-1 bg-db-hover border border-db-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-db-accent" placeholder="••••••••" autocomplete="new-password"></div>
       <p id="reg-error" class="text-red-400 text-xs hidden"></p>
-      <button onclick="handleRegister()" class="w-full bg-fb-primary hover:bg-blue-600 text-white font-semibold py-2.5 rounded-lg transition">Create Account</button>
-      <p class="text-center text-sm text-fb-secondary">Already have an account? <button onclick="showLogin()" class="text-fb-primary font-semibold">Log In</button></p>
+      <button onclick="handleRegister()" class="w-full bg-db-accent hover:opacity-90 text-white font-semibold py-2.5 rounded-xl transition">Create Account</button>
+      <p class="text-center text-sm text-db-muted">Have an account? <button onclick="showLogin()" class="text-db-accent font-semibold">Log In</button></p>
     </div>
   </div>
 </div>
 
 <div id="app" class="hidden flex flex-col h-full">
-  <header class="bg-fb-card border-b border-fb-border px-3 py-2 flex items-center justify-between z-30 shadow-md flex-shrink-0">
+  <header class="bg-db-card border-b border-db-border px-3 py-2.5 flex items-center justify-between flex-shrink-0">
     <div class="flex items-center gap-2">
       <div class="logo-box w-9 h-9">
-        <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+        <svg width="22" height="22" viewBox="0 0 100 100" fill="none">
           <path fill="white" d="M28 58c2-14 12-26 26-28 3-9 12-14 20-10 3 1 4 5 2 7-2 3-5 4-7 3-4-1-6 2-5 5l9 20c2 3-1 7-5 7H58c-3 0-6-3-7-6l-5-14c-1-3-5-5-7-2-3 3-4 7-1 10 5 7 14 12 24 12 16 0 29-12 29-28 0-9-4-17-11-22"/>
-          <path fill="#ff6b35" d="M68 20c5-3 12-1 14 5 1 3-1 6-4 6-3 0-6-3-7-5-1-2-2-5-3-6z"/>
+          <path fill="#e8a87c" d="M68 20c5-3 12-1 14 5 1 3-1 6-4 6-3 0-6-3-7-5-1-2-2-5-3-6z"/>
         </svg>
       </div>
-      <span class="font-bold text-lg hidden sm:inline">Deer<span class="text-fb-primary">Book</span></span>
+      <span class="font-bold text-lg hidden sm:inline">DeerBook</span>
     </div>
-    <div class="flex items-center gap-1 sm:gap-2">
-      <button onclick="switchTab('feed')" id="tab-feed" class="flex flex-col items-center justify-center h-11 w-14 sm:w-16 rounded-lg text-fb-primary border-b-2 border-fb-primary"><i class="fa-solid fa-house text-lg"></i><span class="text-[10px] font-semibold">Feed</span></button>
-      <button onclick="switchTab('stories')" id="tab-stories" class="flex flex-col items-center justify-center h-11 w-14 sm:w-16 rounded-lg text-fb-secondary hover:bg-fb-hover"><i class="fa-solid fa-circle-plus text-lg"></i><span class="text-[10px] font-semibold">Stories</span></button>
-      <button onclick="switchTab('messenger')" id="tab-messenger" class="flex flex-col items-center justify-center h-11 w-14 sm:w-16 rounded-lg text-fb-secondary hover:bg-fb-hover relative"><i class="fa-brands fa-facebook-messenger text-lg"></i><span class="text-[10px] font-semibold">Chat</span></button>
-      <button onclick="openProfile()" class="flex flex-col items-center justify-center h-11 w-14 sm:w-16 rounded-lg text-fb-secondary hover:bg-fb-hover"><div id="header-avatar" class="w-7 h-7 rounded-full bg-fb-primary flex items-center justify-center text-xs font-bold text-white">H</div><span class="text-[10px] font-semibold">Me</span></button>
+    <div class="flex items-center gap-1">
+      <button onclick="switchTab('feed')" id="tab-feed" class="flex flex-col items-center justify-center h-10 w-14 rounded-xl text-db-accent"><i class="fa-solid fa-house text-base"></i><span class="text-[9px] font-medium">Feed</span></button>
+      <button onclick="switchTab('stories')" id="tab-stories" class="flex flex-col items-center justify-center h-10 w-14 rounded-xl text-db-muted hover:text-db-text"><i class="fa-solid fa-camera text-base"></i><span class="text-[9px] font-medium">Stories</span></button>
+      <button onclick="switchTab('messenger')" id="tab-messenger" class="flex flex-col items-center justify-center h-10 w-14 rounded-xl text-db-muted hover:text-db-text"><i class="fa-solid fa-comments text-base"></i><span class="text-[9px] font-medium">Chat</span></button>
+      <button onclick="openProfile()" class="flex flex-col items-center justify-center h-10 w-14 rounded-xl text-db-muted hover:text-db-text"><div id="header-avatar" class="w-6 h-6 rounded-full bg-db-accent flex items-center justify-center text-[10px] font-bold text-white">H</div><span class="text-[9px] font-medium">You</span></button>
     </div>
   </header>
 
-  <div id="view-feed" class="flex-1 overflow-y-auto hide-scrollbar">
-    <div class="bg-fb-card border-b border-fb-border p-3">
-      <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
+  <div id="view-feed" class="flex-1 overflow-y-auto hide-scroll">
+    <div class="px-4 pt-4 pb-2"><p class="text-db-muted text-xs text-center">Chronological · No algorithm · Your pace</p></div>
+    <div class="px-3 pb-2">
+      <div class="flex gap-3 overflow-x-auto hide-scroll">
         <div class="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer" onclick="openStoryUpload()">
-          <div class="w-16 h-16 rounded-full bg-fb-hover border-2 border-dashed border-fb-secondary flex items-center justify-center"><i class="fa-solid fa-plus text-fb-secondary text-xl"></i></div>
-          <span class="text-[11px] text-fb-secondary">Your Story</span>
+          <div class="w-14 h-14 rounded-full bg-db-hover border-2 border-dashed border-db-muted flex items-center justify-center"><i class="fa-solid fa-plus text-db-muted"></i></div>
+          <span class="text-[10px] text-db-muted">Add</span>
         </div>
         <div id="stories-list" class="flex gap-3"></div>
       </div>
     </div>
-    <div class="bg-fb-card m-3 p-3 rounded-xl border border-fb-border">
-      <div class="flex gap-3 items-start">
-        <div id="post-avatar" class="w-10 h-10 rounded-full bg-fb-primary flex items-center justify-center font-bold text-white flex-shrink-0">H</div>
+    <div class="mx-3 mb-3 bg-db-card p-3 rounded-2xl border border-db-border">
+      <div class="flex gap-3">
+        <div id="post-avatar" class="w-9 h-9 rounded-full bg-db-accent flex items-center justify-center font-bold text-white text-xs flex-shrink-0">H</div>
         <div class="flex-1">
-          <textarea id="post-text" rows="2" placeholder="What's happening in the woods?" class="w-full bg-fb-hover border border-fb-border rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:border-fb-primary"></textarea>
-          <div id="post-preview" class="mt-2 hidden"><img id="post-preview-img" class="max-h-48 rounded-lg object-cover"><button onclick="clearPostPhoto()" class="text-xs text-red-400 mt-1">Remove photo</button></div>
-          <div class="flex items-center justify-between mt-2">
-            <label class="flex items-center gap-2 text-sm text-fb-secondary cursor-pointer hover:text-fb-primary"><i class="fa-solid fa-camera"></i> Photo<input type="file" id="post-file" accept="image/*" class="hidden" onchange="handlePostPhoto(event)"></label>
-            <button onclick="createPost()" class="bg-fb-primary hover:bg-blue-600 text-white text-sm font-semibold px-4 py-1.5 rounded-lg">Post</button>
+          <textarea id="post-text" rows="2" placeholder="Share something from the woods…" class="w-full bg-transparent text-sm resize-none focus:outline-none placeholder-db-muted"></textarea>
+          <div id="post-preview" class="mt-2 hidden"><img id="post-preview-img" class="max-h-40 rounded-xl object-cover"><button onclick="clearPostPhoto()" class="text-xs text-red-400 mt-1">Remove</button></div>
+          <div class="flex items-center justify-between mt-2 pt-2 border-t border-db-border">
+            <label class="flex items-center gap-1.5 text-xs text-db-muted cursor-pointer hover:text-db-accent"><i class="fa-solid fa-image"></i> Photo<input type="file" id="post-file" accept="image/*" class="hidden" onchange="handlePostPhoto(event)"></label>
+            <button onclick="createPost()" class="bg-db-accent hover:opacity-90 text-white text-xs font-semibold px-4 py-1.5 rounded-full">Share</button>
           </div>
         </div>
       </div>
     </div>
-    <div id="posts-stream" class="px-3 pb-6 space-y-3"></div>
+    <div id="posts-stream" class="px-3 pb-8 space-y-3"></div>
   </div>
 
-  <div id="view-stories" class="hidden flex-1 overflow-y-auto hide-scrollbar p-3"><h2 class="font-bold text-lg mb-3">Stories</h2><div id="all-stories" class="space-y-3"></div></div>
+  <div id="view-stories" class="hidden flex-1 overflow-y-auto hide-scroll p-4">
+    <h2 class="font-semibold text-lg mb-1">Stories</h2>
+    <p class="text-db-muted text-xs mb-4">Disappear after 24 hours. No pressure.</p>
+    <div id="all-stories" class="space-y-3"></div>
+  </div>
 
   <div id="view-messenger" class="hidden flex-1 flex flex-col">
     <div class="flex flex-1 overflow-hidden">
-      <div id="msg-list-panel" class="w-full sm:w-80 border-r border-fb-border flex flex-col bg-fb-card">
-        <div class="p-3 border-b border-fb-border"><h2 class="font-bold flex items-center gap-2"><i class="fa-brands fa-facebook-messenger text-fb-primary"></i> Chats</h2><input id="msg-search" type="text" placeholder="Search hunters..." class="w-full mt-2 bg-fb-hover border border-fb-border rounded-full px-3 py-1.5 text-xs focus:outline-none" oninput="renderConversations()"></div>
-        <div id="conversations" class="flex-1 overflow-y-auto hide-scrollbar"></div>
-        <div class="p-3 border-t border-fb-border"><button onclick="startNewChat()" class="w-full bg-fb-primary hover:bg-blue-600 text-white text-sm font-semibold py-2 rounded-lg">New Chat</button></div>
+      <div id="msg-list-panel" class="w-full sm:w-72 border-r border-db-border flex flex-col bg-db-card">
+        <div class="p-3 border-b border-db-border"><h2 class="font-semibold text-sm">Messages</h2><p class="text-[10px] text-db-muted mt-0.5">Direct · Private · Simple</p></div>
+        <div id="conversations" class="flex-1 overflow-y-auto hide-scroll"></div>
+        <div class="p-3 border-t border-db-border"><button onclick="startNewChat()" class="w-full bg-db-accent hover:opacity-90 text-white text-sm font-semibold py-2 rounded-xl">New conversation</button></div>
       </div>
-      <div id="msg-chat-panel" class="hidden sm:flex flex-1 flex-col bg-fb-bg">
-        <div id="msg-empty" class="flex-1 flex items-center justify-center text-fb-secondary text-sm">Select a conversation or start a new chat</div>
+      <div id="msg-chat-panel" class="hidden sm:flex flex-1 flex-col bg-db-bg">
+        <div id="msg-empty" class="flex-1 flex items-center justify-center text-db-muted text-sm px-6 text-center">Pick a conversation or start a new one.<br><span class="text-xs mt-1 block">No read receipts. No pressure.</span></div>
         <div id="msg-active" class="hidden flex-1 flex flex-col">
-          <div class="p-3 border-b border-fb-border bg-fb-card flex items-center gap-3"><div id="chat-peer-avatar" class="w-9 h-9 rounded-full bg-fb-primary flex items-center justify-center text-sm font-bold text-white">?</div><div><div id="chat-peer-name" class="font-semibold text-sm">Peer</div><div class="text-[11px] text-fb-secondary">Online</div></div><button onclick="closeChatMobile()" class="ml-auto sm:hidden text-fb-secondary"><i class="fa-solid fa-times"></i></button></div>
-          <div id="chat-messages" class="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2"></div>
-          <div class="p-3 border-t border-fb-border bg-fb-card flex gap-2"><input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 bg-fb-hover border border-fb-border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-fb-primary" onkeydown="if(event.key==='Enter')sendMessage()"><button onclick="sendMessage()" class="bg-fb-primary hover:bg-blue-600 text-white w-10 h-10 rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button></div>
+          <div class="p-3 border-b border-db-border bg-db-card flex items-center gap-3">
+            <div id="chat-peer-avatar" class="w-8 h-8 rounded-full bg-db-accent flex items-center justify-center text-xs font-bold text-white">?</div>
+            <div id="chat-peer-name" class="font-semibold text-sm">Peer</div>
+            <button onclick="closeChatMobile()" class="ml-auto sm:hidden text-db-muted"><i class="fa-solid fa-times"></i></button>
+          </div>
+          <div id="chat-messages" class="flex-1 overflow-y-auto hide-scroll p-3 space-y-2"></div>
+          <div class="p-3 border-t border-db-border bg-db-card flex gap-2">
+            <input id="chat-input" type="text" placeholder="Write a message…" class="flex-1 bg-db-hover border border-db-border rounded-full px-4 py-2 text-sm focus:outline-none focus:border-db-accent" onkeydown="if(event.key==='Enter')sendMessage()">
+            <button onclick="sendMessage()" class="bg-db-accent hover:opacity-90 text-white w-9 h-9 rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane text-sm"></i></button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="view-profile" class="hidden flex-1 overflow-y-auto hide-scrollbar p-4">
-    <div class="max-w-md mx-auto space-y-4">
-      <div class="bg-fb-card p-5 rounded-xl text-center border border-fb-border"><div id="profile-avatar" class="w-20 h-20 rounded-full bg-fb-primary flex items-center justify-center text-2xl font-bold text-white mx-auto mb-3">H</div><h2 id="profile-name" class="text-xl font-bold">Hunter</h2><p id="profile-camp" class="text-fb-secondary text-sm"></p><p id="profile-email" class="text-fb-secondary text-xs mt-1"></p></div>
-      <div class="bg-fb-card p-4 rounded-xl space-y-3 border border-fb-border"><h3 class="font-semibold text-sm">Account</h3>
-        <button id="notif-toggle-btn" onclick="toggleNotifications()" class="w-full bg-fb-hover hover:bg-fb-border text-fb-text font-semibold py-2.5 rounded-lg transition mb-2">Enable Notifications</button>
-        <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 font-semibold py-2.5 rounded-lg transition">Log Out</button></div>
-      <p class="text-center text-xs text-fb-secondary">All your posts, stories and messages are saved in this browser.</p>
+  <div id="view-profile" class="hidden flex-1 overflow-y-auto hide-scroll p-4">
+    <div class="max-w-sm mx-auto space-y-4">
+      <div class="bg-db-card p-5 rounded-2xl text-center border border-db-border">
+        <div id="profile-avatar" class="w-16 h-16 rounded-full bg-db-accent flex items-center justify-center text-xl font-bold text-white mx-auto mb-3">H</div>
+        <h2 id="profile-name" class="text-lg font-semibold">Hunter</h2>
+        <p id="profile-camp" class="text-db-muted text-sm"></p>
+        <p id="profile-email" class="text-db-muted text-xs mt-1"></p>
+      </div>
+      <div class="bg-db-card p-4 rounded-2xl space-y-3 border border-db-border">
+        <h3 class="font-semibold text-sm">Calm settings</h3>
+        <button id="notif-toggle-btn" onclick="toggleNotifications()" class="w-full bg-db-hover text-db-text font-medium py-2.5 rounded-xl text-sm transition">Enable Notifications</button>
+        <button id="quiet-btn" onclick="toggleQuiet()" class="w-full bg-db-hover text-db-text font-medium py-2.5 rounded-xl text-sm transition">Quiet Mode: Off</button>
+        <p class="text-[11px] text-db-muted">Quiet Mode turns off all notifications and reduces visual noise.</p>
+      </div>
+      <div class="bg-db-card p-4 rounded-2xl space-y-2 border border-db-border">
+        <h3 class="font-semibold text-sm">Why DeerBook is different</h3>
+        <ul class="text-xs text-db-muted space-y-1.5">
+          <li>• Chronological feed only — no algorithm</li>
+          <li>• No ads, no sponsored posts</li>
+          <li>• No endless scroll pressure</li>
+          <li>• Gentle notifications you control</li>
+          <li>• Your data stays in your browser</li>
+        </ul>
+      </div>
+      <button onclick="logout()" class="w-full bg-red-900/30 hover:bg-red-900/50 text-red-300 font-medium py-2.5 rounded-xl text-sm transition">Log Out</button>
     </div>
   </div>
 </div>
 
-<div id="story-viewer" class="fixed inset-0 z-[6000] bg-black hidden flex flex-col"><div class="absolute top-0 left-0 right-0 h-1 bg-white/20"><div id="story-progress" class="h-full bg-white transition-all duration-100" style="width:0%"></div></div><div class="flex items-center justify-between p-3 absolute top-2 left-0 right-0 z-10"><div class="flex items-center gap-2"><div id="story-author-avatar" class="w-8 h-8 rounded-full bg-fb-primary flex items-center justify-center text-xs font-bold text-white">H</div><span id="story-author-name" class="text-white text-sm font-semibold"></span><span id="story-time" class="text-white/60 text-xs"></span></div><button onclick="closeStoryViewer()" class="text-white text-xl"><i class="fa-solid fa-times"></i></button></div><div class="flex-1 flex items-center justify-center"><img id="story-img" class="max-w-full max-h-full object-contain" src=""></div><div class="p-4 text-center text-white text-sm" id="story-caption"></div></div>
+<div id="story-viewer" class="fixed inset-0 z-[6000] bg-black hidden flex flex-col">
+  <div class="absolute top-0 left-0 right-0 h-0.5 bg-white/20"><div id="story-progress" class="h-full bg-white transition-all duration-100" style="width:0%"></div></div>
+  <div class="flex items-center justify-between p-3 absolute top-2 left-0 right-0 z-10">
+    <div class="flex items-center gap-2">
+      <div id="story-author-avatar" class="w-7 h-7 rounded-full bg-db-accent flex items-center justify-center text-[10px] font-bold text-white">H</div>
+      <span id="story-author-name" class="text-white text-sm font-medium"></span>
+      <span id="story-time" class="text-white/50 text-xs"></span>
+    </div>
+    <button onclick="closeStoryViewer()" class="text-white/80 text-lg"><i class="fa-solid fa-times"></i></button>
+  </div>
+  <div class="flex-1 flex items-center justify-center"><img id="story-img" class="max-w-full max-h-full object-contain" src=""></div>
+  <div class="p-4 text-center text-white text-sm" id="story-caption"></div>
+</div>
 
-<div id="story-upload-modal" class="fixed inset-0 z-[5500] bg-black/80 hidden flex items-center justify-center p-4"><div class="bg-fb-card rounded-xl w-full max-w-sm p-5 space-y-4 border border-fb-border"><h3 class="font-bold text-lg">Add to Your Story</h3><div id="story-upload-preview" class="hidden"><img id="story-upload-img" class="w-full max-h-64 object-cover rounded-lg"></div><label class="flex flex-col items-center justify-center h-32 border-2 border-dashed border-fb-border rounded-xl cursor-pointer hover:border-fb-primary"><i class="fa-solid fa-camera text-2xl text-fb-secondary mb-2"></i><span class="text-sm text-fb-secondary">Choose Photo</span><input type="file" id="story-file" accept="image/*" class="hidden" onchange="handleStoryPhoto(event)"></label><input id="story-caption-input" type="text" placeholder="Add a caption (optional)" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fb-primary"><div class="flex gap-2"><button onclick="closeStoryUpload()" class="flex-1 bg-fb-hover py-2 rounded-lg text-sm">Cancel</button><button onclick="publishStory()" class="flex-1 bg-fb-primary hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold">Share to Story</button></div></div></div>
+<div id="story-upload-modal" class="fixed inset-0 z-[5500] bg-black/70 hidden flex items-center justify-center p-4">
+  <div class="bg-db-card rounded-2xl w-full max-w-sm p-5 space-y-4 border border-db-border">
+    <h3 class="font-semibold">Share a story</h3>
+    <div id="story-upload-preview" class="hidden"><img id="story-upload-img" class="w-full max-h-52 object-cover rounded-xl"></div>
+    <label class="flex flex-col items-center justify-center h-28 border-2 border-dashed border-db-border rounded-xl cursor-pointer hover:border-db-accent">
+      <i class="fa-solid fa-camera text-xl text-db-muted mb-1"></i>
+      <span class="text-xs text-db-muted">Choose photo</span>
+      <input type="file" id="story-file" accept="image/*" class="hidden" onchange="handleStoryPhoto(event)">
+    </label>
+    <input id="story-caption-input" type="text" placeholder="Optional caption" class="w-full bg-db-hover border border-db-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-db-accent">
+    <div class="flex gap-2">
+      <button onclick="closeStoryUpload()" class="flex-1 bg-db-hover py-2 rounded-xl text-sm">Cancel</button>
+      <button onclick="publishStory()" class="flex-1 bg-db-accent text-white py-2 rounded-xl text-sm font-semibold">Share</button>
+    </div>
+  </div>
+</div>
 
-<div id="new-chat-modal" class="fixed inset-0 z-[5500] bg-black/80 hidden flex items-center justify-center p-4"><div class="bg-fb-card rounded-xl w-full max-w-sm p-5 space-y-4 border border-fb-border"><h3 class="font-bold text-lg">Start New Chat</h3><input id="new-chat-email" type="text" placeholder="Enter hunter's name" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-fb-primary"><p class="text-xs text-fb-secondary">Enter any name to create a chat thread.</p><div class="flex gap-2"><button onclick="closeNewChat()" class="flex-1 bg-fb-hover py-2 rounded-lg text-sm">Cancel</button><button onclick="createChat()" class="flex-1 bg-fb-primary hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold">Start Chat</button></div></div></div>
+<div id="new-chat-modal" class="fixed inset-0 z-[5500] bg-black/70 hidden flex items-center justify-center p-4">
+  <div class="bg-db-card rounded-2xl w-full max-w-sm p-5 space-y-4 border border-db-border">
+    <h3 class="font-semibold">New conversation</h3>
+    <input id="new-chat-email" type="text" placeholder="Name of the person" class="w-full bg-db-hover border border-db-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-db-accent">
+    <div class="flex gap-2">
+      <button onclick="closeNewChat()" class="flex-1 bg-db-hover py-2 rounded-xl text-sm">Cancel</button>
+      <button onclick="createChat()" class="flex-1 bg-db-accent text-white py-2 rounded-xl text-sm font-semibold">Start</button>
+    </div>
+  </div>
+</div>
 
 <script>
-let currentUser=null,posts=[],stories=[],conversations=[],activeChatId=null,currentPostPhoto=null,currentStoryPhoto=null,storyViewerTimer=null,storyProgress=0;
-let notifEnabled=false;
+let currentUser=null,posts=[],stories=[],conversations=[],activeChatId=null,currentPostPhoto=null,currentStoryPhoto=null,storyViewerTimer=null,storyProgress=0,notifEnabled=false,quietMode=false;
 function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,6)}
 function now(){return Date.now()}
 function timeAgo(ts){const s=Math.floor((Date.now()-ts)/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
@@ -145,12 +210,12 @@ function initials(name){return (name||'H').split(' ').map(n=>n[0]).join('').toUp
 function hash(str){let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0}return 'h'+Math.abs(h).toString(16)}
 function save(key,val){localStorage.setItem('db_'+key,JSON.stringify(val))}
 function load(key,def){try{return JSON.parse(localStorage.getItem('db_'+key))||def}catch(e){return def}}
-function requestNotificationPermission(){if(!('Notification' in window))return Promise.resolve(false);if(Notification.permission==='granted'){notifEnabled=true;return Promise.resolve(true)}if(Notification.permission==='denied')return Promise.resolve(false);return Notification.requestPermission().then(p=>{notifEnabled=(p==='granted');if(notifEnabled)save('notif',true);return notifEnabled})}
-function sendNotif(title,body){if(!notifEnabled||Notification.permission!=='granted')return;try{const n=new Notification(title,{body:body||'',icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231877f2'/><path fill='white' d='M30 55c0-12 8-22 20-25 4-8 12-12 18-8 2 1 3 4 2 6-1 3-4 4-6 3-3-1-5 1-4 4l8 18c1 3-1 6-4 6h-8c-3 0-5-2-6-5l-4-12c-1-3-4-4-6-2-3 2-4 6-2 9 4 6 12 10 20 10 14 0 25-10 25-24 0-8-4-15-10-19'/><path fill='%23ff6b35' d='M62 22c4-2 10-1 12 4 1 3-1 5-3 5-3 0-5-2-6-4-1-2-2-4-3-5z'/></svg>",tag:'deerbook-'+Date.now(),renotify:true});n.onclick=()=>{window.focus();n.close()};setTimeout(()=>n.close(),6000)}catch(e){}}
-function initNotifications(){notifEnabled=!!load('notif',false);if(Notification.permission==='granted')notifEnabled=true}
+function requestNotificationPermission(){if(!('Notification' in window)||quietMode)return Promise.resolve(false);if(Notification.permission==='granted'){notifEnabled=true;return Promise.resolve(true)}if(Notification.permission==='denied')return Promise.resolve(false);return Notification.requestPermission().then(p=>{notifEnabled=(p==='granted');if(notifEnabled)save('notif',true);return notifEnabled})}
+function sendNotif(title,body){if(quietMode||!notifEnabled||Notification.permission!=='granted')return;try{const n=new Notification(title,{body:body||'',icon:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a5f4a'/></svg>",tag:'db-'+Date.now()});n.onclick=()=>{window.focus();n.close()};setTimeout(()=>n.close(),5000)}catch(e){}}
+function initNotifications(){notifEnabled=!!load('notif',false);quietMode=!!load('quiet',false);if(Notification.permission==='granted')notifEnabled=true}
 function showLogin(){document.getElementById('login-form').classList.remove('hidden');document.getElementById('register-form').classList.add('hidden');document.getElementById('login-error').classList.add('hidden')}
 function showRegister(){document.getElementById('login-form').classList.add('hidden');document.getElementById('register-form').classList.remove('hidden');document.getElementById('reg-error').classList.add('hidden')}
-function handleRegister(){const name=document.getElementById('reg-name').value.trim(),camp=document.getElementById('reg-camp').value.trim()||'Camp',email=document.getElementById('reg-email').value.trim().toLowerCase(),pass=document.getElementById('reg-password').value,err=document.getElementById('reg-error');if(!name||!email||pass.length<6){err.textContent='Name, email and password (6+ chars) required.';err.classList.remove('hidden');return}let users=load('users',{});if(users[email]){err.textContent='Account with this email already exists.';err.classList.remove('hidden');return}const user={id:uid(),name,camp,email,passHash:hash(pass),created:now()};users[email]=user;save('users',users);currentUser={id:user.id,name,camp,email};save('session',currentUser);enterApp();requestNotificationPermission().then(ok=>{if(ok)sendNotif('Welcome to DeerBook','Notifications are on.')})}
+function handleRegister(){const name=document.getElementById('reg-name').value.trim(),camp=document.getElementById('reg-camp').value.trim()||'Camp',email=document.getElementById('reg-email').value.trim().toLowerCase(),pass=document.getElementById('reg-password').value,err=document.getElementById('reg-error');if(!name||!email||pass.length<6){err.textContent='Name, email and password (6+) required.';err.classList.remove('hidden');return}let users=load('users',{});if(users[email]){err.textContent='That email is already registered.';err.classList.remove('hidden');return}const user={id:uid(),name,camp,email,passHash:hash(pass),created:now()};users[email]=user;save('users',users);currentUser={id:user.id,name,camp,email};save('session',currentUser);enterApp();requestNotificationPermission()}
 function handleLogin(){const email=document.getElementById('login-email').value.trim().toLowerCase(),pass=document.getElementById('login-password').value,err=document.getElementById('login-error');let users=load('users',{});const user=users[email];if(!user||user.passHash!==hash(pass)){err.textContent='Invalid email or password.';err.classList.remove('hidden');return}currentUser={id:user.id,name:user.name,camp:user.camp,email:user.email};save('session',currentUser);enterApp();requestNotificationPermission()}
 function logout(){localStorage.removeItem('db_session');currentUser=null;document.getElementById('app').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');showLogin()}
 function enterApp(){document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');updateUI();loadAllData();switchTab('feed')}
@@ -159,29 +224,31 @@ function loadAllData(){posts=load('posts',[]);stories=load('stories',[]).filter(
 function persistPosts(){save('posts',posts)}function persistStories(){save('stories',stories)}function persistConversations(){save('conversations_'+currentUser.id,conversations)}
 function handlePostPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{currentPostPhoto=ev.target.result;document.getElementById('post-preview-img').src=currentPostPhoto;document.getElementById('post-preview').classList.remove('hidden')};r.readAsDataURL(f)}
 function clearPostPhoto(){currentPostPhoto=null;document.getElementById('post-preview').classList.add('hidden');document.getElementById('post-file').value=''}
-function createPost(){const text=document.getElementById('post-text').value.trim();if(!text&&!currentPostPhoto){alert('Write something or add a photo.');return}posts.unshift({id:uid(),authorId:currentUser.id,author:currentUser.name,camp:currentUser.camp,text,photo:currentPostPhoto,likes:[],comments:[],created:now()});persistPosts();document.getElementById('post-text').value='';clearPostPhoto();renderPosts();sendNotif('Post shared','Your status is now on the feed.')}
+function createPost(){const text=document.getElementById('post-text').value.trim();if(!text&&!currentPostPhoto){alert('Write something or add a photo.');return}posts.unshift({id:uid(),authorId:currentUser.id,author:currentUser.name,camp:currentUser.camp,text,photo:currentPostPhoto,likes:[],comments:[],created:now()});persistPosts();document.getElementById('post-text').value='';clearPostPhoto();renderPosts();sendNotif('Shared','Your post is on the feed.')}
 function toggleLike(id){const p=posts.find(x=>x.id===id);if(!p)return;const i=p.likes.indexOf(currentUser.id);if(i>=0)p.likes.splice(i,1);else p.likes.push(currentUser.id);persistPosts();renderPosts()}
 function addComment(id){const input=document.getElementById('comment-'+id);const text=input.value.trim();if(!text)return;const p=posts.find(x=>x.id===id);if(!p)return;p.comments.push({author:currentUser.name,text,created:now()});persistPosts();input.value='';renderPosts()}
-function renderPosts(){const stream=document.getElementById('posts-stream');if(!posts.length){stream.innerHTML='<div class="text-center text-fb-secondary py-12 text-sm">No posts yet. Be the first to share a sighting!</div>';return}stream.innerHTML=posts.map(p=>{const liked=p.likes.includes(currentUser.id);return `<div class="bg-fb-card rounded-xl border border-fb-border overflow-hidden"><div class="p-3 flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-fb-primary flex items-center justify-center font-bold text-white text-sm">${initials(p.author)}</div><div><div class="font-semibold text-sm">${p.author}</div><div class="text-[11px] text-fb-secondary">${p.camp} · ${timeAgo(p.created)}</div></div></div>${p.text?`<div class="px-3 pb-2 text-sm whitespace-pre-wrap">${p.text}</div>`:''}${p.photo?`<img src="${p.photo}" class="w-full max-h-96 object-cover" alt="post">`:''}<div class="px-3 py-2 flex items-center gap-4 text-sm text-fb-secondary border-t border-fb-border"><button onclick="toggleLike('${p.id}')" class="${liked?'like-active':''}"><i class="fa-solid fa-thumbs-up"></i> ${p.likes.length||''} Like</button><button onclick="document.getElementById('comments-${p.id}').classList.toggle('hidden')"><i class="fa-solid fa-comment"></i> ${p.comments.length||''} Comment</button></div><div id="comments-${p.id}" class="hidden px-3 pb-3 space-y-2 border-t border-fb-border pt-2">${p.comments.map(c=>`<div class="text-xs"><span class="font-semibold">${c.author}</span> ${c.text}</div>`).join('')}<div class="flex gap-2 mt-2"><input id="comment-${p.id}" type="text" placeholder="Write a comment..." class="flex-1 bg-fb-hover border border-fb-border rounded-full px-3 py-1.5 text-xs focus:outline-none" onkeydown="if(event.key==='Enter')addComment('${p.id}')"><button onclick="addComment('${p.id}')" class="text-fb-primary text-xs font-semibold">Post</button></div></div></div>`}).join('')}
+function renderPosts(){const stream=document.getElementById('posts-stream');if(!posts.length){stream.innerHTML='<div class="text-center text-db-muted py-16 text-sm">Nothing here yet.<br>Share a quiet moment from the woods.</div>';return}stream.innerHTML=posts.map(p=>{const liked=p.likes.includes(currentUser.id);return `<div class="bg-db-card rounded-2xl border border-db-border overflow-hidden fade-in"><div class="p-3 flex items-center gap-2.5"><div class="w-9 h-9 rounded-full bg-db-accent flex items-center justify-center font-bold text-white text-xs">${initials(p.author)}</div><div><div class="font-medium text-sm">${p.author}</div><div class="text-[10px] text-db-muted">${p.camp} · ${timeAgo(p.created)}</div></div></div>${p.text?`<div class="px-3 pb-2 text-sm leading-relaxed whitespace-pre-wrap">${p.text}</div>`:''}${p.photo?`<img src="${p.photo}" class="w-full max-h-80 object-cover" alt="">`:''}<div class="px-3 py-2 flex items-center gap-4 text-xs text-db-muted border-t border-db-border"><button onclick="toggleLike('${p.id}')" class="${liked?'text-db-accent':''}"><i class="fa-solid fa-heart"></i> ${p.likes.length||''}</button><button onclick="document.getElementById('comments-${p.id}').classList.toggle('hidden')"><i class="fa-solid fa-comment"></i> ${p.comments.length||''}</button></div><div id="comments-${p.id}" class="hidden px-3 pb-3 space-y-1.5 border-t border-db-border pt-2">${p.comments.map(c=>`<div class="text-xs"><span class="font-medium">${c.author}</span> <span class="text-db-muted">${c.text}</span></div>`).join('')}<div class="flex gap-2 mt-1.5"><input id="comment-${p.id}" type="text" placeholder="Add a thought…" class="flex-1 bg-db-hover border border-db-border rounded-full px-3 py-1.5 text-xs focus:outline-none" onkeydown="if(event.key==='Enter')addComment('${p.id}')"><button onclick="addComment('${p.id}')" class="text-db-accent text-xs font-medium">Reply</button></div></div></div>`}).join('')}
 function openStoryUpload(){currentStoryPhoto=null;document.getElementById('story-upload-preview').classList.add('hidden');document.getElementById('story-file').value='';document.getElementById('story-caption-input').value='';document.getElementById('story-upload-modal').classList.remove('hidden')}
 function closeStoryUpload(){document.getElementById('story-upload-modal').classList.add('hidden')}
 function handleStoryPhoto(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{currentStoryPhoto=ev.target.result;document.getElementById('story-upload-img').src=currentStoryPhoto;document.getElementById('story-upload-preview').classList.remove('hidden')};r.readAsDataURL(f)}
-function publishStory(){if(!currentStoryPhoto){alert('Please choose a photo.');return}const caption=document.getElementById('story-caption-input').value.trim();stories.unshift({id:uid(),authorId:currentUser.id,author:currentUser.name,photo:currentStoryPhoto,caption,created:now()});persistStories();closeStoryUpload();renderStoriesBar();switchTab('feed');sendNotif('Story shared','Your story is live for 24 hours.')}
-function renderStoriesBar(){const list=document.getElementById('stories-list');const byAuthor={};stories.forEach(s=>{if(!byAuthor[s.authorId]||s.created>byAuthor[s.authorId].created)byAuthor[s.authorId]=s});list.innerHTML=Object.values(byAuthor).map(s=>`<div class="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer" onclick="viewStory('${s.id}')"><div class="w-16 h-16 rounded-full p-[3px] story-ring"><div class="w-full h-full rounded-full overflow-hidden bg-fb-card"><img src="${s.photo}" class="w-full h-full object-cover"></div></div><span class="text-[11px] text-fb-secondary max-w-[64px] truncate">${s.authorId===currentUser.id?'Your Story':s.author.split(' ')[0]}</span></div>`).join('')}
+function publishStory(){if(!currentStoryPhoto){alert('Choose a photo.');return}const caption=document.getElementById('story-caption-input').value.trim();stories.unshift({id:uid(),authorId:currentUser.id,author:currentUser.name,photo:currentStoryPhoto,caption,created:now()});persistStories();closeStoryUpload();renderStoriesBar();switchTab('feed');sendNotif('Story shared','Visible for 24 hours.')}
+function renderStoriesBar(){const list=document.getElementById('stories-list');const byAuthor={};stories.forEach(s=>{if(!byAuthor[s.authorId]||s.created>byAuthor[s.authorId].created)byAuthor[s.authorId]=s});list.innerHTML=Object.values(byAuthor).map(s=>`<div class="flex-shrink-0 flex flex-col items-center gap-1 cursor-pointer" onclick="viewStory('${s.id}')"><div class="w-14 h-14 rounded-full p-[2px] story-ring"><div class="w-full h-full rounded-full overflow-hidden bg-db-card"><img src="${s.photo}" class="w-full h-full object-cover"></div></div><span class="text-[10px] text-db-muted max-w-[56px] truncate">${s.authorId===currentUser.id?'Yours':s.author.split(' ')[0]}</span></div>`).join('')}
 function viewStory(id){const s=stories.find(x=>x.id===id);if(!s)return;document.getElementById('story-img').src=s.photo;document.getElementById('story-author-name').textContent=s.author;document.getElementById('story-author-avatar').textContent=initials(s.author);document.getElementById('story-time').textContent=timeAgo(s.created);document.getElementById('story-caption').textContent=s.caption||'';document.getElementById('story-viewer').classList.remove('hidden');storyProgress=0;document.getElementById('story-progress').style.width='0%';if(storyViewerTimer)clearInterval(storyViewerTimer);storyViewerTimer=setInterval(()=>{storyProgress+=2;document.getElementById('story-progress').style.width=storyProgress+'%';if(storyProgress>=100)closeStoryViewer()},100)}
 function closeStoryViewer(){document.getElementById('story-viewer').classList.add('hidden');if(storyViewerTimer)clearInterval(storyViewerTimer)}
-function renderConversations(){const q=(document.getElementById('msg-search').value||'').toLowerCase();const list=document.getElementById('conversations');let filtered=conversations;if(q)filtered=conversations.filter(c=>c.peerName.toLowerCase().includes(q));if(!filtered.length){list.innerHTML='<div class="p-6 text-center text-fb-secondary text-sm">No chats yet. Start a new conversation!</div>';return}list.innerHTML=filtered.map(c=>{const last=c.messages[c.messages.length-1];return `<div onclick="openChat('${c.id}')" class="p-3 flex items-center gap-3 hover:bg-fb-hover cursor-pointer border-b border-fb-border ${activeChatId===c.id?'bg-fb-hover':''}"><div class="w-11 h-11 rounded-full bg-fb-primary flex items-center justify-center font-bold text-white">${initials(c.peerName)}</div><div class="flex-1 min-w-0"><div class="font-semibold text-sm truncate">${c.peerName}</div><div class="text-xs text-fb-secondary truncate">${last?last.text:'No messages yet'}</div></div><div class="text-[10px] text-fb-secondary">${last?timeAgo(last.created):''}</div></div>`}).join('')}
+function renderConversations(){const list=document.getElementById('conversations');if(!conversations.length){list.innerHTML='<div class="p-8 text-center text-db-muted text-sm">No conversations yet.<br>Start one when you\'re ready.</div>';return}list.innerHTML=conversations.map(c=>{const last=c.messages[c.messages.length-1];return `<div onclick="openChat('${c.id}')" class="p-3 flex items-center gap-3 hover:bg-db-hover cursor-pointer border-b border-db-border ${activeChatId===c.id?'bg-db-hover':''}"><div class="w-10 h-10 rounded-full bg-db-accent flex items-center justify-center font-bold text-white text-xs">${initials(c.peerName)}</div><div class="flex-1 min-w-0"><div class="font-medium text-sm truncate">${c.peerName}</div><div class="text-xs text-db-muted truncate">${last?last.text:'No messages yet'}</div></div><div class="text-[10px] text-db-muted">${last?timeAgo(last.created):''}</div></div>`}).join('')}
 function startNewChat(){document.getElementById('new-chat-email').value='';document.getElementById('new-chat-modal').classList.remove('hidden')}
 function closeNewChat(){document.getElementById('new-chat-modal').classList.add('hidden')}
 function createChat(){const name=document.getElementById('new-chat-email').value.trim();if(!name){alert('Enter a name');return}let conv=conversations.find(c=>c.peerName.toLowerCase()===name.toLowerCase());if(!conv){conv={id:uid(),peerName:name,peerId:'peer_'+uid(),messages:[],created:now()};conversations.unshift(conv);persistConversations()}closeNewChat();openChat(conv.id);renderConversations()}
 function openChat(id){activeChatId=id;const conv=conversations.find(c=>c.id===id);if(!conv)return;document.getElementById('msg-empty').classList.add('hidden');document.getElementById('msg-active').classList.remove('hidden');document.getElementById('chat-peer-name').textContent=conv.peerName;document.getElementById('chat-peer-avatar').textContent=initials(conv.peerName);if(window.innerWidth<640){document.getElementById('msg-list-panel').classList.add('hidden');document.getElementById('msg-chat-panel').classList.remove('hidden');document.getElementById('msg-chat-panel').classList.add('flex')}renderMessages();renderConversations()}
 function closeChatMobile(){document.getElementById('msg-list-panel').classList.remove('hidden');document.getElementById('msg-chat-panel').classList.add('hidden');activeChatId=null}
-function renderMessages(){const conv=conversations.find(c=>c.id===activeChatId);if(!conv)return;const box=document.getElementById('chat-messages');box.innerHTML=conv.messages.map(m=>{const mine=m.from===currentUser.id;return `<div class="flex ${mine?'justify-end':''}"><div class="max-w-[75%] px-3 py-2 rounded-2xl text-sm ${mine?'bg-fb-primary text-white':'bg-fb-card border border-fb-border'}">${m.text}<div class="text-[10px] opacity-60 mt-0.5 text-right">${timeAgo(m.created)}</div></div></div>`}).join('');box.scrollTop=box.scrollHeight}
-function sendMessage(){const input=document.getElementById('chat-input');const text=input.value.trim();if(!text||!activeChatId)return;const conv=conversations.find(c=>c.id===activeChatId);if(!conv)return;conv.messages.push({id:uid(),from:currentUser.id,text,created:now()});persistConversations();input.value='';renderMessages();renderConversations();sendNotif('Message sent',text.length>40?text.slice(0,40)+'…':text)}
-function switchTab(tab){['feed','stories','messenger','profile'].forEach(t=>{const v=document.getElementById('view-'+t);if(v)v.classList.toggle('hidden',t!==tab);const btn=document.getElementById('tab-'+t);if(btn){if(t===tab){btn.classList.add('text-fb-primary','border-b-2','border-fb-primary');btn.classList.remove('text-fb-secondary')}else{btn.classList.remove('text-fb-primary','border-b-2','border-fb-primary');btn.classList.add('text-fb-secondary')}}});if(tab==='stories'){document.getElementById('all-stories').innerHTML=stories.length?stories.map(s=>`<div class="bg-fb-card rounded-xl p-3 flex gap-3 cursor-pointer border border-fb-border" onclick="viewStory('${s.id}')"><img src="${s.photo}" class="w-16 h-16 rounded-lg object-cover"><div><div class="font-semibold text-sm">${s.author}</div><div class="text-xs text-fb-secondary">${timeAgo(s.created)}</div><div class="text-xs mt-1">${s.caption||''}</div></div></div>`).join(''):'<p class="text-fb-secondary text-sm">No active stories. Share one from the Feed!</p>'}}
-function openProfile(){switchTab('profile');updateNotifBtn()}
-function updateNotifBtn(){const btn=document.getElementById('notif-toggle-btn');if(!btn)return;if(notifEnabled&&Notification.permission==='granted'){btn.textContent='Notifications: ON';btn.className='w-full bg-green-600/20 hover:bg-green-600/40 text-green-400 font-semibold py-2.5 rounded-lg transition mb-2'}else{btn.textContent='Enable Notifications';btn.className='w-full bg-fb-hover hover:bg-fb-border text-fb-text font-semibold py-2.5 rounded-lg transition mb-2'}}
-function toggleNotifications(){if(notifEnabled&&Notification.permission==='granted'){notifEnabled=false;save('notif',false);updateNotifBtn()}else{requestNotificationPermission().then(ok=>{if(ok)sendNotif('DeerBook','Notifications enabled!');updateNotifBtn()})}}
+function renderMessages(){const conv=conversations.find(c=>c.id===activeChatId);if(!conv)return;const box=document.getElementById('chat-messages');box.innerHTML=conv.messages.map(m=>{const mine=m.from===currentUser.id;return `<div class="flex ${mine?'justify-end':''}"><div class="max-w-[75%] px-3 py-2 rounded-2xl text-sm ${mine?'bg-db-accent text-white':'bg-db-card border border-db-border'}">${m.text}<div class="text-[10px] opacity-50 mt-0.5 text-right">${timeAgo(m.created)}</div></div></div>`}).join('');box.scrollTop=box.scrollHeight}
+function sendMessage(){const input=document.getElementById('chat-input');const text=input.value.trim();if(!text||!activeChatId)return;const conv=conversations.find(c=>c.id===activeChatId);if(!conv)return;conv.messages.push({id:uid(),from:currentUser.id,text,created:now()});persistConversations();input.value='';renderMessages();renderConversations()}
+function switchTab(tab){['feed','stories','messenger','profile'].forEach(t=>{const v=document.getElementById('view-'+t);if(v)v.classList.toggle('hidden',t!==tab);const btn=document.getElementById('tab-'+t);if(btn){if(t===tab){btn.classList.add('text-db-accent');btn.classList.remove('text-db-muted')}else{btn.classList.remove('text-db-accent');btn.classList.add('text-db-muted')}}});if(tab==='stories'){document.getElementById('all-stories').innerHTML=stories.length?stories.map(s=>`<div class="bg-db-card rounded-2xl p-3 flex gap-3 cursor-pointer border border-db-border" onclick="viewStory('${s.id}')"><img src="${s.photo}" class="w-14 h-14 rounded-xl object-cover"><div><div class="font-medium text-sm">${s.author}</div><div class="text-xs text-db-muted">${timeAgo(s.created)}</div><div class="text-xs mt-0.5 text-db-muted">${s.caption||''}</div></div></div>`).join(''):'<p class="text-db-muted text-sm">No stories right now. Share one when you feel like it.</p>'}}
+function openProfile(){switchTab('profile');updateNotifBtn();updateQuietBtn()}
+function updateNotifBtn(){const btn=document.getElementById('notif-toggle-btn');if(!btn)return;if(notifEnabled&&Notification.permission==='granted'&&!quietMode){btn.textContent='Notifications: On';btn.className='w-full bg-db-accent/20 text-db-accent font-medium py-2.5 rounded-xl text-sm transition'}else{btn.textContent='Enable Notifications';btn.className='w-full bg-db-hover text-db-text font-medium py-2.5 rounded-xl text-sm transition'}}
+function toggleNotifications(){if(notifEnabled&&Notification.permission==='granted'){notifEnabled=false;save('notif',false);updateNotifBtn()}else{requestNotificationPermission().then(ok=>{if(ok)sendNotif('DeerBook','Notifications on — only for things you do.');updateNotifBtn()})}}
+function updateQuietBtn(){const btn=document.getElementById('quiet-btn');if(!btn)return;btn.textContent=quietMode?'Quiet Mode: On':'Quiet Mode: Off';btn.className=quietMode?'w-full bg-db-accent/20 text-db-accent font-medium py-2.5 rounded-xl text-sm transition':'w-full bg-db-hover text-db-text font-medium py-2.5 rounded-xl text-sm transition'}
+function toggleQuiet(){quietMode=!quietMode;save('quiet',quietMode);updateQuietBtn();updateNotifBtn()}
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 window.addEventListener('DOMContentLoaded',()=>{initNotifications();const session=load('session',null);if(session){currentUser=session;enterApp()}else{document.getElementById('auth-screen').classList.remove('hidden');showLogin()}});
 </script>
