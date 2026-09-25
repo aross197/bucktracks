@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#18191A">
 <title>DeerBook</title>
-<link rel="icon" type="image/png" href="logo.png">
-<link rel="apple-touch-icon" href="logo.png">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="apple-touch-icon" href="logo.svg">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script>tailwind.config={theme:{extend:{colors:{fb:{bg:'#18191A',card:'#242526',border:'#3E4042',hover:'#3A3B3C',text:'#E4E6EB',sec:'#B0B3B8',blue:'#1877F2',green:'#42B72A'}}}}}</script>
@@ -21,7 +21,7 @@ button{cursor:pointer}
 <div id="auth" class="fixed inset-0 z-[5000] bg-fb-bg flex items-center justify-center p-4">
 <div class="w-full max-w-md">
 <div class="text-center mb-6">
-<img src="logo.png" alt="DeerBook" class="w-24 h-24 mx-auto mb-3 rounded-2xl shadow-lg object-cover">
+<img src="logo.svg" alt="DeerBook" class="w-24 h-24 mx-auto mb-3 rounded-2xl shadow-lg object-cover" style="background:#1877F2">
 <h1 class="text-3xl font-bold text-fb-blue">DeerBook</h1>
 <p class="text-fb-sec text-sm mt-1">Your own social network</p>
 </div>
@@ -43,7 +43,7 @@ button{cursor:pointer}
 </div></div></div>
 <div id="app" class="hidden flex flex-col h-full">
 <header class="bg-fb-card border-b border-fb-border px-2 py-1.5 flex items-center gap-2 flex-shrink-0 z-30">
-<div class="flex items-center gap-2 flex-1"><img src="logo.png" alt="DeerBook" class="w-9 h-9 flex-shrink-0 rounded-lg object-cover"><span class="font-bold text-fb-blue hidden sm:inline">DeerBook</span></div>
+<div class="flex items-center gap-2 flex-1"><img src="logo.svg" alt="DeerBook" class="w-9 h-9 flex-shrink-0 rounded-lg object-cover" style="background:#1877F2"><span class="font-bold text-fb-blue hidden sm:inline">DeerBook</span></div>
 <nav class="flex items-center">
 <button type="button" onclick="go('feed')" id="nav-feed" class="w-12 h-11 flex items-center justify-center text-fb-blue border-b-2 border-fb-blue"><i class="fa-solid fa-house text-lg"></i></button>
 <button type="button" onclick="go('friends')" id="nav-friends" class="w-12 h-11 flex items-center justify-center text-fb-sec"><i class="fa-solid fa-user-group text-lg"></i></button>
