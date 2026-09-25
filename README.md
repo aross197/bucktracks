@@ -1,67 +1,39 @@
 # DeerBook
 
-**A quieter social network for hunters — built to be put down.**
+Your own Facebook-style social network. Runs in the browser on GitHub Pages.
 
-No algorithms. No ads. No engagement traps. Designed for mental health.
-
-## Live site
-
-**https://aross197.github.io/bucktracks/**
+**Live:** https://aross197.github.io/bucktracks/
 
 ## Features
 
-- **Registration & Login** — email + password, stored in your browser
-- **Status updates** — text + photo posts, chronological feed only
-- **Stories** — photo stories that disappear after 24 hours
-- **Messenger** — private chats, no read receipts
-- **Notifications** — optional, gentle, fully controllable
-- **Quiet Mode** — one-tap silence
-- **Break reminders** — gentle prompt after ~20 minutes
-- **Pause screen** — full-screen “go outside” break
+- **Sign up / Log in** — stays logged in until you log out
+- **Profile** — name, hometown, bio, profile photo
+- **Feed** — posts, photos, likes, comments
+- **Stories** — expire after 24 hours
+- **Messenger** — private chats
+- **Friends** — add people who sign up on the same device
 
-## Mental health design
+## Quick start
 
-| What Facebook does | What DeerBook does |
-|--------------------|--------------------|
-| Algorithm pushes content | Chronological only |
-| Ads & sponsored posts | Zero ads |
-| Endless scroll pressure | Clean, intentional layout |
-| Notification spam | Quiet Mode + optional alerts |
-| Read receipts | None |
-| Keeps you scrolling | Break reminders + pause |
-| Data on their servers | Everything stays on your device |
+1. Open https://aross197.github.io/bucktracks/
+2. Sign Up (name, email, password 6+)
+3. You stay logged in
+4. Post, chat, edit profile, share stories
+
+### Friends
+
+Someone else must sign up on the **same phone/computer**. Log out → second account → log back in → Add Friend.
+
+### Clear data
+
+Menu → **Clear all data on this device** wipes accounts and posts on that browser only.
 
 ## Files
 
-```
-bucktracks/
-├── index.html      # Full DeerBook app
-├── sw.js           # Service worker (notifications)
-├── .nojekyll       # Ensures GitHub Pages works
-├── README.md       # This file
-└── bucktracks-hub.html  # Separate hub tool (optional)
-```
+| File | Purpose |
+|------|---------|
+| `index.html` | Full app |
+| `sw.js` | Service worker |
+| `.nojekyll` | GitHub Pages config |
 
-## How to use
-
-1. Open https://aross197.github.io/bucktracks/
-2. Create an account (name, camp, email, password)
-3. Share posts, stories, and messages
-4. Use **Quiet Mode** or **Pause** anytime from your profile
-
-## GitHub Pages
-
-If the site shows 404:
-
-1. Repo → **Settings** → **Pages**
-2. Source: **Deploy from a branch**
-3. Branch: **main** / folder: **/ (root)**
-4. Save and wait ~30–60 seconds
-
-## Privacy
-
-All data (accounts, posts, photos, messages) is stored in **your browser’s localStorage**. Nothing is sent to a server. Clearing browser data will clear your DeerBook data.
-
----
-
-*Designed to be put down.*
+Data is stored in the browser (`localStorage`). It is not shared across different phones or computers.

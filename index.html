@@ -13,11 +13,9 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body,html{height:100%;margin:0;background:#18191A;color:#E4E6EB;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .hide-scroll::-webkit-scrollbar{display:none}.hide-scroll{scrollbar-width:none}
-.story-ring{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
 .logo{background:#1877F2;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#242526;border:1px solid #1877F2;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-button{cursor:pointer}
-input,textarea{font-family:inherit}
+button{cursor:pointer}input,textarea{font-family:inherit}
 </style>
 </head>
 <body class="bg-fb-bg text-fb-text flex flex-col h-screen overflow-hidden">
@@ -32,7 +30,7 @@ input,textarea{font-family:inherit}
 <input id="login-email" type="email" placeholder="Email" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="email">
 <input id="login-pass" type="password" placeholder="Password" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
 <p id="login-err" class="text-red-400 text-xs hidden"></p>
-<button type="button" onclick="doLogin()" class="w-full bg-fb-blue hover:bg-blue-600 text-white font-semibold py-3 rounded-lg text-base">Log In</button>
+<button type="button" onclick="doLogin()" class="w-full bg-fb-blue hover:bg-blue-600 text-white font-semibold py-3 rounded-lg">Log In</button>
 <div class="text-center text-sm text-fb-sec pt-2 border-t border-fb-border">Don't have an account? <button type="button" onclick="showReg()" class="text-fb-blue font-semibold">Sign Up</button></div>
 </div>
 <div id="reg-box" class="bg-fb-card p-5 rounded-xl border border-fb-border space-y-3 hidden">
@@ -41,25 +39,20 @@ input,textarea{font-family:inherit}
 <input id="reg-email" type="email" placeholder="Email" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="email">
 <input id="reg-pass" type="password" placeholder="Password (6+ characters)" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
 <p id="reg-err" class="text-red-400 text-xs hidden"></p>
-<button type="button" onclick="doRegister()" class="w-full bg-fb-green hover:opacity-90 text-white font-semibold py-3 rounded-lg text-base">Create Account</button>
+<button type="button" onclick="doRegister()" class="w-full bg-fb-green hover:opacity-90 text-white font-semibold py-3 rounded-lg">Create Account</button>
 <div class="text-center text-sm text-fb-sec pt-2 border-t border-fb-border">Already have an account? <button type="button" onclick="showLogin()" class="text-fb-blue font-semibold">Log In</button></div>
-</div>
-</div>
-</div>
+</div></div></div>
 <div id="app" class="hidden flex flex-col h-full">
 <header class="bg-fb-card border-b border-fb-border px-2 py-1 flex items-center gap-2 flex-shrink-0 z-30">
-<div class="flex items-center gap-2 flex-1 min-w-0">
-<div class="logo w-9 h-9 flex-shrink-0"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path fill="white" d="M28 58c2-14 12-26 26-28 3-9 12-14 20-10 3 1 4 5 2 7-2 3-5 4-7 3-4-1-6 2-5 5l9 20c2 3-1 7-5 7H58c-3 0-6-3-7-6l-5-14c-1-3-5-5-7-2-3 3-4 7-1 10 5 7 14 12 24 12 16 0 29-12 29-28 0-9-4-17-11-22"/><path fill="#FF6B35" d="M68 20c5-3 12-1 14 5 1 3-1 6-4 6-3 0-6-3-7-5-1-2-2-5-3-6z"/></svg></div>
-<span class="font-bold text-fb-blue text-lg hidden sm:inline">DeerBook</span>
-</div>
+<div class="flex items-center gap-2 flex-1 min-w-0"><div class="logo w-9 h-9 flex-shrink-0"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path fill="white" d="M28 58c2-14 12-26 26-28 3-9 12-14 20-10 3 1 4 5 2 7-2 3-5 4-7 3-4-1-6 2-5 5l9 20c2 3-1 7-5 7H58c-3 0-6-3-7-6l-5-14c-1-3-5-5-7-2-3 3-4 7-1 10 5 7 14 12 24 12 16 0 29-12 29-28 0-9-4-17-11-22"/><path fill="#FF6B35" d="M68 20c5-3 12-1 14 5 1 3-1 6-4 6-3 0-6-3-7-5-1-2-2-5-3-6z"/></svg></div>
+<span class="font-bold text-fb-blue text-lg hidden sm:inline">DeerBook</span></div>
 <nav class="flex items-center">
 <button type="button" onclick="go('feed')" id="nav-feed" class="w-12 sm:w-14 h-12 flex items-center justify-center text-fb-blue border-b-2 border-fb-blue"><i class="fa-solid fa-house text-lg"></i></button>
 <button type="button" onclick="go('friends')" id="nav-friends" class="w-12 sm:w-14 h-12 flex items-center justify-center text-fb-sec"><i class="fa-solid fa-user-group text-lg"></i></button>
 <button type="button" onclick="go('watch')" id="nav-watch" class="w-12 sm:w-14 h-12 flex items-center justify-center text-fb-sec"><i class="fa-solid fa-clapperboard text-lg"></i></button>
 <button type="button" onclick="go('chat')" id="nav-chat" class="w-12 sm:w-14 h-12 flex items-center justify-center text-fb-sec"><i class="fa-solid fa-comments text-lg"></i></button>
 <button type="button" onclick="go('menu')" id="nav-menu" class="w-12 sm:w-14 h-12 flex items-center justify-center text-fb-sec"><div id="nav-av" class="w-7 h-7 rounded-full bg-fb-blue flex items-center justify-center text-xs font-bold text-white">?</div></button>
-</nav>
-</header>
+</nav></header>
 <div id="page-feed" class="flex-1 overflow-y-auto hide-scroll"><div class="max-w-xl mx-auto">
 <div class="bg-fb-card border-b border-fb-border p-3"><div class="flex gap-2 overflow-x-auto hide-scroll">
 <div onclick="openStoryUpload()" class="flex-shrink-0 w-24 h-40 rounded-xl bg-fb-hover relative cursor-pointer overflow-hidden border border-fb-border"><div class="absolute inset-0 flex flex-col items-center justify-end pb-2 bg-gradient-to-t from-black/60 to-transparent"><div class="w-8 h-8 rounded-full bg-fb-blue flex items-center justify-center mb-1 border-2 border-fb-card"><i class="fa-solid fa-plus text-white text-xs"></i></div><span class="text-[11px] font-medium">Create story</span></div></div>
@@ -67,7 +60,7 @@ input,textarea{font-family:inherit}
 <div class="bg-fb-card m-2 p-3 rounded-xl border border-fb-border">
 <div class="flex gap-2 items-center"><div id="comp-av" class="w-10 h-10 rounded-full bg-fb-blue flex items-center justify-center text-sm font-bold text-white flex-shrink-0">?</div>
 <button type="button" onclick="openComposer()" class="flex-1 text-left bg-fb-hover rounded-full px-4 py-2.5 text-sm text-fb-sec">What's on your mind?</button></div>
-<div id="composer-expand" class="hidden mt-3"><textarea id="post-text-full" rows="3" placeholder="What's on your mind?" class="w-full bg-fb-hover rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-fb-blue"></textarea>
+<div id="composer-expand" class="hidden mt-3"><textarea id="post-text-full" rows="3" placeholder="What's on your mind?" class="w-full bg-fb-hover rounded-lg px-3 py-2 text-sm resize-none focus:outline-none"></textarea>
 <div id="post-prev" class="hidden mt-2 relative"><img id="post-prev-img" class="max-h-48 rounded-lg w-full object-cover" alt=""><button type="button" onclick="clearPhoto()" class="absolute top-2 right-2 bg-black/70 w-8 h-8 rounded-full text-white"><i class="fa-solid fa-times"></i></button></div>
 <div class="flex items-center justify-between mt-2 pt-2 border-t border-fb-border">
 <label class="flex items-center gap-1.5 text-sm text-fb-sec cursor-pointer"><i class="fa-solid fa-image text-green-500"></i> Photo<input type="file" id="post-file" accept="image/*" class="hidden" onchange="onPhoto(event)"></label>
@@ -102,7 +95,8 @@ input,textarea{font-family:inherit}
 <button type="button" onclick="go('chat')" class="w-full flex items-center gap-3 p-3.5 hover:bg-fb-hover text-left"><i class="fa-solid fa-comments text-fb-blue w-6"></i> Messenger</button>
 <button type="button" onclick="go('watch')" class="w-full flex items-center gap-3 p-3.5 hover:bg-fb-hover text-left"><i class="fa-solid fa-clapperboard text-fb-blue w-6"></i> Stories</button></div>
 <button type="button" onclick="doLogout()" class="w-full bg-fb-card border border-fb-border rounded-xl p-3.5 text-center text-sm font-semibold hover:bg-fb-hover">Log Out</button>
-<p class="text-center text-[11px] text-fb-sec">You stay logged in until you tap Log Out</p></div></div>
+<button type="button" onclick="if(confirm('Clear ALL DeerBook data on this device? You will need to sign up again.')){Object.keys(localStorage).filter(k=>k.startsWith('db_')).forEach(k=>localStorage.removeItem(k));location.reload()}" class="w-full text-red-400 text-xs py-2">Clear all data on this device</button>
+<p class="text-center text-[11px] text-fb-sec">You stay logged in until you Log Out</p></div></div>
 <div id="page-profile" class="hidden flex-1 overflow-y-auto hide-scroll"><div class="max-w-xl mx-auto">
 <div class="bg-fb-card border-b border-fb-border">
 <div class="h-32 bg-gradient-to-r from-fb-blue to-blue-800 relative">
@@ -155,6 +149,8 @@ input,textarea{font-family:inherit}
 <button type="button" onclick="createChat()" class="flex-1 bg-fb-blue text-white py-2.5 rounded-lg text-sm font-semibold">Chat</button></div></div></div>
 <script>
 let user=null,posts=[],stories=[],chats=[],friends=[],activeChat=null,postPhoto=null,storyPhoto=null,storyTimer=null,storyPct=0;
+const DB_VERSION=3;
+(function migrateDb(){try{const v=parseInt(localStorage.getItem('db_version')||'0',10);if(v!==DB_VERSION){if(v===0||v<2){Object.keys(localStorage).filter(k=>k.startsWith('db_')).forEach(k=>localStorage.removeItem(k))}localStorage.setItem('db_version',String(DB_VERSION))}}catch(e){}})();
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function now(){return Date.now()}
 function ago(t){const s=Math.floor((Date.now()-t)/1000);if(s<60)return'Just now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
@@ -175,10 +171,10 @@ function updateAvatarDisplay(){const letter=ini(user&&user.name);['nav-av','comp
 function showEditProfile(){document.getElementById('prof-view').classList.add('hidden');document.getElementById('prof-edit').classList.remove('hidden');document.getElementById('edit-name').value=user.name||'';document.getElementById('edit-camp').value=user.camp||'';document.getElementById('edit-bio').value=user.bio||''}
 function cancelEditProfile(){document.getElementById('prof-edit').classList.add('hidden');document.getElementById('prof-view').classList.remove('hidden')}
 function saveProfile(){const name=document.getElementById('edit-name').value.trim(),camp=document.getElementById('edit-camp').value.trim(),bio=document.getElementById('edit-bio').value.trim();if(!name){toast('Name is required');return}user.name=name;user.camp=camp;user.bio=bio;save('session',user);let users=load('users',{});if(users[user.email]){users[user.email].name=name;users[user.email].camp=camp;users[user.email].bio=bio;if(user.photo)users[user.email].photo=user.photo;save('users',users)}let people=load('people',[]);const pi=people.findIndex(p=>p.id===user.id||p.email===user.email);if(pi>=0){people[pi].name=name;people[pi].camp=camp;save('people',people)}document.getElementById('prof-name').textContent=name;document.getElementById('prof-camp').textContent=camp||'';document.getElementById('prof-bio').textContent=bio||'';document.getElementById('menu-name').textContent=name;updateAvatarDisplay();cancelEditProfile();toast('Profile saved')}
-async function onProfilePhoto(e){const f=e.target.files[0];if(!f)return;toast('Updating photo...');const data=await compress(f,400,0.75);if(!data){toast('Could not load photo');return}user.photo=data;save('session',user);let users=load('users',{});if(users[user.email]){users[user.email].photo=data;save('users',users)}updateAvatarDisplay();toast('Photo updated')}
+async function onProfilePhoto(e){const f=e.target.files[0];if(!f)return;const data=await compress(f,400,0.75);if(!data){toast('Could not load photo');return}user.photo=data;save('session',user);let users=load('users',{});if(users[user.email]){users[user.email].photo=data;save('users',users)}updateAvatarDisplay();toast('Photo updated')}
 function go(page){['feed','friends','watch','chat','menu','profile'].forEach(p=>{const el=document.getElementById('page-'+p);if(el)el.classList.toggle('hidden',p!==page);const nav=document.getElementById('nav-'+p);if(nav){if(p===page){nav.classList.add('text-fb-blue','border-b-2','border-fb-blue');nav.classList.remove('text-fb-sec')}else{nav.classList.remove('text-fb-blue','border-b-2','border-fb-blue');nav.classList.add('text-fb-sec')}}});if(page==='feed'){renderFeed();renderStories()}if(page==='friends')renderPeople();if(page==='watch')renderAllStories();if(page==='chat'){document.getElementById('chat-list').classList.remove('hidden');renderChats()}if(page==='profile')renderProfPosts()}
 function openComposer(){document.getElementById('composer-expand').classList.remove('hidden');setTimeout(()=>document.getElementById('post-text-full').focus(),50)}
-async function onPhoto(e){const f=e.target.files[0];if(!f)return;postPhoto=await compress(f,1200,0.72);if(postPhoto){document.getElementById('post-prev-img').src=postPhoto;document.getElementById('post-prev').classList.remove('hidden');document.getElementById('composer-expand').classList.remove('hidden')}else toast('Could not load photo')}
+async function onPhoto(e){const f=e.target.files[0];if(!f)return;postPhoto=await compress(f,1200,0.72);if(postPhoto){document.getElementById('post-prev-img').src=postPhoto;document.getElementById('post-prev').classList.remove('hidden');document.getElementById('composer-expand').classList.remove('hidden')}}
 function clearPhoto(){postPhoto=null;document.getElementById('post-prev').classList.add('hidden');document.getElementById('post-file').value=''}
 function createPost(){const text=(document.getElementById('post-text-full').value||'').trim();if(!text&&!postPhoto){toast('Write something or add a photo');return}posts.unshift({id:uid(),authorId:user.id,author:user.name,camp:user.camp,text,photo:postPhoto,likes:[],comments:[],created:now()});save('posts',posts);document.getElementById('post-text-full').value='';clearPhoto();document.getElementById('composer-expand').classList.add('hidden');renderFeed();toast('Posted!')}
 function like(id){const p=posts.find(x=>x.id===id);if(!p)return;const i=p.likes.indexOf(user.id);if(i>=0)p.likes.splice(i,1);else p.likes.push(user.id);save('posts',posts);renderFeed()}
