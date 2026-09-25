@@ -1,18 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B8CFF"/>
-      <stop offset="100%" stop-color="#1877F2"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
-  <g fill="#FFFFFF">
-    <path d="M130 420 C130 300 180 220 260 200 C270 240 310 270 360 275 C410 280 455 250 475 220 C485 260 480 320 460 370 C420 450 330 480 250 480 C180 480 130 450 130 420Z"/>
-    <path d="M255 200 C265 130 320 90 390 95 C430 98 470 130 485 170 C495 195 485 220 460 230 C430 200 385 205 350 230 C320 250 280 240 255 200Z"/>
-    <path d="M270 145 C255 100 270 70 305 80 C315 100 295 140 270 145Z"/>
-    <ellipse cx="420" cy="160" rx="12" ry="14" fill="#1877F2"/>
-  </g>
-  <path fill="#FF6B35" d="M360 100 C370 40 420 10 470 20 C475 50 450 80 420 95 C440 50 490 40 510 60 C490 90 450 110 400 115 C380 100 365 100 360 100Z"/>
-  <path fill="#FFFFFF" d="M320 95 C290 40 230 15 180 25 C185 55 230 80 280 95 C250 50 190 40 160 55 C185 85 240 105 300 110 C315 100 320 95 320 95Z"/>
-  <text x="256" y="500" text-anchor="middle" fill="#FFFFFF" font-family="Arial Black, Helvetica, Arial, sans-serif" font-weight="900" font-size="72" letter-spacing="-1">DeerBook</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" rx="96" fill="#1877F2"/>
+<path fill="#FFFFFF" d="M140 430C140 310 195 230 275 205C285 250 330 280 385 285C430 290 470 260 485 225C495 270 485 340 455 390C410 460 310 485 230 485C175 485 140 460 140 430Z"/>
+<path fill="#FFFFFF" d="M270 205C280 125 345 85 420 95C460 100 495 140 505 185C510 210 495 235 465 245C430 210 375 215 335 245C305 265 275 250 270 205Z"/>
+<path fill="#FFFFFF" d="M285 145C270 95 290 60 330 70C340 95 310 140 285 145Z"/>
+<ellipse cx="455" cy="165" rx="14" ry="16" fill="#1877F2"/>
+<path fill="#FF6B35" d="M390 95C400 30 470 5 505 25C500 55 470 80 440 95C465 45 515 40 520 65C495 95 450 110 400 115C390 105 390 95 390 95Z"/>
+<path fill="#FFFFFF" d="M340 95C310 35 240 10 185 30C190 60 245 85 305 100C275 50 210 40 175 55C205 90 270 110 335 115C340 105 345 100 340 95Z"/>
+<text x="256" y="500" text-anchor="middle" fill="#FFFFFF" font-family="Arial Black, Helvetica, Arial, sans-serif" font-weight="900" font-size="68">DeerBook</text>
 </svg>
