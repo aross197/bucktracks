@@ -1,1 +1,145 @@
-PLACEHOLDER_WILL_FAIL
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#18191A">
+<title>DeerBook</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script>tailwind.config={theme:{extend:{colors:{fb:{bg:'#18191A',card:'#242526',border:'#3E4042',hover:'#3A3B3C',text:'#E4E6EB',sec:'#B0B3B8',blue:'#1877F2',green:'#42B72A'}}}}}</script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body,html{height:100%;margin:0;background:#18191A;color:#E4E6EB;font-family:system-ui,-apple-system,sans-serif}
+.hide-scroll::-webkit-scrollbar{display:none}.hide-scroll{scrollbar-width:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#242526;border:1px solid #1877F2;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.db-logo{background:url(logo.svg) center/cover no-repeat;display:block;background-color:#1877F2}
+button{cursor:pointer}input,textarea{font-family:inherit}
+.post-card{background:#242526;border:1px solid #3E4042;border-radius:12px;overflow:hidden}
+.online-dot{width:10px;height:10px;background:#31A24C;border:2px solid #242526;border-radius:50%;position:absolute;bottom:0;right:0}
+</style>
+</head>
+<body class="bg-fb-bg text-fb-text flex flex-col h-screen overflow-hidden">
+<div id="auth" class="fixed inset-0 z-[5000] bg-fb-bg flex items-center justify-center p-4">
+<div class="w-full max-w-md">
+<div class="text-center mb-6">
+<div class="db-logo w-24 h-24 mx-auto mb-3 rounded-2xl shadow-lg" role="img" aria-label="DeerBook"></div>
+<h1 class="text-3xl font-bold text-fb-blue">DeerBook</h1>
+<p class="text-fb-sec text-sm mt-1">Your own social network</p>
+</div>
+<div id="login-box" class="bg-fb-card p-5 rounded-xl border border-fb-border space-y-3">
+<input id="login-email" type="email" placeholder="Email" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="email">
+<input id="login-pass" type="password" placeholder="Password" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+<p id="login-err" class="text-red-400 text-xs hidden"></p>
+<button type="button" onclick="doLogin()" class="w-full bg-fb-blue hover:bg-blue-600 text-white font-semibold py-3 rounded-lg">Log In</button>
+<div class="text-center text-sm text-fb-sec pt-2 border-t border-fb-border">Don't have an account? <button type="button" onclick="showReg()" class="text-fb-blue font-semibold">Sign Up</button></div>
+</div>
+<div id="reg-box" class="bg-fb-card p-5 rounded-xl border border-fb-border space-y-3 hidden">
+<input id="reg-name" type="text" placeholder="Full name" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue">
+<input id="reg-camp" type="text" placeholder="Hometown / Camp (optional)" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue">
+<input id="reg-email" type="email" placeholder="Email" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="email">
+<input id="reg-pass" type="password" placeholder="Password (6+ characters)" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-3 text-sm focus:outline-none focus:border-fb-blue" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+<p id="reg-err" class="text-red-400 text-xs hidden"></p>
+<button type="button" onclick="doRegister()" class="w-full bg-fb-green hover:opacity-90 text-white font-semibold py-3 rounded-lg">Create Account</button>
+<div class="text-center text-sm text-fb-sec pt-2 border-t border-fb-border">Already have an account? <button type="button" onclick="showLogin()" class="text-fb-blue font-semibold">Log In</button></div>
+</div></div></div>
+<div id="app" class="hidden flex flex-col h-full">
+<header class="bg-fb-card border-b border-fb-border px-2 py-1.5 flex items-center gap-2 flex-shrink-0 z-30">
+<div class="flex items-center gap-2 flex-1 min-w-0">
+<div class="db-logo w-9 h-9 flex-shrink-0 rounded-lg" role="img" aria-label="DeerBook"></div>
+<span class="font-bold text-fb-blue text-lg hidden sm:inline">DeerBook</span>
+</div>
+<nav class="flex items-center">
+<button type="button" onclick="go('feed')" id="nav-feed" class="w-12 sm:w-14 h-11 flex items-center justify-center text-fb-blue border-b-2 border-fb-blue"><i class="fa-solid fa-house text-lg"></i></button>
+<button type="button" onclick="go('online')" id="nav-online" title="Online" class="w-12 sm:w-14 h-11 flex items-center justify-center text-fb-sec relative"><i class="fa-solid fa-circle-user text-lg"></i><span id="online-badge" class="hidden absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-fb-green text-[10px] font-bold text-white flex items-center justify-center">0</span></button>
+<button type="button" onclick="go('friends')" id="nav-friends" class="w-12 sm:w-14 h-11 flex items-center justify-center text-fb-sec"><i class="fa-solid fa-user-group text-lg"></i></button>
+<button type="button" onclick="go('chat')" id="nav-chat" title="Messenger" class="w-12 sm:w-14 h-11 flex items-center justify-center text-fb-sec"><i class="fa-solid fa-comments text-lg"></i></button>
+<button type="button" onclick="go('menu')" id="nav-menu" class="w-12 sm:w-14 h-11 flex items-center justify-center text-fb-sec"><div id="nav-av" class="w-7 h-7 rounded-full bg-fb-blue flex items-center justify-center text-xs font-bold text-white overflow-hidden">?</div></button>
+</nav></header>
+<div id="page-feed" class="flex-1 overflow-y-auto hide-scroll"><div class="max-w-xl mx-auto pb-6">
+<div class="bg-fb-card border-b border-fb-border p-3"><div class="flex gap-2 overflow-x-auto hide-scroll">
+<div onclick="openStoryUpload()" class="flex-shrink-0 w-24 h-40 rounded-xl bg-fb-hover relative cursor-pointer overflow-hidden border border-fb-border"><div class="absolute inset-0 flex flex-col items-center justify-end pb-2 bg-gradient-to-t from-black/60 to-transparent"><div class="w-8 h-8 rounded-full bg-fb-blue flex items-center justify-center mb-1 border-2 border-fb-card"><i class="fa-solid fa-plus text-white text-xs"></i></div><span class="text-[11px] font-medium">Create story</span></div></div>
+<div id="stories-row" class="flex gap-2"></div></div></div>
+<div class="bg-fb-card m-2 p-3 rounded-xl border border-fb-border shadow-sm">
+<div class="flex gap-3 items-center"><div id="comp-av" class="w-10 h-10 rounded-full bg-fb-blue flex items-center justify-center text-sm font-bold text-white flex-shrink-0 overflow-hidden">?</div>
+<button type="button" onclick="openComposer()" class="flex-1 text-left bg-fb-hover hover:bg-fb-border rounded-full px-4 py-2.5 text-sm text-fb-sec transition">What's on your mind?</button></div>
+<div id="composer-expand" class="hidden mt-3 pt-3 border-t border-fb-border">
+<textarea id="post-text-full" rows="3" placeholder="What's on your mind?" class="w-full bg-fb-hover rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-fb-blue"></textarea>
+<div id="post-prev" class="hidden mt-3 relative rounded-xl overflow-hidden"><img id="post-prev-img" class="max-h-64 w-full object-cover" alt=""><button type="button" onclick="clearPhoto()" class="absolute top-2 right-2 bg-black/70 w-8 h-8 rounded-full text-white"><i class="fa-solid fa-times"></i></button></div>
+<div class="flex items-center justify-between mt-3"><label class="flex items-center gap-2 text-sm text-fb-sec cursor-pointer hover:bg-fb-hover px-3 py-2 rounded-lg"><i class="fa-solid fa-image text-green-500 text-lg"></i> Photo<input type="file" id="post-file" accept="image/*" class="hidden" onchange="onPhoto(event)"></label>
+<button type="button" onclick="createPost()" class="bg-fb-blue hover:bg-blue-600 text-white text-sm font-semibold px-6 py-2 rounded-lg">Post</button></div></div></div>
+<div id="feed" class="px-2 space-y-3"></div></div></div>
+<div id="page-online" class="hidden flex-1 overflow-y-auto hide-scroll p-3"><div class="max-w-xl mx-auto"><h2 class="font-bold text-xl mb-1">Online now</h2><p class="text-fb-sec text-xs mb-4">People using DeerBook on this device</p><div id="online-list" class="space-y-2"></div></div></div>
+<div id="page-friends" class="hidden flex-1 overflow-y-auto hide-scroll p-3"><div class="max-w-xl mx-auto"><h2 class="font-bold text-xl mb-3">Friends</h2><div class="bg-fb-card rounded-xl border border-fb-border p-3 mb-3"><input id="friend-search" type="text" placeholder="Search people" class="w-full bg-fb-hover rounded-full px-4 py-2.5 text-sm focus:outline-none" oninput="renderPeople()"></div><div id="people-list" class="space-y-2"></div></div></div>
+<div id="page-chat" class="hidden flex-1 flex overflow-hidden">
+<div id="chat-list" class="w-full sm:w-96 border-r border-fb-border flex flex-col bg-fb-card">
+<div class="p-4 border-b border-fb-border"><h2 class="font-bold text-xl mb-3">Messenger</h2>
+<button type="button" onclick="startChat()" class="w-full bg-fb-blue hover:bg-blue-600 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-sm"><i class="fa-solid fa-pen-to-square"></i> New Message</button></div>
+<div id="chats" class="flex-1 overflow-y-auto hide-scroll"></div></div>
+<div id="chat-pane" class="hidden sm:flex flex-1 flex-col bg-fb-bg">
+<div id="chat-empty" class="flex-1 flex flex-col items-center justify-center text-fb-sec p-6 text-center gap-3">
+<div class="w-16 h-16 rounded-full bg-fb-hover flex items-center justify-center"><i class="fa-solid fa-comments text-2xl text-fb-blue"></i></div>
+<p class="text-sm font-semibold text-fb-text">Your messages</p>
+<button type="button" onclick="startChat()" class="mt-2 bg-fb-blue text-white text-sm font-semibold px-5 py-2.5 rounded-full">New Message</button></div>
+<div id="chat-active" class="hidden flex-1 flex flex-col min-h-0">
+<div class="p-3 border-b border-fb-border bg-fb-card flex items-center gap-3">
+<button type="button" onclick="closeChatMob()" class="sm:hidden text-fb-sec p-1"><i class="fa-solid fa-arrow-left"></i></button>
+<div id="chat-av" class="w-10 h-10 rounded-full bg-fb-blue flex items-center justify-center text-sm font-bold text-white">?</div>
+<span id="chat-name" class="font-semibold text-sm flex-1">Name</span></div>
+<div id="chat-msgs" class="flex-1 overflow-y-auto hide-scroll p-3 space-y-2"></div>
+<div class="p-3 border-t border-fb-border bg-fb-card flex gap-2">
+<input id="chat-in" type="text" placeholder="Type a message..." class="flex-1 bg-fb-hover rounded-full px-4 py-2.5 text-sm focus:outline-none" onkeydown="if(event.key==='Enter')sendMsg()">
+<button type="button" onclick="sendMsg()" class="w-11 h-11 rounded-full bg-fb-blue flex items-center justify-center text-white"><i class="fa-solid fa-paper-plane"></i></button></div></div></div></div>
+<div id="page-menu" class="hidden flex-1 overflow-y-auto hide-scroll p-3"><div class="max-w-md mx-auto space-y-3">
+<div class="bg-fb-card rounded-xl border border-fb-border p-4 flex items-center gap-3 cursor-pointer hover:bg-fb-hover" onclick="go('profile')">
+<div id="menu-av" class="w-14 h-14 rounded-full bg-fb-blue flex items-center justify-center text-xl font-bold text-white overflow-hidden">?</div>
+<div><div id="menu-name" class="font-bold">You</div><div class="text-xs text-fb-sec">View your profile</div></div></div>
+<div class="bg-fb-card rounded-xl border border-fb-border divide-y divide-fb-border">
+<button type="button" onclick="go('online')" class="w-full flex items-center gap-3 p-3.5 hover:bg-fb-hover text-left"><i class="fa-solid fa-circle text-fb-green text-xs w-6"></i> Online now</button>
+<button type="button" onclick="go('friends')" class="w-full flex items-center gap-3 p-3.5 hover:bg-fb-hover text-left"><i class="fa-solid fa-user-group text-fb-blue w-6"></i> Friends</button>
+<button type="button" onclick="go('chat')" class="w-full flex items-center gap-3 p-3.5 hover:bg-fb-hover text-left"><i class="fa-solid fa-comments text-fb-blue w-6"></i> Messenger</button></div>
+<button type="button" onclick="doLogout()" class="w-full bg-fb-card border border-fb-border rounded-xl p-3.5 text-center text-sm font-semibold hover:bg-fb-hover">Log Out</button>
+<p class="text-center text-[11px] text-fb-sec">You stay logged in until you Log Out</p></div></div>
+<div id="page-profile" class="hidden flex-1 overflow-y-auto hide-scroll"><div class="max-w-xl mx-auto">
+<div class="bg-fb-card border-b border-fb-border"><div class="h-36 bg-gradient-to-r from-fb-blue to-blue-800 relative">
+<button type="button" onclick="go('menu')" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button></div>
+<div class="px-4 pb-4 -mt-12">
+<div class="relative inline-block"><div id="prof-av" class="w-24 h-24 rounded-full bg-fb-blue border-4 border-fb-card flex items-center justify-center text-3xl font-bold text-white overflow-hidden">?</div>
+<img id="prof-av-img" class="hidden w-24 h-24 rounded-full border-4 border-fb-card object-cover absolute top-0 left-0" alt="">
+<label class="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-fb-blue text-white flex items-center justify-center cursor-pointer shadow border-2 border-fb-card"><i class="fa-solid fa-camera text-xs"></i><input type="file" id="prof-photo-file" accept="image/*" class="hidden" onchange="onProfilePhoto(event)"></label></div>
+<div id="prof-view"><h1 id="prof-name" class="text-2xl font-bold mt-2">You</h1><p id="prof-camp" class="text-fb-sec text-sm"></p><p id="prof-bio" class="text-sm mt-2"></p><p id="prof-email" class="text-fb-sec text-xs mt-1"></p>
+<button type="button" onclick="showEditProfile()" class="mt-3 w-full bg-fb-hover text-sm font-semibold py-2.5 rounded-lg">Edit Profile</button></div>
+<div id="prof-edit" class="hidden mt-3 space-y-2">
+<label class="text-xs text-fb-sec">Display name</label><input id="edit-name" type="text" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-blue">
+<label class="text-xs text-fb-sec">Hometown / Camp</label><input id="edit-camp" type="text" class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-fb-blue">
+<label class="text-xs text-fb-sec">Bio</label><textarea id="edit-bio" rows="3" placeholder="Tell people about yourself..." class="w-full bg-fb-hover border border-fb-border rounded-lg px-3 py-2.5 text-sm resize-none focus:outline-none focus:border-fb-blue"></textarea>
+<div class="flex gap-2 pt-1"><button type="button" onclick="cancelEditProfile()" class="flex-1 bg-fb-hover py-2.5 rounded-lg text-sm">Cancel</button>
+<button type="button" onclick="saveProfile()" class="flex-1 bg-fb-blue text-white py-2.5 rounded-lg text-sm font-semibold">Save</button></div></div></div></div>
+<div id="prof-posts" class="p-2 space-y-3"></div></div></div></div>
+<div id="story-view" class="fixed inset-0 z-[6000] bg-black hidden flex flex-col">
+<div class="h-1 bg-white/20"><div id="story-bar" class="h-full bg-white transition-all" style="width:0%"></div></div>
+<div class="flex items-center gap-2 p-3 absolute top-2 left-0 right-0 z-10">
+<div id="sv-av" class="w-8 h-8 rounded-full bg-fb-blue flex items-center justify-center text-xs font-bold text-white">?</div>
+<span id="sv-name" class="text-white text-sm font-semibold"></span><span id="sv-time" class="text-white/50 text-xs"></span>
+<button type="button" onclick="closeStory()" class="ml-auto text-white text-xl p-1"><i class="fa-solid fa-times"></i></button></div>
+<div class="flex-1 flex items-center justify-center"><img id="sv-img" class="max-w-full max-h-full object-contain" src="" alt=""></div>
+<p id="sv-cap" class="p-4 text-center text-white text-sm"></p></div>
+<div id="story-modal" class="fixed inset-0 z-[5500] bg-black/80 hidden flex items-center justify-center p-4">
+<div class="bg-fb-card rounded-xl w-full max-w-sm p-4 space-y-3 border border-fb-border">
+<h3 class="font-bold text-lg">Create Story</h3>
+<div id="st-prev" class="hidden"><img id="st-prev-img" class="w-full max-h-48 object-cover rounded-lg" alt=""></div>
+<label class="flex flex-col items-center justify-center h-28 border-2 border-dashed border-fb-border rounded-xl cursor-pointer hover:border-fb-blue"><i class="fa-solid fa-camera text-2xl text-fb-sec mb-1"></i><span class="text-sm text-fb-sec">Choose photo</span>
+<input type="file" id="st-file" accept="image/*" class="hidden" onchange="onStoryPhoto(event)"></label>
+<input id="st-cap" type="text" placeholder="Say something..." class="w-full bg-fb-hover rounded-lg px-3 py-2.5 text-sm focus:outline-none">
+<div class="flex gap-2"><button type="button" onclick="closeStoryModal()" class="flex-1 bg-fb-hover py-2.5 rounded-lg text-sm">Cancel</button>
+<button type="button" onclick="shareStory()" class="flex-1 bg-fb-blue text-white py-2.5 rounded-lg text-sm font-semibold">Share</button></div></div></div>
+<div id="newchat-modal" class="fixed inset-0 z-[5500] bg-black/80 hidden flex items-center justify-center p-4">
+<div class="bg-fb-card rounded-xl w-full max-w-sm p-4 space-y-3 border border-fb-border">
+<h3 class="font-bold text-lg">New Message</h3>
+<input id="newchat-name" type="text" placeholder="Name" class="w-full bg-fb-hover rounded-lg px-3 py-2.5 text-sm" onkeydown="if(event.key==='Enter')createChat()">
+<div class="flex gap-2"><button type="button" onclick="closeNewChat()" class="flex-1 bg-fb-hover py-2 rounded-lg text-sm">Cancel</button>
+<button type="button" onclick="createChat()" class="flex-1 bg-fb-blue text-white py-2 rounded-lg text-sm font-semibold">Start Chat</button></div></div></div>
+<script src="app.js"></script>
+</body>
+</html>
