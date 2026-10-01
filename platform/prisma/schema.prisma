@@ -1,0 +1,301 @@
+// BuckTracks Prisma schema
+// Full models: auth, hunt logs, trail cams, I Am Lost, crew feed reactions
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts           Account[]
+  sessions           Session[]
+  huntLogs           HuntLog[]
+  trailCams          TrailCamPhoto[]
+  waypoints          Waypoint[]
+  groups             GroupMember[]
+  camJobs            TrailCamJob[]
+  emergencyContacts  EmergencyContact[]
+  lostAlerts         LostAlert[]
+  feedPosts          FeedPost[]
+  reactions          Reaction[]
+  comments           Comment[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model HuntLog {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String?
+  date        DateTime
+  zone        String?
+  location    String?
+  latitude    Float?
+  longitude   Float?
+  weather     String?
+  wind        String?
+  tempC       Float?
+  moonPhase   String?
+  weapon      String?
+  sightings   Int      @default(0)
+  harvested   Boolean  @default(false)
+  notes       String?  @db.Text
+  photos      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("hunt_logs")
+}
+
+model TrailCamJob {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String?
+  status        String   @default("pending")
+  totalFiles    Int      @default(0)
+  processed     Int      @default(0)
+  animalsFound  Int      @default(0)
+  emptyFrames   Int      @default(0)
+  deerCount     Int      @default(0)
+  buckCount     Int      @default(0)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  completedAt   DateTime?
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos TrailCamPhoto[]
+
+  @@map("trail_cam_jobs")
+}
+
+model TrailCamPhoto {
+  id              String   @id @default(cuid())
+  userId          String
+  jobId           String?
+  title           String?
+  imageUrl        String
+  thumbnailUrl    String?
+  originalName    String?
+  takenAt         DateTime?
+  cameraMake      String?
+  cameraModel     String?
+  latitude        Float?
+  longitude       Float?
+  locationLabel   String?
+  hasAnimal       Boolean  @default(false)
+  hasPerson       Boolean  @default(false)
+  hasVehicle      Boolean  @default(false)
+  isEmpty         Boolean  @default(false)
+  animalConfidence Float?
+  species         String?
+  speciesConfidence Float?
+  isDeer          Boolean  @default(false)
+  isBuck          Boolean  @default(false)
+  isDoe           Boolean  @default(false)
+  antlerPoints    Int?
+  detectionNotes  String?
+  userTags        String[]
+  userNotes       String?  @db.Text
+  isPublic        Boolean  @default(false)
+  isFavorite      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  TrailCamJob? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  @@index([userId, takenAt])
+  @@index([userId, isDeer])
+  @@index([userId, isBuck])
+  @@index([jobId])
+  @@map("trail_cam_photos")
+}
+
+model Waypoint {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  type        String
+  latitude    Float
+  longitude   Float
+  notes       String?
+  isHomeBase  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("waypoints")
+}
+
+model EmergencyContact {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String
+  phone     String?
+  relation  String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_contacts")
+}
+
+model LostAlert {
+  id              String   @id @default(cuid())
+  userId          String
+  latitude        Float
+  longitude       Float
+  accuracyMetres  Float?
+  backBearingDeg  Float?
+  backBearingLabel String?
+  distanceToHomeM Float?
+  homeWaypointId  String?
+  homeWaypointName String?
+  waypointsJson   String?  @db.Text
+  mapsUrl         String?
+  message         String?  @db.Text
+  emailsSentTo    String[]
+  status          String   @default("sent")
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("lost_alerts")
+}
+
+model FeedPost {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   @default("harvest")
+  body        String?  @db.Text
+  photoUrls   String[]
+  species     String?
+  isBuck      Boolean?
+  antlerPoints Int?
+  weapon      String?
+  zone        String?
+  harvestDate DateTime?
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+  comments  Comment[]
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("feed_posts")
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  type      String
+  createdAt DateTime @default(now())
+
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@map("reactions")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+
+  post FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isPrivate   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  members GroupMember[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
