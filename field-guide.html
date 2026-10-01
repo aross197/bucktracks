@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Field Guide · BuckTracks</title>
+  <meta name="theme-color" content="#050708" />
+  <style>
+    :root {
+      --deep: #050708;
+      --card: #121a16;
+      --amber: #e8a317;
+      --amber-soft: #f5d078;
+      --moss: #6bbf82;
+      --cream: #f6f1e8;
+      --muted: rgba(246, 241, 232, 0.55);
+      --border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--deep);
+      color: var(--cream);
+      line-height: 1.55;
+    }
+    a { color: var(--amber-soft); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(10, 16, 14, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.85rem 1rem;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem;
+    }
+    nav .brand { font-size: 1.15rem; font-weight: 600; color: var(--cream); text-decoration: none; }
+    nav .links { display: flex; gap: 1rem; font-size: 0.9rem; }
+    main { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    .eyebrow {
+      font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(232, 163, 23, 0.75); margin-bottom: 0.5rem;
+    }
+    h1 { font-size: clamp(1.75rem, 4vw, 2.35rem); line-height: 1.15; margin: 0 0 0.75rem; font-weight: 600; }
+    h1 span { color: var(--amber-soft); }
+    .lead { color: var(--muted); font-size: 0.95rem; margin-bottom: 2rem; }
+    section {
+      background: linear-gradient(155deg, #1c2420 0%, #0c100e 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.35rem 1.4rem;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: 1.15rem; margin: 0 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(232, 163, 23, 0.2);
+    }
+    ul { padding-left: 1.15rem; margin: 0.5rem 0 0; }
+    li { margin-bottom: 0.55rem; color: rgba(246, 241, 232, 0.82); font-size: 0.92rem; }
+    strong { color: var(--amber-soft); font-weight: 600; }
+    .note { font-size: 0.8rem; color: var(--muted); margin-top: 0.85rem; }
+    .warn { font-size: 0.8rem; color: rgba(232, 163, 23, 0.85); margin-top: 0.85rem; }
+    pre {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: var(--moss);
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.5rem; }
+    .btn {
+      display: inline-block;
+      padding: 0.7rem 1.15rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #f0c14b, #e8a317);
+      color: #1a1200;
+    }
+    .btn-ghost {
+      border: 1px solid var(--border);
+      color: var(--cream);
+      background: rgba(255,255,255,0.04);
+    }
+    footer { text-align: center; font-size: 0.7rem; color: rgba(246,241,232,0.25); margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="brand" href="index.html">BuckTracks</a>
+    <div class="links">
+      <a href="index.html">Feed</a>
+      <a href="field-guide.html">Field guide</a>
+    </div>
+  </nav>
+
+  <main>
+    <p class="eyebrow">Field reference · free · live page</p>
+    <h1>Advanced Whitetail Scouting &<br /><span>Automated Scent Dispenser</span></h1>
+    <p class="lead">
+      Technical and strategic notes for patterning mature bucks — digital mapping, timber cuts,
+      camera tradecraft, and a low-power timed attractant dispenser. Fair chase applies. Confirm
+      all baiting and scent rules with Nova Scotia DNR before you deploy anything in the field.
+    </p>
+
+    <section>
+      <h2>1. Digital mapping & scouting platforms</h2>
+      <ul>
+        <li><strong>onX Hunt</strong> — Best overall mapping & offline: aerial/topo, property lines, deep-woods cache.</li>
+        <li><strong>HuntStand</strong> — Best value & organization: parcels, stands, cams, harvest logs.</li>
+        <li><strong>Spartan Forge</strong> — Predictive movement & AI from collar/LiDAR-style analysis.</li>
+        <li><strong>HuntWise</strong> — HuntCast / WindCast pressure and wind scoring.</li>
+        <li><strong style="color:var(--moss)">BuckTracks</strong> — Free NS kit: Land 3D, weather, cam AI, SOS, Master Baiter (Next.js app in repo).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>2. Timber cuts, crops & historical layers</h2>
+      <ul>
+        <li><strong>1–3 year cuts</strong> — Browse, briars, forbs; high-protein early-fall feed.</li>
+        <li><strong>5–10 year cuts</strong> — 6–10 ft thickets; bedding with low visibility.</li>
+        <li><strong>Micro-ag pockets</strong> — Small plots and clearings pull bucks earlier than big fields.</li>
+        <li><strong>Fire & storm scars</strong> — Concentrated browse away from pressure.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>3. Trail cameras & natural attractants</h2>
+      <ul>
+        <li><strong>High-angle cams</strong> — 7–8 ft up, angled down 30–45°.</li>
+        <li><strong>Mock scrapes</strong> — Cleared earth under a licking branch on transitions.</li>
+        <li><strong>Aromatic blends</strong> — Long-range fermented/sweet carriers on porous wood.</li>
+        <li><strong>Cellular cams</strong> — Fewer scent loops into core cover.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Automated scent dispenser — parts</h2>
+      <ul>
+        <li><strong>MCU:</strong> ESP32 or Arduino Pro Mini (3.3 V)</li>
+        <li><strong>Pump:</strong> 3–6 V mini peristaltic</li>
+        <li><strong>Power:</strong> 18650 pack + 5–10 W solar trickle</li>
+        <li><strong>Switch:</strong> Logic-level N-MOSFET (e.g. IRLZ44N) or mini relay</li>
+        <li><strong>Clock:</strong> DS3231 RTC</li>
+        <li><strong>Box:</strong> IP67 UV-resistant enclosure</li>
+      </ul>
+      <p class="warn">Legal note: automated attractants may be restricted. Technical reference only — not permission where prohibited in NS.</p>
+    </section>
+
+    <section>
+      <h2>5. Sample ESP32 control sketch</h2>
+      <p class="note" style="margin-top:0;margin-bottom:0.75rem">Tune peak hours for your latitude and season. Prefer ESP32 light-sleep for longer battery life in production.</p>
+      <pre>#include <Wire.h>
+#include <RTClib.h>
+
+const int PUMP_PIN = 14; // MOSFET gate
+
+RTC_DS3231 rtc;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PUMP_PIN, OUTPUT);
+  digitalWrite(PUMP_PIN, LOW);
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+}
+
+void loop() {
+  DateTime now = rtc.now();
+  bool isMorningPeak = (now.hour() == 6);
+  bool isEveningPeak = (now.hour() == 18);
+
+  if (isMorningPeak || isEveningPeak) {
+    Serial.println("Dispensing scent during peak window...");
+    digitalWrite(PUMP_PIN, HIGH);
+    delay(3000);
+    digitalWrite(PUMP_PIN, LOW);
+    delay(3300000); // ~55 min
+  } else {
+    delay(600000); // 10 min
+  }
+}</pre>
+    </section>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="index.html">Back to DeerBook feed</a>
+      <a class="btn btn-ghost" href="https://github.com/aross197/NS-Deer-Paradise">Full platform source</a>
+    </div>
+
+    <footer>BuckTracks · Fair chase · Confirm NS regulations</footer>
+  </main>
+</body>
+</html>
