@@ -1,39 +1,63 @@
-# DeerBook
+# BuckTracks
 
-Your own Facebook-style social network. Runs in the browser on GitHub Pages.
+**Every deer hunter's dream platform — built for Northern Nova Scotia.**
 
-**Live:** https://aross197.github.io/bucktracks/
+Free account → confirmation email → logged into paradise.
 
-## Features
+**Live (browser social):** https://aross197.github.io/bucktracks/  
+**Full platform source:** this repo (`platform/` = Next.js app) · also mirrored at [NS-Deer-Paradise](https://github.com/aross197/NS-Deer-Paradise)
 
-- **Sign up / Log in** — stays logged in until you log out
-- **Profile** — name, hometown, bio, profile photo
-- **Feed** — posts, photos, likes, comments
-- **Stories** — expire after 24 hours
-- **Messenger** — private chats
-- **Friends** — add people who sign up on the same device
+---
 
-## Quick start
+## What's in BuckTracks
 
-1. Open https://aross197.github.io/bucktracks/
-2. Sign Up (name, email, password 6+)
-3. You stay logged in
-4. Post, chat, edit profile, share stories
+| Feature | Description |
+|--------|-------------|
+| **Crew Feed** | Mini Facebook-style posts for kills/harvests — react (👍🔥🦌🫡🏹) and comment |
+| **Mass Dump Trail Cam Reader** | Dump an SD card; EXIF + MegaDetector-class animal detection; filter empties; tag deer/bucks |
+| **I Am Lost** | One button → GPS + **back bearing** to truck/home + waypoints emailed to emergency contacts |
+| **Season Hub** | Live 2026–2027 NS deer dates, zones 101–112, bag limits |
+| **Maps / Journal / Weather** | Crown land, hunt logs, solunar (in progress) |
+| **Browser social (GitHub Pages)** | Sign up, feed, stories, messenger — runs at `/` via `index.html` |
 
-### Friends
+---
 
-Someone else must sign up on the **same phone/computer**. Log out → second account → log back in → Add Friend.
+## Repo layout
 
-### Clear data
+```
+bucktracks/
+├── index.html, app.js, sw.js   # GitHub Pages social app (DeerBook)
+├── platform/                  # Full Next.js hunting platform
+│   ├── app/                   # landing, feed, cams, safety, dashboard, auth
+│   ├── lib/                   # seasons, geo (back bearing)
+│   ├── prisma/                # users, posts, reactions, lost alerts, trail cams
+│   └── docs/
+└── README.md
+```
 
-Menu → **Clear all data on this device** wipes accounts and posts on that browser only.
+---
 
-## Files
+## Run the full platform locally
 
-| File | Purpose |
-|------|---------|
-| `index.html` | Full app |
-| `sw.js` | Service worker |
-| `.nojekyll` | GitHub Pages config |
+```bash
+git clone https://github.com/aross197/bucktracks.git
+cd bucktracks/platform
+npm install
+cp .env.example .env.local
+npx prisma generate && npx prisma db push
+npm run dev
+```
 
-Data is stored in the browser (`localStorage`). It is not shared across different phones or computers.
+Open http://localhost:3000
+
+---
+
+## Safety note
+
+**I Am Lost** helps share location and the walk-home bearing. It is not a substitute for 911, a PLB, or Search & Rescue.
+
+Always follow current Nova Scotia DNR regulations. Hunt safe. Hunt ethical.
+
+---
+
+Built for the woods of northern Nova Scotia.
