@@ -1,0 +1,56 @@
+name: Deploy BuckTracks to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # Static site at repo root (index, land-3d, sos, field-guide, hub)
+      # Exclude Next.js platform source from the published artifact
+      - name: Prepare site artifact
+        run: |
+          mkdir -p _site
+          # Copy live HTML/assets only
+          for f in index.html land-3d.html sos.html field-guide.html bucktracks-hub.html \
+                   app.js sw.js logo.svg logo.png .nojekyll README.md; do
+            if [ -f "$f" ]; then cp "$f" _site/; fi
+          done
+          # Optional: any extra static assets
+          if [ -d assets ]; then cp -r assets _site/; fi
+          ls -la _site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
