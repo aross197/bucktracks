@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#450a0a">
+<title>SOS · BuckTracks</title>
+<style>
+body{margin:0;font-family:system-ui,sans-serif;background:#120808;color:#f6f1e8;min-height:100dvh;padding:1rem}
+a{color:#f5d078}.card{max-width:480px;margin:0 auto;background:#1a1010;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:1.25rem}
+h1{margin:0 0 .5rem;font-size:1.5rem;color:#fecaca}
+.muted{color:rgba(246,241,232,.55);font-size:.9rem}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;white-space:pre-wrap;background:#000;border-radius:12px;padding:1rem;border:1px solid rgba(255,255,255,.08);margin:1rem 0}
+button{width:100%;min-height:52px;border:none;border-radius:14px;font-weight:700;font-size:1rem;cursor:pointer;margin-top:.5rem}
+.danger{background:#dc2626;color:#fff}.ghost{background:rgba(255,255,255,.06);color:#f6f1e8;border:1px solid rgba(255,255,255,.12)}
+label{display:block;font-size:.75rem;color:rgba(246,241,232,.5);margin-top:.75rem}
+input{width:100%;padding:.7rem;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0a0606;color:#f6f1e8;margin-top:.25rem}
+</style>
+</head>
+<body>
+<p><a href="index.html">← BuckTracks</a></p>
+<div class="card">
+  <h1>SOS / I Am Lost</h1>
+  <p class="muted">High-accuracy GPS + WGS84 Vincenty bearing home. Not a substitute for 911 or SAR.</p>
+  <label>Home / truck lat</label>
+  <input id="hlat" type="number" step="any" placeholder="45.36">
+  <label>Home / truck lon</label>
+  <input id="hlon" type="number" step="any" placeholder="-63.28">
+  <button class="danger" id="fix">Get precision fix & bearing home</button>
+  <button class="ghost" id="share">Copy / share message</button>
+  <div class="mono" id="out">Waiting…</div>
+  <p class="muted">True north bearings. NS magnetic declination ≈ 17° E if using a magnetic compass.</p>
+</div>
+<script>
+const a=6378137,f=1/298.257223563,b=a*(1-f);
+function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}
+function vincenty(from,to){
+  const φ1=toRad(from.lat),φ2=toRad(to.lat),L=toRad(to.lon-from.lon);
+  const tanU1=(1-f)*Math.tan(φ1),cosU1=1/Math.sqrt(1+tanU1*tanU1),sinU1=tanU1*cosU1;
+  const tanU2=(1-f)*Math.tan(φ2),cosU2=1/Math.sqrt(1+tanU2*tanU2),sinU2=tanU2*cosU2;
+  let λ=L,λp,iter=0,sinλ,cosλ,sinσ,cosσ,σ,sinα,cos2α,cos2σm,C;
+  do{
+    sinλ=Math.sin(λ);cosλ=Math.cos(λ);
+    const sinSqσ=(cosU2*sinλ)**2+(cosU1*sinU2-sinU1*cosU2*cosλ)**2;
+    sinσ=Math.sqrt(sinSqσ);if(sinσ===0)return{d:0,brg:0};
+    cosσ=sinU1*sinU2+cosU1*cosU2*cosλ;σ=Math.atan2(sinσ,cosσ);
+    sinα=cosU1*cosU2*sinλ/sinσ;cos2α=1-sinα*sinα;
+    cos2σm=cos2α!==0?cosσ-2*sinU1*sinU2/cos2α:0;
+    C=f/16*cos2α*(4+f*(4-3*cos2α));λp=λ;
+    λ=L+(1-C)*f*sinα*(σ+C*sinσ*(cos2σm+C*cosσ*(-1+2*cos2σm*cos2σm)));
+  }while(Math.abs(λ-λp)>1e-12&&++iter<100);
+  const uSq=cos2α*(a*a-b*b)/(b*b);
+  const A=1+uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)));
+  const B=uSq/1024*(256+uSq*(-128+uSq*(74-47*uSq)));
+  const Δσ=B*sinσ*(cos2σm+B/4*(cosσ*(-1+2*cos2σm*cos2σm)-B/6*cos2σm*(-3+4*sinσ*sinσ)*(-3+4*cos2σm*cos2σm)));
+  const d=b*A*(σ-Δσ);
+  const α1=Math.atan2(cosU2*sinλ,cosU1*sinU2-sinU1*cosU2*cosλ);
+  return{d,brg:(toDeg(α1)+360)%360};
+}
+function compass(b){const l=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return l[Math.round(b/22.5)%16]}
+let lastMsg='';
+document.getElementById('fix').onclick=()=>{
+  const out=document.getElementById('out');out.textContent='Getting high-accuracy GPS…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    const lat=p.coords.latitude,lon=p.coords.longitude,acc=p.coords.accuracy;
+    const hlat=parseFloat(document.getElementById('hlat').value);
+    const hlon=parseFloat(document.getElementById('hlon').value);
+    let line=`POSITION ${lat.toFixed(7)}, ${lon.toFixed(7)}\nGPS accuracy ±${acc.toFixed(1)} m\nMaps: https://maps.google.com/?q=${lat.toFixed(7)},${lon.toFixed(7)}`;
+    if(Number.isFinite(hlat)&&Number.isFinite(hlon)){
+      const v=vincenty({lat,lon},{lat:hlat,lon:hlon});
+      line+=`\nHOME ${hlat}, ${hlon}\nDistance ${v.d<1000?v.d.toFixed(1)+' m':(v.d/1000).toFixed(3)+' km'}\nWalk bearing home ${v.brg.toFixed(1)}° true ${compass(v.brg)}`;
+    }else line+='\n(Set home lat/lon for back bearing)';
+    lastMsg='BUCKTRACKS SOS\n'+line+'\nTime '+new Date().toISOString();
+    out.textContent=lastMsg;
+  },()=>{out.textContent='GPS failed. Enable location / open sky.';},{enableHighAccuracy:true,timeout:30000,maximumAge:0});
+};
+document.getElementById('share').onclick=async()=>{
+  if(!lastMsg)return;
+  if(navigator.share){try{await navigator.share({text:lastMsg});return}catch{}}
+  await navigator.clipboard.writeText(lastMsg);alert('Copied SOS message');
+};
+</script>
+</body>
+</html>
