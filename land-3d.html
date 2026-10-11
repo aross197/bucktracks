@@ -3,92 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#050708">
+<meta name="theme-color" content="#060908">
 <title>Land 3D · BuckTracks</title>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-html,body{margin:0;height:100%;background:#050708;color:#f6f1e8;font-family:system-ui,sans-serif}
+html,body{margin:0;height:100%;background:#060908;color:#f3eee5;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
 #map{position:absolute;inset:0}
-.bar{position:absolute;z-index:2;left:12px;right:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.top{top:12px}.bot{bottom:12px}
-.glass{background:rgba(10,16,14,.88);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px);border-radius:14px;padding:10px 12px;font-size:12px}
-button,.btn{appearance:none;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#f6f1e8;border-radius:10px;padding:8px 12px;font-weight:600;font-size:12px;cursor:pointer}
+.bar{position:absolute;z-index:2;left:10px;right:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;pointer-events:none}
+.bar > *{pointer-events:auto}
+.top{top:10px}.bot{bottom:10px}
+.glass{
+  background:linear-gradient(165deg,rgba(18,26,22,.72),rgba(10,14,12,.82));
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  backdrop-filter:blur(14px) saturate(150%);
+  border:1px solid rgba(255,255,255,.1);
+  border-top-color:rgba(255,255,255,.16);
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.glass strong{font-weight:650}
+a{color:#f5d078;text-decoration:none;margin-right:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+button{
+  appearance:none;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.07);color:#f3eee5;
+  border-radius:9px;padding:7px 11px;font-weight:600;font-size:12px;cursor:pointer;
+}
+button:hover{background:rgba(255,255,255,.12)}
 button.primary{background:linear-gradient(135deg,#f0c14b,#e8a317);color:#1a1200;border:none}
-a{color:#f5d078;text-decoration:none;font-size:12px;margin-right:8px}
+button.active{border-color:rgba(232,163,23,.5);background:rgba(232,163,23,.15);color:#f5d078}
+.meta{opacity:.65;font-size:11px;font-variant-numeric:tabular-nums}
+.legend{font-size:10px;opacity:.7;display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.legend span::before{
+  content:'';display:inline-block;width:10px;height:3px;border-radius:1px;
+  margin-right:4px;vertical-align:middle;
+}
+.l50::before{background:#38bdf8}.l100::before{background:#a3e635}.l200::before{background:#e8a317}
+.maplibregl-ctrl-group{background:rgba(12,18,15,.9)!important;border:1px solid rgba(255,255,255,.1)!important}
+.maplibregl-ctrl-group button{background-color:transparent!important}
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-in,
+.maplibregl-ctrl button.maplibregl-ctrl-zoom-out,
+.maplibregl-ctrl button.maplibregl-ctrl-compass{filter:invert(1) brightness(1.2)}
 </style>
 </head>
 <body>
 <div id="map"></div>
+
 <div class="bar top">
   <div class="glass">
-    <a href="index.html">BuckTracks</a>
-    <strong id="status">Standing view · 200 m</strong>
+    <div class="row" style="margin-bottom:4px">
+      <a href="index.html">← BuckTracks</a>
+      <strong id="status">Cumberland · standing view</strong>
+    </div>
+    <div class="row">
+      <button type="button" class="active" data-base="sat" id="btn-sat">Satellite</button>
+      <button type="button" data-base="topo" id="btn-topo">Topo</button>
+      <button type="button" data-base="hybrid" id="btn-hybrid">Hybrid</button>
+    </div>
   </div>
 </div>
+
 <div class="bar bot">
-  <div class="glass" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-    <button class="primary" id="gps">Precision GPS</button>
-    <button id="north">Face north</button>
-    <button id="spin">Look 90°</button>
-    <span id="meta" style="opacity:.7"></span>
+  <div class="glass">
+    <div class="row">
+      <button class="primary" id="gps">Precision GPS</button>
+      <button id="north">Face N</button>
+      <button id="tilt">2D / 3D</button>
+      <button id="spin">+90°</button>
+    </div>
+    <div class="meta" id="meta" style="margin-top:6px">—</div>
+    <div class="legend">
+      <span class="l50">50 m</span>
+      <span class="l100">100 m</span>
+      <span class="l200">200 m</span>
+    </div>
   </div>
 </div>
+
 <script>
-const NS={lat:45.3647,lon:-63.2797};
-const ZOOM=16.85,PITCH=78,R=200;
-function circle(lon,lat,m,steps=64){
-  const coords=[];const mLat=111132.92-559.82*Math.cos(2*lat*Math.PI/180);const mLng=111412.84*Math.cos(lat*Math.PI/180);
-  for(let i=0;i<=steps;i++){const a=i/steps*Math.PI*2;coords.push([lon+(m*Math.sin(a))/mLng,lat+(m*Math.cos(a))/mLat]);}
-  return{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[coords]}};
+/* Default: Springhill / Cumberland County NS */
+const HOME = { lat: 45.70, lon: -64.10 };
+const ZOOM3D = 16.6, PITCH3D = 72, ZOOM2D = 15.2;
+
+function circle(lon, lat, m, steps = 72) {
+  const coords = [];
+  const mLat = 111132.92 - 559.82 * Math.cos(2 * lat * Math.PI / 180);
+  const mLng = 111412.84 * Math.cos(lat * Math.PI / 180);
+  for (let i = 0; i <= steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    coords.push([lon + (m * Math.sin(a)) / mLng, lat + (m * Math.cos(a)) / mLat]);
+  }
+  return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coords] } };
 }
-function setRing(map,id,lon,lat,m,color,op){
-  const data={type:'FeatureCollection',features:[circle(lon,lat,m)]};
-  if(map.getSource(id))map.getSource(id).setData(data);
-  else{
-    map.addSource(id,{type:'geojson',data});
-    map.addLayer({id:id+'-f',type:'fill',source:id,paint:{'fill-color':color,'fill-opacity':op}});
-    map.addLayer({id:id+'-l',type:'line',source:id,paint:{'line-color':color,'line-width':2,'line-dasharray':[2,1.5]}});
+
+function setRing(id, lon, lat, m, color, fillOp, lineW) {
+  const data = { type: 'FeatureCollection', features: [circle(lon, lat, m)] };
+  if (map.getSource(id)) {
+    map.getSource(id).setData(data);
+  } else {
+    map.addSource(id, { type: 'geojson', data });
+    map.addLayer({
+      id: id + '-f', type: 'fill', source: id,
+      paint: { 'fill-color': color, 'fill-opacity': fillOp }
+    });
+    map.addLayer({
+      id: id + '-l', type: 'line', source: id,
+      paint: { 'line-color': color, 'line-width': lineW, 'line-opacity': 0.9 }
+    });
   }
 }
-const map=new maplibregl.Map({
-  container:'map',
-  style:{
-    version:8,
-    sources:{
-      sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'© Esri'},
-      dem:{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],encoding:'terrarium',tileSize:256,maxzoom:15}
-    },
-    layers:[
-      {id:'sat',type:'raster',source:'sat'},
-      {id:'hs',type:'hillshade',source:'dem',paint:{'hillshade-exaggeration':0.45}}
-    ],
-    terrain:{source:'dem',exaggeration:1.2},
-    sky:{'sky-color':'#7eb0d0','horizon-color':'#d0dde8','fog-color':'#b8c6d0'}
-  },
-  center:[NS.lon,NS.lat],zoom:ZOOM,pitch:PITCH,bearing:0,maxPitch:85,antialias:true
-});
-map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
-const marker=new maplibregl.Marker({color:'#e8a317'}).setLngLat([NS.lon,NS.lat]).addTo(map);
-map.on('load',()=>{setRing(map,'r200',NS.lon,NS.lat,R,'#e8a317',0.07);document.getElementById('meta').textContent=NS.lat.toFixed(5)+', '+NS.lon.toFixed(5)});
-function stand(lat,lon,acc){
-  map.flyTo({center:[lon,lat],zoom:ZOOM,pitch:PITCH,bearing:0,duration:1400});
-  marker.setLngLat([lon,lat]);
-  setRing(map,'r200',lon,lat,R,'#e8a317',0.07);
-  if(acc>0)setRing(map,'acc',lon,lat,acc,'#38bdf8',0.12);
-  document.getElementById('meta').textContent=lat.toFixed(7)+', '+lon.toFixed(7)+(acc?(' · ±'+acc.toFixed(1)+' m'):'');
-  document.getElementById('status').textContent='Standing · 200 m · true north';
+
+function placeRings(lon, lat, acc) {
+  setRing('r50', lon, lat, 50, '#38bdf8', 0.04, 1.5);
+  setRing('r100', lon, lat, 100, '#a3e635', 0.05, 1.5);
+  setRing('r200', lon, lat, 200, '#e8a317', 0.06, 2);
+  if (acc > 0 && acc < 500) setRing('acc', lon, lat, acc, '#60a5fa', 0.1, 1.5);
 }
-document.getElementById('gps').onclick=()=>{
-  document.getElementById('status').textContent='High-accuracy fix…';
+
+const styleBase = {
+  version: 8,
+  sources: {
+    sat: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      attribution: '© Esri',
+      maxzoom: 19
+    },
+    topo: {
+      type: 'raster',
+      tiles: ['https://tile.opentopomap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© OpenTopoMap / OSM',
+      maxzoom: 17
+    },
+    labels: {
+      type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}'],
+      tileSize: 256,
+      attribution: '© Esri',
+      maxzoom: 19
+    },
+    dem: {
+      type: 'raster-dem',
+      tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium',
+      tileSize: 256,
+      maxzoom: 15
+    }
+  },
+  layers: [
+    { id: 'sat', type: 'raster', source: 'sat' },
+    { id: 'topo', type: 'raster', source: 'topo', layout: { visibility: 'none' } },
+    {
+      id: 'hs', type: 'hillshade', source: 'dem',
+      paint: {
+        'hillshade-exaggeration': 0.55,
+        'hillshade-shadow-color': '#1a1a1a',
+        'hillshade-highlight-color': '#ffffff',
+        'hillshade-illumination-direction': 315
+      }
+    },
+    { id: 'labels', type: 'raster', source: 'labels', layout: { visibility: 'none' }, paint: { 'raster-opacity': 0.85 } }
+  ],
+  terrain: { source: 'dem', exaggeration: 1.35 },
+  sky: {
+    'sky-color': '#6a9ab8',
+    'horizon-color': '#c5d4e0',
+    'fog-color': '#a8b8c8',
+    'sky-horizon-blend': 0.6
+  }
+};
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: styleBase,
+  center: [HOME.lon, HOME.lat],
+  zoom: ZOOM3D,
+  pitch: PITCH3D,
+  bearing: 0,
+  maxPitch: 85,
+  antialias: true,
+  hash: false
+});
+
+map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-right');
+
+const marker = new maplibregl.Marker({ color: '#e8a317' })
+  .setLngLat([HOME.lon, HOME.lat])
+  .addTo(map);
+
+let mode3d = true;
+let current = { lat: HOME.lat, lon: HOME.lon };
+
+map.on('load', () => {
+  placeRings(HOME.lon, HOME.lat, 0);
+  document.getElementById('meta').textContent =
+    HOME.lat.toFixed(5) + ', ' + HOME.lon.toFixed(5) + ' · Springhill area';
+});
+
+function setBase(name) {
+  const sat = name === 'sat' || name === 'hybrid';
+  const topo = name === 'topo';
+  const labels = name === 'hybrid';
+  map.setLayoutProperty('sat', 'visibility', sat ? 'visible' : 'none');
+  map.setLayoutProperty('topo', 'visibility', topo ? 'visible' : 'none');
+  map.setLayoutProperty('labels', 'visibility', labels ? 'visible' : 'none');
+  // Stronger hillshade on topo so relief pops
+  map.setPaintProperty('hs', 'hillshade-exaggeration', topo ? 0.75 : 0.5);
+  document.querySelectorAll('[data-base]').forEach(b => {
+    b.classList.toggle('active', b.dataset.base === name);
+  });
+}
+
+document.getElementById('btn-sat').onclick = () => setBase('sat');
+document.getElementById('btn-topo').onclick = () => setBase('topo');
+document.getElementById('btn-hybrid').onclick = () => setBase('hybrid');
+
+function stand(lat, lon, acc) {
+  current = { lat, lon };
+  map.flyTo({
+    center: [lon, lat],
+    zoom: mode3d ? ZOOM3D : ZOOM2D,
+    pitch: mode3d ? PITCH3D : 0,
+    bearing: 0,
+    duration: 1400
+  });
+  marker.setLngLat([lon, lat]);
+  placeRings(lon, lat, acc || 0);
+  document.getElementById('meta').textContent =
+    lat.toFixed(6) + ', ' + lon.toFixed(6) +
+    (acc ? ' · GPS ±' + acc.toFixed(1) + ' m' : '');
+  document.getElementById('status').textContent =
+    'Standing · 50 / 100 / 200 m · true north';
+}
+
+document.getElementById('gps').onclick = () => {
+  document.getElementById('status').textContent = 'High-accuracy GPS…';
   navigator.geolocation.getCurrentPosition(
-    p=>stand(p.coords.latitude,p.coords.longitude,p.coords.accuracy),
-    ()=>{document.getElementById('status').textContent='GPS failed — enable location'},
-    {enableHighAccuracy:true,timeout:25000,maximumAge:0}
+    p => stand(p.coords.latitude, p.coords.longitude, p.coords.accuracy),
+    () => { document.getElementById('status').textContent = 'GPS failed — check permissions'; },
+    { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
   );
 };
-document.getElementById('north').onclick=()=>map.easeTo({bearing:0,duration:800});
-document.getElementById('spin').onclick=()=>map.easeTo({bearing:map.getBearing()+90,duration:2000});
+
+document.getElementById('north').onclick = () => map.easeTo({ bearing: 0, duration: 700 });
+
+document.getElementById('spin').onclick = () =>
+  map.easeTo({ bearing: map.getBearing() + 90, duration: 1800 });
+
+document.getElementById('tilt').onclick = () => {
+  mode3d = !mode3d;
+  map.easeTo({
+    pitch: mode3d ? PITCH3D : 0,
+    zoom: mode3d ? ZOOM3D : ZOOM2D,
+    duration: 900
+  });
+  document.getElementById('status').textContent =
+    mode3d ? '3D standing view' : '2D map view';
+};
 </script>
 </body>
 </html>
