@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050708">
-<meta name="description" content="BuckTracks — free precision hunting platform for northern Nova Scotia. Land 3D, trail cams, weather, SOS.">
+<meta name="description" content="BuckTracks — free precision hunting platform for northern Nova Scotia. Land 3D, trail cams, weather, SOS, aurora.">
 <title>BuckTracks · Northern Nova Scotia</title>
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
@@ -41,7 +41,7 @@ h1 span{background:linear-gradient(125deg,#fff4d4,#f5d078 40%,#e8a317);-webkit-b
 .panel-inner{background:rgba(14,20,18,.9);border:1px solid var(--line);border-radius:18px;padding:1.2rem 1.3rem}
 .panel h2{margin:0 0 .75rem;font-size:1.05rem}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem}
-#wx,#sos-out{color:var(--muted);font-size:.9rem;min-height:1.4em}
+#wx{color:var(--muted);font-size:.9rem;min-height:1.4em}
 .row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem}
 footer{text-align:center;padding:2rem 1rem 3rem;font-size:.72rem;color:rgba(246,241,232,.28)}
 </style>
@@ -52,6 +52,7 @@ footer{text-align:center;padding:2rem 1rem 3rem;font-size:.72rem;color:rgba(246,
   <div class="nav-links">
     <a href="bucktracks-hub.html">Cam hub</a>
     <a href="land-3d.html">Land 3D</a>
+    <a href="aurora.html">Aurora</a>
     <a href="field-guide.html">Field guide</a>
     <a href="sos.html">SOS</a>
   </div>
@@ -60,10 +61,11 @@ footer{text-align:center;padding:2rem 1rem 3rem;font-size:.72rem;color:rgba(246,
 <header class="hero">
   <div class="badge"><i></i> Northern Nova Scotia · free · live</div>
   <h1>The woods,<br><span>commanded.</span></h1>
-  <p class="lead">Precision tools for serious hunters — trail-cam telemetry, 200&nbsp;m land view, live weather, WGS84 SOS bearings. No DeerBook. No fluff.</p>
+  <p class="lead">Precision tools for serious hunters — trail-cam telemetry, 200&nbsp;m land view, live weather, WGS84 SOS bearings, and northern lights. No fluff.</p>
   <div class="cta-row">
     <a class="btn btn-primary" href="bucktracks-hub.html">Open tactical cam hub</a>
     <a class="btn btn-ghost" href="land-3d.html">Stand in Land 3D</a>
+    <a class="btn btn-ghost" href="aurora.html">Northern Lights</a>
     <a class="btn btn-sos" href="sos.html">SOS / I Am Lost</a>
   </div>
 </header>
@@ -89,6 +91,11 @@ footer{text-align:center;padding:2rem 1rem 3rem;font-size:.72rem;color:rgba(246,
     <h3>Land 3D · 200 m</h3>
     <p>MapLibre + real DEM + satellite. Standing view around your GPS, true north.</p>
   </a>
+  <a class="card" href="aurora.html" style="text-decoration:none;color:inherit">
+    <span class="tag">Works live</span>
+    <h3>Northern Lights</h3>
+    <p>NOAA OVATION map, live Kp, 27-day outlook, moon phase — real-time for Cumberland County NS.</p>
+  </a>
   <a class="card" href="sos.html" style="text-decoration:none;color:inherit">
     <span class="tag">Works live</span>
     <h3>SOS / I Am Lost</h3>
@@ -103,7 +110,7 @@ footer{text-align:center;padding:2rem 1rem 3rem;font-size:.72rem;color:rgba(246,
 
 <footer>
   BuckTracks · free · northern Nova Scotia<br>
-  DeerBook removed from this homepage. Hunt safe. Confirm NS DNR rules.
+  Hunt safe. Confirm NS DNR rules.
 </footer>
 
 <script>

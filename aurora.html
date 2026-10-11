@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050708">
+<meta name="description" content="Live Northern Lights forecast for Cumberland County, Nova Scotia — NOAA OVATION, Kp, 27-day outlook, moon phase.">
+<title>Aurora · BuckTracks</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+:root{--deep:#050708;--panel:#0e1412;--amber:#e8a317;--amber2:#f5d078;--moss:#6bbf82;--cream:#f6f1e8;--muted:rgba(246,241,232,.55);--line:rgba(255,255,255,.08);--danger:#ff4d6d;--warn:#ffb84d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--deep);color:var(--cream);line-height:1.5;min-height:100dvh;
+background-image:radial-gradient(ellipse at 20% 0%,rgba(107,191,130,.08),transparent 50%),radial-gradient(ellipse at 80% 10%,rgba(123,92,255,.07),transparent 40%)}
+a{color:var(--amber2);text-decoration:none}a:hover{text-decoration:underline}
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.85rem 1.1rem;background:rgba(8,12,10,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{font-size:1.2rem;font-weight:650;color:var(--cream);letter-spacing:.02em;text-decoration:none}
+.nav-links{display:flex;flex-wrap:wrap;gap:.65rem;font-size:.82rem}
+.nav-links a{color:var(--muted);text-decoration:none;padding:.35rem .55rem;border-radius:8px}
+.nav-links a:hover,.nav-links a.active{color:var(--cream);background:rgba(255,255,255,.05)}
+main{max-width:980px;margin:0 auto;padding:1.25rem 1.1rem 3rem}
+h1{font-size:clamp(1.5rem,4vw,2rem);margin:0 0 .35rem;font-weight:650}
+.sub{color:var(--muted);font-size:.92rem;margin-bottom:1.25rem}
+.live{display:inline-flex;align-items:center;gap:.4rem;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--moss);border:1px solid rgba(107,191,130,.35);padding:.3rem .65rem;border-radius:999px;margin-bottom:1rem}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--moss);animation:pulse 1.8s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.grid{display:grid;gap:1rem;margin-bottom:1.25rem}
+@media(min-width:700px){.grid-3{grid-template-columns:1fr 1fr 1fr}}
+.card{background:linear-gradient(155deg,#1a221e,#0c100e);border:1px solid var(--line);border-radius:16px;padding:1.15rem 1.2rem}
+.card h2{margin:0 0 .6rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.big{font-size:2.6rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:.2rem .55rem;border-radius:6px;font-size:.78rem;font-weight:600;margin-top:.35rem}
+.quiet{background:rgba(107,191,130,.15);color:var(--moss)}
+.active{background:rgba(255,184,77,.15);color:var(--warn)}
+.storm{background:rgba(255,77,109,.18);color:var(--danger)}
+.kp-bar{display:flex;gap:3px;margin-top:.7rem;height:8px;border-radius:4px;overflow:hidden}
+.kp-seg{flex:1;background:#1a1a2e}.kp-seg.on{background:var(--moss)}.kp-seg.g1{background:var(--warn)}.kp-seg.g2{background:#ff8c42}.kp-seg.g3{background:var(--danger)}
+.note{font-size:.72rem;color:var(--muted);margin-top:.45rem}
+.verdict{font-size:1rem;font-weight:600;padding:.85rem 1rem;border-radius:12px;text-align:center;margin-top:.5rem}
+.v-good{background:rgba(107,191,130,.12);border:1px solid rgba(107,191,130,.3);color:var(--moss)}
+.v-maybe{background:rgba(255,184,77,.1);border:1px solid rgba(255,184,77,.3);color:var(--warn)}
+.v-poor{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.22);color:var(--danger)}
+.moon{width:72px;height:72px;border-radius:50%;background:#1a1a2e;margin:0 auto .6rem;box-shadow:inset -12px 0 0 0 #f5f5f0}
+.ovation{width:100%;border-radius:12px;border:1px solid var(--line);background:#000;display:block}
+.map-wrap{position:relative}
+.map-label{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.75);padding:.25rem .5rem;border-radius:6px;font-size:.68rem;color:#ccc}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{padding:.5rem .35rem;text-align:left;border-bottom:1px solid rgba(255,255,255,.05)}
+th{color:var(--muted);font-weight:500;font-size:.7rem;text-transform:uppercase}
+.kp-cell{font-weight:650;font-variant-numeric:tabular-nums}
+.tips{font-size:.88rem;color:var(--muted);padding-left:1.1rem}
+.tips li{margin-bottom:.4rem}
+footer{text-align:center;padding:2rem 1rem 3rem;font-size:.72rem;color:rgba(246,241,232,.28)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="brand" href="index.html">BuckTracks</a>
+  <div class="nav-links">
+    <a href="bucktracks-hub.html">Cam hub</a>
+    <a href="land-3d.html">Land 3D</a>
+    <a href="aurora.html" class="active">Aurora</a>
+    <a href="field-guide.html">Field guide</a>
+    <a href="sos.html">SOS</a>
+  </div>
+</nav>
+
+<main>
+  <div class="live"><i></i> Live · NOAA SWPC</div>
+  <h1>Northern Lights</h1>
+  <p class="sub">Cumberland County, Nova Scotia · real-time OVATION + Kp + 27-day outlook</p>
+
+  <section class="grid grid-3">
+    <div class="card">
+      <h2>Current Kp</h2>
+      <div class="big" id="kp-now">–</div>
+      <div id="kp-status" class="pill quiet">Loading…</div>
+      <div class="kp-bar" id="kp-bar"></div>
+      <p class="note" id="kp-updated">—</p>
+    </div>
+    <div class="card">
+      <h2>Chance here</h2>
+      <div class="big" id="prob">–%</div>
+      <p class="note">OVATION at ~45.7°N</p>
+      <div id="verdict" class="verdict v-poor">Checking…</div>
+    </div>
+    <div class="card">
+      <h2>Moon</h2>
+      <div class="moon" id="moon-visual"></div>
+      <p style="text-align:center;font-size:.95rem" id="moon-phase">—</p>
+      <p style="text-align:center" class="note" id="moon-illum">—</p>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:1.25rem">
+    <h2>NOAA OVATION map (30–90 min)</h2>
+    <div class="map-wrap">
+      <img class="ovation" id="ovation" src="https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg" alt="NOAA OVATION Northern Hemisphere" onerror="this.src='https://services.swpc.noaa.gov/images/aurora-forecast-northern-hemisphere.jpg'">
+      <div class="map-label">Northern Hemisphere · live</div>
+    </div>
+    <p class="note">Cumberland NS sits near the southern edge of the oval at moderate Kp. Higher Kp pushes it south over us.</p>
+  </section>
+
+  <section class="card" style="margin-bottom:1.25rem">
+    <h2>3-day Kp forecast</h2>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>UTC slot</th><th>Kp</th><th>Scale</th><th>Cumberland outlook</th></tr></thead>
+        <tbody id="fcst-body"><tr><td colspan="4">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note">NOAA 3-hour planetary K-index forecast. G1 = Kp≥5.</p>
+  </section>
+
+  <section class="card" style="margin-bottom:1.25rem">
+    <h2>27-day outlook</h2>
+    <div style="overflow-x:auto;max-height:300px;overflow-y:auto">
+      <table>
+        <thead><tr><th>Date UTC</th><th>10.7cm</th><th>A</th><th>Max Kp</th><th>Chance</th></tr></thead>
+        <tbody id="out-body"><tr><td colspan="5">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note">Official NOAA 27-day Space Weather Outlook — daily maximums for planning.</p>
+  </section>
+
+  <section class="grid" style="grid-template-columns:1fr 1fr;gap:1rem">
+    <div class="card">
+      <h2>Viewing tips · Cumberland NS</h2>
+      <ul class="tips">
+        <li><strong>Kp 4–5</strong> — possible faint glow low on the northern horizon under dark clear skies.</li>
+        <li><strong>Kp 6+</strong> — solid chance of visible aurora; stronger storms bring colour and structure.</li>
+        <li><strong>Best window</strong> — 10 pm to 2 am Atlantic time.</li>
+        <li><strong>Moon</strong> — new or thin crescent is ideal; full moon washes faint displays.</li>
+        <li><strong>Location</strong> — get away from town lights, open northern horizon (Springhill / Oxford / Amherst corridor works well).</li>
+        <li><strong>Camera</strong> — tripod, high ISO, 5–15 s; phones often see more than the eye.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Data sources</h2>
+      <ul class="tips">
+        <li>NOAA SWPC OVATION model (probability grid + map)</li>
+        <li>Planetary K-index real-time + 3-day forecast</li>
+        <li>27-day Space Weather Outlook</li>
+        <li>All public endpoints, no keys, refreshed every 5 min</li>
+      </ul>
+      <p class="note" style="margin-top:1rem">
+        <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener">swpc.noaa.gov</a> ·
+        <a href="https://www.swpc.noaa.gov/products/aurora-30-minute-forecast" target="_blank" rel="noopener">OVATION product</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  BuckTracks · Aurora · Cumberland County NS<br>
+  Data © NOAA / NWS SWPC · Hunt safe · Confirm NS DNR rules
+</footer>
+
+<script>
+const LAT=45.70, LON=-64.10; // Springhill / Cumberland NS area
+
+function kpLabel(kp){
+  if(kp>=8) return {t:'G4+ Severe',c:'storm'};
+  if(kp>=7) return {t:'G3 Strong',c:'storm'};
+  if(kp>=6) return {t:'G2 Moderate',c:'storm'};
+  if(kp>=5) return {t:'G1 Minor',c:'active'};
+  if(kp>=4) return {t:'Active',c:'active'};
+  if(kp>=3) return {t:'Unsettled',c:'active'};
+  return {t:'Quiet',c:'quiet'};
+}
+function outlook(kp){
+  if(kp>=7) return 'Strong chance — look north';
+  if(kp>=6) return 'Good chance on northern horizon';
+  if(kp>=5) return 'Possible low on northern horizon';
+  if(kp>=4) return 'Low / faint if any';
+  return 'Unlikely visible';
+}
+function renderBar(kp){
+  const bar=document.getElementById('kp-bar');
+  bar.innerHTML='';
+  for(let i=0;i<9;i++){
+    const s=document.createElement('div');
+    s.className='kp-seg';
+    if(i<Math.floor(kp)){
+      if(i>=6) s.classList.add('g3');
+      else if(i>=5) s.classList.add('g2');
+      else if(i>=4) s.classList.add('g1');
+      else s.classList.add('on');
+    }
+    bar.appendChild(s);
+  }
+}
+function getMoon(d=new Date()){
+  const syn=29.53058867;
+  const known=new Date('2000-01-06T18:14:00Z').getTime();
+  const days=(d.getTime()-known)/86400000;
+  const age=((days%syn)+syn)%syn;
+  const illum=Math.round(50*(1-Math.cos(2*Math.PI*age/syn)));
+  let phase;
+  if(age<1.85) phase='New Moon';
+  else if(age<7.38) phase='Waxing Crescent';
+  else if(age<9.23) phase='First Quarter';
+  else if(age<14.77) phase='Waxing Gibbous';
+  else if(age<16.61) phase='Full Moon';
+  else if(age<22.15) phase='Waning Gibbous';
+  else if(age<24) phase='Last Quarter';
+  else phase='Waning Crescent';
+  return {age,illumination:illum,phase};
+}
+function renderMoon(m){
+  document.getElementById('moon-phase').textContent=m.phase;
+  document.getElementById('moon-illum').textContent=m.illumination+'% illuminated';
+  const el=document.getElementById('moon-visual');
+  const wax=m.age<14.77;
+  const pct=m.illumination/100;
+  if(m.illumination<5) el.style.boxShadow='inset 0 0 0 40px #1a1a2e';
+  else if(wax) el.style.boxShadow=`inset ${-40+pct*40}px 0 0 0 #f5f5f0`;
+  else el.style.boxShadow=`inset ${40-pct*40}px 0 0 0 #f5f5f0`;
+}
+
+async function fetchOvation(){
+  try{
+    const r=await fetch('https://services.swpc.noaa.gov/json/ovation_aurora_latest.json');
+    const data=await r.json();
+    let best=null,bestD=1e9;
+    const lon=LON<0?LON+360:LON;
+    for(const c of data.coordinates){
+      const d=Math.abs(c[0]-lon)+Math.abs(c[1]-LAT);
+      if(d<bestD){bestD=d;best=c}
+    }
+    return best?best[2]:0;
+  }catch(e){console.error(e);return null}
+}
+async function fetchKp(){
+  try{
+    const r=await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json');
+    const data=await r.json();
+    const last=data[data.length-1];
+    return {kp:parseFloat(last.Kp),time:last.time_tag};
+  }catch(e){return null}
+}
+async function fetchFcst(){
+  try{
+    const r=await fetch('https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json');
+    return await r.json();
+  }catch(e){return []}
+}
+async function fetch27(){
+  try{
+    const r=await fetch('https://services.swpc.noaa.gov/text/27-day-outlook.txt');
+    const text=await r.text();
+    return text.split('\n').filter(l=>/^\d{4} [A-Za-z]{3} \d{2}/.test(l.trim())).map(l=>{
+      const p=l.trim().split(/\s+/);
+      return {date:p[0]+' '+p[1]+' '+p[2],flux:p[3],a:p[4],kp:parseFloat(p[5])};
+    });
+  }catch(e){return []}
+}
+
+async function update(){
+  const kpD=await fetchKp();
+  if(kpD){
+    document.getElementById('kp-now').textContent=kpD.kp.toFixed(1);
+    const lab=kpLabel(kpD.kp);
+    const st=document.getElementById('kp-status');
+    st.textContent=lab.t; st.className='pill '+lab.c;
+    renderBar(kpD.kp);
+    document.getElementById('kp-updated').textContent='Updated '+new Date(kpD.time+'Z').toLocaleString();
+  }
+  const prob=await fetchOvation();
+  if(prob!==null){
+    document.getElementById('prob').textContent=Math.round(prob)+'%';
+    const v=document.getElementById('verdict');
+    if(prob>=20||(kpD&&kpD.kp>=6)){v.textContent='Elevated — check the northern sky';v.className='verdict v-good'}
+    else if(prob>=5||(kpD&&kpD.kp>=5)){v.textContent='Marginal — possible faint northern glow';v.className='verdict v-maybe'}
+    else{v.textContent='Low probability from this latitude tonight';v.className='verdict v-poor'}
+  }
+  renderMoon(getMoon());
+
+  const fcst=await fetchFcst();
+  const tb=document.getElementById('fcst-body');
+  if(fcst.length){
+    tb.innerHTML='';
+    fcst.filter(r=>r.observed==='predicted'||new Date(r.time_tag+'Z')>new Date(Date.now()-3*3600*1000)).slice(0,16).forEach(r=>{
+      const kp=parseFloat(r.kp);
+      const tr=document.createElement('tr');
+      const scale=r.noaa_scale||(kp>=5?'G'+Math.min(5,Math.floor(kp-4)):'—');
+      tr.innerHTML=`<td>${r.time_tag.replace('T',' ').slice(0,16)}</td><td class="kp-cell">${kp.toFixed(1)}</td><td>${scale}</td><td>${outlook(kp)}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+  const out=await fetch27();
+  const ob=document.getElementById('out-body');
+  if(out.length){
+    ob.innerHTML='';
+    out.forEach(d=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${d.date}</td><td>${d.flux}</td><td>${d.a}</td><td class="kp-cell">${d.kp}</td><td>${outlook(d.kp)}</td>`;
+      ob.appendChild(tr);
+    });
+  }
+  document.getElementById('ovation').src='https://services.swpc.noaa.gov/images/animations/ovation/north/latest.jpg?t='+Date.now();
+}
+update();
+setInterval(update,5*60*1000);
+</script>
+</body>
+</html>
