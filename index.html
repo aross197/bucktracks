@@ -10,16 +10,16 @@
 <style>
 :root{
   --bg:#060908;
-  --bg2:#0a0f0c;
-  --card:#0f1512;
-  --card-hi:#141c18;
   --amber:#e8a317;
   --amber2:#f5d078;
   --moss:#5cb87a;
   --cream:#f3eee5;
-  --muted:rgba(243,238,229,.5);
-  --line:rgba(255,255,255,.07);
-  --line2:rgba(232,163,23,.22);
+  --muted:rgba(243,238,229,.52);
+  --glass-bg:linear-gradient(165deg,rgba(22,32,28,.55),rgba(12,18,15,.72));
+  --glass-blur:blur(14px) saturate(150%) brightness(1.05);
+  --glass-border:rgba(255,255,255,.09);
+  --glass-border-hi:rgba(255,255,255,.16);
+  --glass-shadow:0 10px 36px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.07);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
 body{
@@ -28,20 +28,54 @@ body{
   color:var(--cream);
   line-height:1.45;
   min-height:100dvh;
+  /* Rich backdrop so glass has something to frost */
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%,rgba(92,184,122,.07),transparent),
-    radial-gradient(ellipse 60% 40% at 100% 0%,rgba(232,163,23,.04),transparent);
+    radial-gradient(ellipse 90% 55% at 50% -15%,rgba(92,184,122,.12),transparent 55%),
+    radial-gradient(ellipse 50% 40% at 95% 5%,rgba(232,163,23,.08),transparent 50%),
+    radial-gradient(ellipse 40% 30% at 5% 60%,rgba(61,107,79,.07),transparent 50%),
+    linear-gradient(180deg,#060908 0%,#080c0a 100%);
+  background-attachment:fixed;
 }
 a{color:var(--amber2);text-decoration:none}
 
-/* Nav */
+/* ——— Glass system ——— */
+.glass{
+  background:var(--glass-bg);
+  -webkit-backdrop-filter:var(--glass-blur);
+  backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);
+  border-top-color:var(--glass-border-hi);
+  border-radius:14px;
+  box-shadow:var(--glass-shadow);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass,.nav{
+    background:rgba(12,18,15,.94);
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+  }
+}
+@media (prefers-reduced-transparency:reduce){
+  .glass,.nav{
+    background:rgba(12,18,15,.95);
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+  }
+}
+@media (max-width:640px){
+  :root{--glass-blur:blur(10px) saturate(140%)}
+}
+
+/* Nav — frosted sticky bar */
 .nav{
   position:sticky;top:0;z-index:50;
   display:flex;align-items:center;justify-content:space-between;
   padding:.7rem 1.15rem;
-  background:rgba(6,9,8,.88);
-  backdrop-filter:blur(16px) saturate(1.2);
-  border-bottom:1px solid var(--line);
+  background:rgba(8,12,10,.45);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  backdrop-filter:blur(16px) saturate(160%);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset;
 }
 .brand{
   font-weight:700;font-size:1.05rem;color:var(--cream);
@@ -55,7 +89,7 @@ a{color:var(--amber2);text-decoration:none}
   padding:.35rem .55rem;border-radius:7px;text-decoration:none;
   transition:color .15s,background .15s;
 }
-.nav-links a:hover{color:var(--cream);background:rgba(255,255,255,.05)}
+.nav-links a:hover{color:var(--cream);background:rgba(255,255,255,.08)}
 
 .wrap{max-width:860px;margin:0 auto;padding:1.5rem 1.15rem 3.5rem}
 
@@ -65,8 +99,10 @@ a{color:var(--amber2);text-decoration:none}
   display:inline-flex;align-items:center;gap:.4rem;
   font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
   color:var(--amber2);
-  border:1px solid var(--line2);
-  background:rgba(232,163,23,.06);
+  border:1px solid rgba(232,163,23,.28);
+  background:rgba(232,163,23,.08);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
   padding:.3rem .65rem;border-radius:999px;margin-bottom:.75rem;
 }
 .badge i{
@@ -81,7 +117,7 @@ a{color:var(--amber2);text-decoration:none}
 }
 .hero p{color:var(--muted);font-size:.9rem;max-width:28rem;line-height:1.5}
 
-/* Conditions */
+/* Conditions — glass cards */
 .conds{
   display:grid;
   grid-template-columns:1.35fr 1fr 1fr;
@@ -90,16 +126,9 @@ a{color:var(--amber2);text-decoration:none}
 }
 @media(max-width:640px){.conds{grid-template-columns:1fr}}
 .box{
-  background:linear-gradient(165deg,var(--card-hi),var(--card));
-  border:1px solid var(--line);
-  border-radius:14px;
   padding:1rem 1.05rem;
   position:relative;
   overflow:hidden;
-}
-.box::before{
-  content:'';position:absolute;inset:0 0 auto;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(232,163,23,.15),transparent);
 }
 .box h2{
   font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
@@ -113,32 +142,34 @@ a{color:var(--amber2);text-decoration:none}
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .wind-spd{font-size:.8rem;color:var(--muted);margin-top:.25rem}
-.wind-tip{font-size:.72rem;color:rgba(243,238,229,.4);margin-top:.45rem;line-height:1.35}
+.wind-tip{font-size:.72rem;color:rgba(243,238,229,.42);margin-top:.45rem;line-height:1.35}
 .sun-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
 .sun-grid span{display:block;font-size:.65rem;color:var(--muted);margin-bottom:.15rem}
 .sun-grid strong{font-size:.95rem;font-weight:650}
-.moon-line{font-size:.72rem;color:var(--muted);margin-top:.55rem;padding-top:.5rem;border-top:1px solid var(--line)}
+.moon-line{
+  font-size:.72rem;color:var(--muted);margin-top:.55rem;padding-top:.5rem;
+  border-top:1px solid rgba(255,255,255,.08);
+}
 .loc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:rgba(243,238,229,.35);margin-top:.5rem}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;
   min-height:34px;padding:.4rem .75rem;border-radius:8px;
   font-weight:600;font-size:.75rem;border:none;cursor:pointer;
-  transition:opacity .15s,transform .1s;
+  transition:background .15s,transform .1s;
 }
 .btn:active{transform:scale(.97)}
 .btn-ghost{
-  background:rgba(255,255,255,.04);color:var(--cream);
-  border:1px solid var(--line);margin-top:.55rem;
+  background:rgba(255,255,255,.06);color:var(--cream);
+  border:1px solid rgba(255,255,255,.1);margin-top:.55rem;
 }
-.btn-ghost:hover{background:rgba(255,255,255,.07)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
 
-/* Section label */
 .sec{
   font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
   color:var(--muted);margin:0 0 .65rem;
 }
 
-/* Tools */
+/* Tools — glass cards */
 .tools{
   display:grid;grid-template-columns:1fr 1fr;gap:.7rem;
   margin-bottom:1.5rem;
@@ -146,44 +177,32 @@ a{color:var(--amber2);text-decoration:none}
 @media(max-width:520px){.tools{grid-template-columns:1fr}}
 .tool{
   display:block;
-  background:linear-gradient(165deg,var(--card-hi),var(--card));
-  border:1px solid var(--line);
-  border-radius:14px;
   padding:1.05rem 1.1rem;
   text-decoration:none;color:inherit;
   transition:border-color .2s,transform .15s,box-shadow .2s;
   position:relative;overflow:hidden;
 }
-.tool::before{
-  content:'';position:absolute;inset:0 0 auto;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
-}
 .tool:hover{
-  border-color:rgba(232,163,23,.35);
+  border-color:rgba(232,163,23,.4);
   transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  box-shadow:0 14px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.1);
 }
 .tool .tag{
   font-size:.55rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   color:var(--moss);
-  border:1px solid rgba(92,184,122,.28);
-  background:rgba(92,184,122,.06);
+  border:1px solid rgba(92,184,122,.3);
+  background:rgba(92,184,122,.1);
   padding:.12rem .4rem;border-radius:999px;
   display:inline-block;margin-bottom:.45rem;
 }
 .tool .tag.safety{
-  color:#f87171;border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06);
+  color:#f87171;border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.1);
 }
 .tool h3{font-size:.98rem;font-weight:650;margin-bottom:.2rem;letter-spacing:-.01em}
 .tool p{font-size:.78rem;color:var(--muted);line-height:1.4}
 
-/* Notes */
-.notes{
-  background:linear-gradient(165deg,var(--card-hi),var(--card));
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:1.1rem 1.15rem;
-}
+/* Notes glass */
+.notes{padding:1.1rem 1.15rem}
 .notes h2{
   font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   color:var(--muted);margin-bottom:.6rem;
@@ -191,7 +210,7 @@ a{color:var(--amber2);text-decoration:none}
 .notes ul{list-style:none;padding:0}
 .notes li{
   font-size:.82rem;color:var(--muted);padding:.35rem 0;
-  border-bottom:1px solid var(--line);line-height:1.4;
+  border-bottom:1px solid rgba(255,255,255,.06);line-height:1.4;
 }
 .notes li:last-child{border-bottom:none;padding-bottom:0}
 .notes strong{color:var(--cream);font-weight:600}
@@ -224,20 +243,20 @@ footer{
   </header>
 
   <div class="conds">
-    <div class="box">
+    <div class="box glass">
       <h2>Conditions</h2>
       <div class="wx-main" id="temp">—</div>
       <div class="wx-sub" id="wx-detail">Fetching…</div>
       <div class="loc" id="wx-loc">—</div>
       <button type="button" class="btn btn-ghost" onclick="loadAll(true)">Use my GPS</button>
     </div>
-    <div class="box">
+    <div class="box glass">
       <h2>Wind</h2>
       <div class="wind-dir" id="wind-dir">—</div>
       <div class="wind-spd" id="wind-spd">—</div>
       <div class="wind-tip" id="wind-tip">Stand-side tip loads with wind</div>
     </div>
-    <div class="box">
+    <div class="box glass">
       <h2>Light</h2>
       <div class="sun-grid">
         <div><span>Sunrise</span><strong id="sunrise">—</strong></div>
@@ -249,29 +268,29 @@ footer{
 
   <p class="sec">Tools</p>
   <div class="tools">
-    <a class="tool" href="bucktracks-hub.html">
+    <a class="tool glass" href="bucktracks-hub.html">
       <span class="tag">Primary</span>
       <h3>Tactical cam hub</h3>
       <p>Drop trail-cam photos, read EXIF, map heat, match weather to activity.</p>
     </a>
-    <a class="tool" href="land-3d.html">
+    <a class="tool glass" href="land-3d.html">
       <span class="tag">Terrain</span>
       <h3>Land 3D · 200 m</h3>
       <p>Real elevation and satellite around your GPS. Standing view, true north.</p>
     </a>
-    <a class="tool" href="sos.html">
+    <a class="tool glass" href="sos.html">
       <span class="tag safety">Safety</span>
       <h3>SOS / I Am Lost</h3>
       <p>High-accuracy fix plus true bearing and distance back to the truck.</p>
     </a>
-    <a class="tool" href="field-guide.html">
+    <a class="tool glass" href="field-guide.html">
       <span class="tag">Reference</span>
       <h3>Field guide</h3>
       <p>Scouting platforms, timber cuts, cam tradecraft, scent notes for NS.</p>
     </a>
   </div>
 
-  <div class="notes">
+  <div class="notes glass">
     <h2>Field notes · Cumberland County</h2>
     <ul>
       <li><strong>Wind first.</strong> Check direction before you walk in. Don’t hunt the wrong side of the ridge.</li>
