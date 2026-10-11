@@ -3,122 +3,266 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#050708">
-<meta name="description" content="BuckTracks — free hunting tools for Cumberland County, Nova Scotia. Live wind, sunrise, trail cams, Land 3D, SOS.">
+<meta name="theme-color" content="#060908">
+<meta name="description" content="BuckTracks — hunting tools for Cumberland County, Nova Scotia. Live wind, sunrise, trail cams, Land 3D, SOS.">
 <title>BuckTracks · Cumberland County NS</title>
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
-:root{--bg:#070a08;--card:#101612;--amber:#e8a317;--amber2:#f5d078;--moss:#6bbf82;--cream:#f4efe6;--muted:rgba(244,239,230,.55);--line:rgba(255,255,255,.08)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--cream);line-height:1.45;min-height:100dvh}
+:root{
+  --bg:#060908;
+  --bg2:#0a0f0c;
+  --card:#0f1512;
+  --card-hi:#141c18;
+  --amber:#e8a317;
+  --amber2:#f5d078;
+  --moss:#5cb87a;
+  --cream:#f3eee5;
+  --muted:rgba(243,238,229,.5);
+  --line:rgba(255,255,255,.07);
+  --line2:rgba(232,163,23,.22);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+body{
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--cream);
+  line-height:1.45;
+  min-height:100dvh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%,rgba(92,184,122,.07),transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%,rgba(232,163,23,.04),transparent);
+}
 a{color:var(--amber2);text-decoration:none}
-.nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:rgba(7,10,8,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.brand{font-weight:700;font-size:1.1rem;color:var(--cream);text-decoration:none;letter-spacing:.02em}
-.nav a.n{color:var(--muted);font-size:.78rem;padding:.3rem .45rem;border-radius:6px;text-decoration:none}
-.nav a.n:hover{color:var(--cream);background:rgba(255,255,255,.05)}
-.nav-links{display:flex;gap:.25rem;flex-wrap:wrap}
-.wrap{max-width:880px;margin:0 auto;padding:1.25rem 1rem 3rem}
-.hero{margin-bottom:1.4rem}
-.hero h1{font-size:clamp(1.55rem,4.5vw,2.1rem);margin:0 0 .35rem;font-weight:700;letter-spacing:-.02em}
-.hero p{margin:0;color:var(--muted);font-size:.92rem;max-width:36rem}
-.badge{display:inline-block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--amber2);border:1px solid rgba(232,163,23,.3);padding:.25rem .55rem;border-radius:999px;margin-bottom:.65rem}
 
-/* Conditions grid */
-.conds{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:.65rem;margin-bottom:1.25rem}
+/* Nav */
+.nav{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.7rem 1.15rem;
+  background:rgba(6,9,8,.88);
+  backdrop-filter:blur(16px) saturate(1.2);
+  border-bottom:1px solid var(--line);
+}
+.brand{
+  font-weight:700;font-size:1.05rem;color:var(--cream);
+  letter-spacing:.03em;text-decoration:none;
+  display:flex;align-items:center;gap:.45rem;
+}
+.brand svg{width:22px;height:22px}
+.nav-links{display:flex;gap:.15rem;flex-wrap:wrap}
+.nav-links a{
+  color:var(--muted);font-size:.75rem;font-weight:500;
+  padding:.35rem .55rem;border-radius:7px;text-decoration:none;
+  transition:color .15s,background .15s;
+}
+.nav-links a:hover{color:var(--cream);background:rgba(255,255,255,.05)}
+
+.wrap{max-width:860px;margin:0 auto;padding:1.5rem 1.15rem 3.5rem}
+
+/* Hero */
+.hero{margin-bottom:1.6rem;padding-top:.3rem}
+.badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--amber2);
+  border:1px solid var(--line2);
+  background:rgba(232,163,23,.06);
+  padding:.3rem .65rem;border-radius:999px;margin-bottom:.75rem;
+}
+.badge i{
+  width:5px;height:5px;border-radius:50%;background:var(--amber);
+  box-shadow:0 0 8px var(--amber);animation:pulse 2.2s ease-in-out infinite;
+}
+@keyframes pulse{50%{opacity:.35}}
+.hero h1{
+  font-size:clamp(1.7rem,4.8vw,2.35rem);
+  font-weight:700;letter-spacing:-.03em;line-height:1.1;
+  margin-bottom:.4rem;
+}
+.hero p{color:var(--muted);font-size:.9rem;max-width:28rem;line-height:1.5}
+
+/* Conditions */
+.conds{
+  display:grid;
+  grid-template-columns:1.35fr 1fr 1fr;
+  gap:.7rem;
+  margin-bottom:1.5rem;
+}
 @media(max-width:640px){.conds{grid-template-columns:1fr}}
-.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.9rem 1rem}
-.box h2{margin:0 0 .5rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.wx-main{font-size:1.35rem;font-weight:700;margin-bottom:.15rem}
-.wx-sub{font-size:.8rem;color:var(--muted)}
-.wind-dir{font-size:1.6rem;font-weight:700;line-height:1}
-.wind-spd{font-size:.85rem;color:var(--muted);margin-top:.2rem}
-.sun-row{display:flex;justify-content:space-between;gap:.5rem;font-size:.88rem}
-.sun-row span{color:var(--muted);font-size:.72rem;display:block}
-.mono{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;color:var(--muted)}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:.5rem .85rem;border-radius:9px;font-weight:650;font-size:.82rem;border:none;cursor:pointer;text-decoration:none}
-.btn-ghost{background:rgba(255,255,255,.05);color:var(--cream);border:1px solid var(--line)}
-.btn-primary{background:linear-gradient(135deg,#f0c14b,#e8a317);color:#1a1200}
-.btn-danger{background:#b91c1c;color:#fff}
+.box{
+  background:linear-gradient(165deg,var(--card-hi),var(--card));
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1rem 1.05rem;
+  position:relative;
+  overflow:hidden;
+}
+.box::before{
+  content:'';position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(232,163,23,.15),transparent);
+}
+.box h2{
+  font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:.55rem;
+}
+.wx-main{font-size:1.55rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.15rem}
+.wx-sub{font-size:.78rem;color:var(--muted)}
+.wind-dir{
+  font-size:1.85rem;font-weight:700;letter-spacing:-.02em;line-height:1;
+  background:linear-gradient(135deg,var(--cream),var(--amber2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.wind-spd{font-size:.8rem;color:var(--muted);margin-top:.25rem}
+.wind-tip{font-size:.72rem;color:rgba(243,238,229,.4);margin-top:.45rem;line-height:1.35}
+.sun-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.sun-grid span{display:block;font-size:.65rem;color:var(--muted);margin-bottom:.15rem}
+.sun-grid strong{font-size:.95rem;font-weight:650}
+.moon-line{font-size:.72rem;color:var(--muted);margin-top:.55rem;padding-top:.5rem;border-top:1px solid var(--line)}
+.loc{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.68rem;color:rgba(243,238,229,.35);margin-top:.5rem}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;padding:.4rem .75rem;border-radius:8px;
+  font-weight:600;font-size:.75rem;border:none;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+}
+.btn:active{transform:scale(.97)}
+.btn-ghost{
+  background:rgba(255,255,255,.04);color:var(--cream);
+  border:1px solid var(--line);margin-top:.55rem;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.07)}
+
+/* Section label */
+.sec{
+  font-size:.6rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 .65rem;
+}
 
 /* Tools */
-.sec-label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 .6rem;font-weight:600}
-.tools{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:1.4rem}
+.tools{
+  display:grid;grid-template-columns:1fr 1fr;gap:.7rem;
+  margin-bottom:1.5rem;
+}
 @media(max-width:520px){.tools{grid-template-columns:1fr}}
-.tool{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem 1.05rem;text-decoration:none;color:inherit;transition:border-color .15s}
-.tool:hover{border-color:rgba(232,163,23,.4)}
-.tool .tag{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);border:1px solid rgba(107,191,130,.3);padding:.1rem .35rem;border-radius:999px;display:inline-block;margin-bottom:.4rem}
-.tool h3{margin:0 0 .25rem;font-size:1rem;font-weight:650}
-.tool p{margin:0;font-size:.82rem;color:var(--muted)}
+.tool{
+  display:block;
+  background:linear-gradient(165deg,var(--card-hi),var(--card));
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.05rem 1.1rem;
+  text-decoration:none;color:inherit;
+  transition:border-color .2s,transform .15s,box-shadow .2s;
+  position:relative;overflow:hidden;
+}
+.tool::before{
+  content:'';position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);
+}
+.tool:hover{
+  border-color:rgba(232,163,23,.35);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+.tool .tag{
+  font-size:.55rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--moss);
+  border:1px solid rgba(92,184,122,.28);
+  background:rgba(92,184,122,.06);
+  padding:.12rem .4rem;border-radius:999px;
+  display:inline-block;margin-bottom:.45rem;
+}
+.tool .tag.safety{
+  color:#f87171;border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06);
+}
+.tool h3{font-size:.98rem;font-weight:650;margin-bottom:.2rem;letter-spacing:-.01em}
+.tool p{font-size:.78rem;color:var(--muted);line-height:1.4}
 
-/* Quick notes */
-.notes{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem 1.05rem;margin-bottom:1rem}
-.notes h2{margin:0 0 .55rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.notes ul{margin:0;padding-left:1.1rem;font-size:.84rem;color:var(--muted)}
-.notes li{margin-bottom:.35rem}
-.notes strong{color:var(--cream)}
-footer{text-align:center;font-size:.68rem;color:rgba(244,239,230,.28);padding:1rem 0 2rem}
+/* Notes */
+.notes{
+  background:linear-gradient(165deg,var(--card-hi),var(--card));
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.1rem 1.15rem;
+}
+.notes h2{
+  font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:.6rem;
+}
+.notes ul{list-style:none;padding:0}
+.notes li{
+  font-size:.82rem;color:var(--muted);padding:.35rem 0;
+  border-bottom:1px solid var(--line);line-height:1.4;
+}
+.notes li:last-child{border-bottom:none;padding-bottom:0}
+.notes strong{color:var(--cream);font-weight:600}
+
+footer{
+  text-align:center;font-size:.65rem;color:rgba(243,238,229,.22);
+  padding:2rem 1rem 2.5rem;letter-spacing:.02em;
+}
 </style>
 </head>
 <body>
 <nav class="nav">
-  <a class="brand" href="index.html">BuckTracks</a>
+  <a class="brand" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z" stroke="#e8a317"/><circle cx="12" cy="14" r="2" fill="#e8a317" stroke="none"/></svg>
+    BuckTracks
+  </a>
   <div class="nav-links">
-    <a class="n" href="bucktracks-hub.html">Cam hub</a>
-    <a class="n" href="land-3d.html">Land 3D</a>
-    <a class="n" href="field-guide.html">Field guide</a>
-    <a class="n" href="sos.html">SOS</a>
+    <a href="bucktracks-hub.html">Cam hub</a>
+    <a href="land-3d.html">Land 3D</a>
+    <a href="field-guide.html">Field guide</a>
+    <a href="sos.html">SOS</a>
   </div>
 </nav>
 
 <div class="wrap">
   <header class="hero">
-    <div class="badge">Cumberland County · NS</div>
+    <div class="badge"><i></i> Cumberland County · NS</div>
     <h1>Hunt ready.</h1>
-    <p>Live wind, light, trail-cam tools, terrain view, and SOS — built for the woods around Springhill, Oxford, and Amherst.</p>
+    <p>Live wind, light, trail-cam tools, terrain, and SOS — for the woods around Springhill, Oxford, and Amherst.</p>
   </header>
 
-  <!-- Live conditions -->
   <div class="conds">
     <div class="box">
       <h2>Conditions</h2>
       <div class="wx-main" id="temp">—</div>
       <div class="wx-sub" id="wx-detail">Fetching…</div>
-      <div class="mono" id="wx-loc" style="margin-top:.45rem">—</div>
-      <button type="button" class="btn btn-ghost" style="margin-top:.55rem" onclick="loadAll(true)">Use my GPS</button>
+      <div class="loc" id="wx-loc">—</div>
+      <button type="button" class="btn btn-ghost" onclick="loadAll(true)">Use my GPS</button>
     </div>
     <div class="box">
       <h2>Wind</h2>
       <div class="wind-dir" id="wind-dir">—</div>
       <div class="wind-spd" id="wind-spd">—</div>
-      <div class="wx-sub" style="margin-top:.5rem" id="wind-tip">Critical for stand choice</div>
+      <div class="wind-tip" id="wind-tip">Stand-side tip loads with wind</div>
     </div>
     <div class="box">
-      <h2>Light today</h2>
-      <div class="sun-row">
+      <h2>Light</h2>
+      <div class="sun-grid">
         <div><span>Sunrise</span><strong id="sunrise">—</strong></div>
         <div><span>Sunset</span><strong id="sunset">—</strong></div>
       </div>
-      <div class="wx-sub" style="margin-top:.55rem" id="moon-line">—</div>
+      <div class="moon-line" id="moon-line">—</div>
     </div>
   </div>
 
-  <!-- Tools -->
-  <p class="sec-label">Tools</p>
+  <p class="sec">Tools</p>
   <div class="tools">
     <a class="tool" href="bucktracks-hub.html">
       <span class="tag">Primary</span>
       <h3>Tactical cam hub</h3>
-      <p>Drop trail-cam photos, read EXIF, map heat, and check weather against activity.</p>
+      <p>Drop trail-cam photos, read EXIF, map heat, match weather to activity.</p>
     </a>
     <a class="tool" href="land-3d.html">
       <span class="tag">Terrain</span>
       <h3>Land 3D · 200 m</h3>
-      <p>Standing view of real elevation and satellite around your GPS. True north.</p>
+      <p>Real elevation and satellite around your GPS. Standing view, true north.</p>
     </a>
     <a class="tool" href="sos.html">
-      <span class="tag">Safety</span>
+      <span class="tag safety">Safety</span>
       <h3>SOS / I Am Lost</h3>
-      <p>High-accuracy fix + Vincenty distance and true bearing back to truck.</p>
+      <p>High-accuracy fix plus true bearing and distance back to the truck.</p>
     </a>
     <a class="tool" href="field-guide.html">
       <span class="tag">Reference</span>
@@ -131,9 +275,9 @@ footer{text-align:center;font-size:.68rem;color:rgba(244,239,230,.28);padding:1r
     <h2>Field notes · Cumberland County</h2>
     <ul>
       <li><strong>Wind first.</strong> Check direction before you walk in. Don’t hunt the wrong side of the ridge.</li>
-      <li><strong>Access.</strong> Confirm private land / Crown land and any posted boundaries before you set stands or cams.</li>
-      <li><strong>Legal.</strong> Baiting, scent, and season dates are set by NS DNR — check current regs every season.</li>
-      <li><strong>Safety.</strong> Tell someone your plan. SOS page is for a shareable fix, not a replacement for 911.</li>
+      <li><strong>Access.</strong> Confirm private or Crown land and any posted boundaries before stands or cams.</li>
+      <li><strong>Legal.</strong> Baiting, scent, and seasons are set by NS DNR — verify current regs every year.</li>
+      <li><strong>Safety.</strong> Tell someone your plan. SOS is for a shareable fix, not a replacement for 911.</li>
     </ul>
   </div>
 </div>
@@ -141,71 +285,62 @@ footer{text-align:center;font-size:.68rem;color:rgba(244,239,230,.28);padding:1r
 <footer>BuckTracks · free · northern Nova Scotia · Hunt safe</footer>
 
 <script>
-const FALLBACK={lat:45.70,lon:-64.10}; // Springhill / Cumberland
-
+const FALLBACK={lat:45.70,lon:-64.10};
 function windLabel(d){
   const a=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
   return a[Math.round(d/22.5)%16];
 }
 function windTip(dir){
-  // Simple practical tip for deer hunters in rolling NS terrain
-  if(dir>=337.5||dir<22.5) return 'North wind — good for south-facing approaches';
+  if(dir>=337.5||dir<22.5) return 'North wind — favour south-facing approaches';
   if(dir<67.5) return 'NE wind — watch ridges running SW–NE';
-  if(dir<112.5) return 'East wind — approach from the west when possible';
-  if(dir<157.5) return 'SE wind — common fall pattern';
-  if(dir<202.5) return 'South wind — good for north stands / scrapes';
-  if(dir<247.5) return 'SW wind — approach from NE side';
+  if(dir<112.5) return 'East wind — approach from the west when you can';
+  if(dir<157.5) return 'SE wind — common fall pattern in the Maritimes';
+  if(dir<202.5) return 'South wind — strong for north stands and scrapes';
+  if(dir<247.5) return 'SW wind — approach from the NE side';
   if(dir<292.5) return 'West wind — approach from the east';
-  return 'NW wind — strong cold fronts often bring movement';
+  return 'NW wind — cold fronts often move deer';
 }
 function fmtTime(iso){
   if(!iso) return '—';
-  const d=new Date(iso);
-  return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  return new Date(iso).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 }
 function getMoon(){
   const syn=29.53058867, known=new Date('2000-01-06T18:14:00Z').getTime();
   const age=(((Date.now()-known)/86400000)%syn+syn)%syn;
   const illum=Math.round(50*(1-Math.cos(2*Math.PI*age/syn)));
   let phase;
-  if(age<1.85) phase='New';
+  if(age<1.85) phase='New moon';
   else if(age<7.38) phase='Waxing crescent';
   else if(age<9.23) phase='First quarter';
   else if(age<14.77) phase='Waxing gibbous';
-  else if(age<16.61) phase='Full';
+  else if(age<16.61) phase='Full moon';
   else if(age<22.15) phase='Waning gibbous';
   else if(age<24) phase='Last quarter';
   else phase='Waning crescent';
   return phase+' · '+illum+'% lit';
 }
-
 async function fetchConditions(lat,lon,label){
   const u=new URL('https://api.open-meteo.com/v1/forecast');
   u.searchParams.set('latitude',lat);
   u.searchParams.set('longitude',lon);
-  u.searchParams.set('current','temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl');
+  u.searchParams.set('current','temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,pressure_msl');
   u.searchParams.set('daily','sunrise,sunset');
   u.searchParams.set('wind_speed_unit','kmh');
   u.searchParams.set('timezone','America/Halifax');
   u.searchParams.set('forecast_days','1');
   const j=await (await fetch(u)).json();
   const c=j.current, d=j.daily;
-
   document.getElementById('temp').textContent=c.temperature_2m.toFixed(1)+'°C';
-  document.getElementById('wx-detail').textContent=
-    'RH '+c.relative_humidity_2m+'% · '+c.pressure_msl.toFixed(0)+' hPa';
+  document.getElementById('wx-detail').textContent='RH '+c.relative_humidity_2m+'% · '+c.pressure_msl.toFixed(0)+' hPa';
   document.getElementById('wx-loc').textContent=label+' · '+lat.toFixed(4)+', '+lon.toFixed(4);
-
   const dir=c.wind_direction_10m;
   document.getElementById('wind-dir').textContent=windLabel(dir);
   document.getElementById('wind-spd').textContent=c.wind_speed_10m.toFixed(0)+' km/h · '+dir.toFixed(0)+'°';
   document.getElementById('wind-tip').textContent=windTip(dir);
-
   document.getElementById('sunrise').textContent=fmtTime(d.sunrise[0]);
   document.getElementById('sunset').textContent=fmtTime(d.sunset[0]);
   document.getElementById('moon-line').textContent=getMoon();
 }
-
 async function loadAll(useGps){
   document.getElementById('wx-detail').textContent='Fetching…';
   try{
@@ -215,12 +350,8 @@ async function loadAll(useGps){
         ()=>fetchConditions(FALLBACK.lat,FALLBACK.lon,'Springhill area'),
         {enableHighAccuracy:true,timeout:12000,maximumAge:0}
       );
-    }else{
-      await fetchConditions(FALLBACK.lat,FALLBACK.lon,'Springhill area');
-    }
-  }catch(e){
-    document.getElementById('wx-detail').textContent='Weather unavailable';
-  }
+    }else await fetchConditions(FALLBACK.lat,FALLBACK.lon,'Springhill area');
+  }catch(e){document.getElementById('wx-detail').textContent='Weather unavailable'}
 }
 loadAll(true);
 </script>
