@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AI Animal Caller – Nova Scotia</title>
+  <style>
+    :root {
+      --bg: #0f1a12;
+      --card: #1a2e1f;
+      --accent: #3d8b4f;
+      --accent-hover: #4caf63;
+      --danger: #c62828;
+      --text: #e8f5e9;
+      --muted: #a5d6a7;
+      --border: #2e4a35;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+      line-height: 1.45;
+    }
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 2px;
+      color: #81c784;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 18px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0d160f;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 12px;
+      appearance: none;
+    }
+    select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+      display: none;
+      margin-top: 8px;
+    }
+    .btn-danger.visible { display: block; }
+    #status {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #a5d6a7;
+      min-height: 1.4em;
+      margin: 10px 0;
+    }
+    #recommendation {
+      background: #132018;
+      border-left: 4px solid var(--accent);
+      padding: 14px;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+    #recommendation strong { color: #81c784; }
+    .timer {
+      text-align: center;
+      font-size: 2.3rem;
+      font-weight: 700;
+      color: #81c784;
+      letter-spacing: 2px;
+      margin: 12px 0 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-label {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .disclaimer {
+      font-size: 0.68rem;
+      color: #6b8f71;
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.4;
+    }
+    .ns-note {
+      font-size: 0.78rem;
+      color: #a5d6a7;
+      background: #132018;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .animal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .animal-btn {
+      padding: 10px 8px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0d160f;
+      color: var(--text);
+      font-size: 0.88rem;
+      text-align: center;
+      cursor: pointer;
+    }
+    .animal-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>🦌 AI Animal Caller</h1>
+  <p class="subtitle">Nova Scotia Edition – Every major call-able species</p>
+
+  <div class="ns-note">
+    <strong>Nova Scotia focus:</strong> White-tailed deer, moose (Cape Breton only / limited), black bear, coyote (year-round), red fox, bobcat, raccoon, ruffed grouse, snowshoe hare, wild turkey & waterfowl. Always check current NS DNR regulations & bag limits before hunting.
+  </div>
+
+  <div class="card">
+    <label>Animal</label>
+    <div class="animal-grid" id="animalGrid">
+      <div class="animal-btn active" data-value="deer">🦌 Whitetail Deer</div>
+      <div class="animal-btn" data-value="moose">🦎 Moose</div>
+      <div class="animal-btn" data-value="bear">🐻 Black Bear</div>
+      <div class="animal-btn" data-value="coyote">🐺 Coyote</div>
+      <div class="animal-btn" data-value="fox">🦊 Red Fox</div>
+      <div class="animal-btn" data-value="bobcat">🐱 Bobcat</div>
+      <div class="animal-btn" data-value="raccoon">🦝 Raccoon</div>
+      <div class="animal-btn" data-value="turkey">🦃 Wild Turkey</div>
+      <div class="animal-btn" data-value="grouse">🪶 Ruffed Grouse</div>
+      <div class="animal-btn" data-value="hare">🐇 Snowshoe Hare</div>
+      <div class="animal-btn" data-value="goose">🦢 Canada Goose</div>
+      <div class="animal-btn" data-value="duck">🦆 Duck</div>
+    </div>
+    <input type="hidden" id="animal" value="deer" />
+
+    <div class="row">
+      <div>
+        <label for="phase">Season / Phase</label>
+        <select id="phase">
+          <option value="prerut">Pre-Rut / Early Fall</option>
+          <option value="peak">Peak Rut / Breeding</option>
+          <option value="postrut">Post-Rut / Late Fall</option>
+          <option value="spring">Spring</option>
+          <option value="summer">Summer</option>
+          <option value="winter">Winter</option>
+          <option value="general">General / Year-round</option>
+        </select>
+      </div>
+      <div>
+        <label for="weather">Weather</label>
+        <select id="weather">
+          <option value="calm">Calm / Clear</option>
+          <option value="cold">Cold Front / Cold Calm</option>
+          <option value="windy">Windy</option>
+          <option value="rain">Light Rain / Damp</option>
+          <option value="snow">Snow / Fresh Snow</option>
+          <option value="hot">Hot / Still</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="startBtn">Start Calling Sequence</button>
+    <button class="btn-danger" id="stopBtn">STOP – Animal Coming!</button>
+  </div>
+
+  <div class="card" id="recCard" style="display:none;">
+    <div id="recommendation"></div>
+    <div class="timer" id="countdown">--:--</div>
+    <div class="timer-label">Next call in</div>
+    <div id="status"></div>
+  </div>
+
+  <p class="disclaimer">
+    Simulated calls only (Web Audio). For real hunting use your own mouth calls or e-caller files.
+    Always follow Nova Scotia Wildlife Act, current bag limits, and ethical practices.
+    Mainland moose are endangered – do not call or hunt them. Cape Breton moose is draw-only when open.
+  </p>
+
+  <script>
+    // Animal selection buttons
+    document.querySelectorAll('.animal-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.animal-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('animal').value = btn.dataset.value;
+      });
+    });
+
+    // ---------- Web Audio Call Synthesizer ----------
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let ctx = null;
+    let isPlaying = false;
+    let intervalId = null;
+    let countdownId = null;
+    let nextCallTime = 0;
+    let currentIntervalSec = 900;
+
+    function ensureCtx() {
+      if (!ctx) ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+    }
+
+    function playDeerGrunt(duration = 0.55, pitch = 125) {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(pitch, now);
+      osc.frequency.exponentialRampToValueAtTime(pitch * 0.72, now + duration);
+      filter.type = 'lowpass';
+      filter.frequency.value = 380;
+      gain.gain.setValueAtTime(0.32, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + duration + 0.05);
+    }
+
+    function playDoeBleat(duration = 0.75) {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(370, now);
+      osc.frequency.linearRampToValueAtTime(310, now + duration * 0.55);
+      osc.frequency.linearRampToValueAtTime(350, now + duration);
+      gain.gain.setValueAtTime(0.24, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + duration + 0.05);
+    }
+
+    function playRattle(duration = 2.2) {
+      ensureCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 11; i++) {
+        const t = now + i * 0.17;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 170 + Math.random() * 90;
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.11);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.14);
+      }
+    }
+
+    function playElkBugle(duration = 2.1) { // reused for moose-ish
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(380, now + 0.9);
+      osc.frequency.exponentialRampToValueAtTime(220, now + duration);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.linearRampToValueAtTime(0.32, now + 0.7);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + duration + 0.05);
+    }
+
+    function playMooseCall() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(95, now);
+      osc.frequency.linearRampToValueAtTime(180, now + 1.1);
+      osc.frequency.linearRampToValueAtTime(120, now + 1.9);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 2.1);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 2.15);
+    }
+
+    function playBearGrunt() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(70, now);
+      osc.frequency.linearRampToValueAtTime(55, now + 0.8);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 1.05);
+    }
+
+    function playCoyoteHowl() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(360, now);
+      osc.frequency.linearRampToValueAtTime(580, now + 1.3);
+      osc.frequency.linearRampToValueAtTime(420, now + 2.1);
+      gain.gain.setValueAtTime(0.24, now);
+      gain.gain.linearRampToValueAtTime(0.28, now + 0.9);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 2.3);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 2.35);
+    }
+
+    function playFoxBark() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 4; i++) {
+        const t = now + i * 0.28;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(520 + Math.random()*30, t);
+        osc.frequency.linearRampToValueAtTime(380, t + 0.15);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.2);
+      }
+    }
+
+    function playBobcatScream() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.linearRampToValueAtTime(720, now + 0.4);
+      osc.frequency.linearRampToValueAtTime(350, now + 0.9);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 1.05);
+    }
+
+    function playRaccoonChitter() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 8; i++) {
+        const t = now + i * 0.09;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 400 + Math.random() * 120;
+        gain.gain.setValueAtTime(0.12, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.08);
+      }
+    }
+
+    function playTurkeyYelp() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 5; i++) {
+        const t = now + i * 0.21;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(640 + Math.random()*35, t);
+        osc.frequency.linearRampToValueAtTime(470, t + 0.14);
+        gain.gain.setValueAtTime(0.26, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.17);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.19);
+      }
+    }
+
+    function playTurkeyGobble() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(170, now);
+      for (let i = 0; i < 7; i++) {
+        osc.frequency.setValueAtTime(210 + (i % 2) * 35, now + i * 0.07);
+      }
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.6);
+    }
+
+    function playGrouseDrum() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 14; i++) {
+        const t = now + i * 0.09 + (i * i * 0.004);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 55 + i * 2;
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.1);
+      }
+    }
+
+    function playHareSqueal() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(890, now);
+      osc.frequency.linearRampToValueAtTime(620, now + 0.35);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.42);
+    }
+
+    function playGooseHonk() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.linearRampToValueAtTime(220, now + 0.4);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.55);
+    }
+
+    function playDuckQuack() {
+      ensureCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const t = now + i * 0.25;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(420, t);
+        osc.frequency.linearRampToValueAtTime(280, t + 0.18);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t + 0.22);
+      }
+    }
+
+    // ---------- AI Recommendation Engine (NS-focused) ----------
+    function getRecommendation(animal, phase, weather) {
+      const windyOrRain = weather === 'windy' || weather === 'rain';
+      const cold = weather === 'cold' || weather === 'snow';
+      const hot = weather === 'hot';
+
+      let baseInterval = 900;
+      if (windyOrRain) baseInterval = 720;
+      if (cold) baseInterval = 600;
+      if (hot) baseInterval = 1200;
+      if (weather === 'snow') baseInterval = 660;
+
+      if (animal === 'deer') {
+        if (phase === 'prerut') {
+          return {
+            title: 'NS Pre-Rut Whitetail – Contact Grunts + Light Rattle',
+            description: 'Bucks establishing dominance. Soft contact grunts every 30–45 min + short rattle. Volume moderate. Cold fronts increase movement.',
+            sequenceFn: () => {
+              playDeerGrunt(0.5, 130);
+              setTimeout(() => playDeerGrunt(0.4, 115), 750);
+              if (Math.random() > 0.5) setTimeout(() => playRattle(1.7), 1600);
+            },
+            intervalSec: Math.round(baseInterval * 1.35),
+            volumeNote: windyOrRain ? 'Medium-loud' : 'Soft–medium'
+          };
+        }
+        if (phase === 'peak') {
+          return {
+            title: 'NS Peak Rut Whitetail – Tending Grunts + Estrus Bleat',
+            description: '8–12 short grunts + long tending grunt every 15–20 min. Mix soft estrus bleats. Extremely effective on cold clear mornings in NS.',
+            sequenceFn: () => {
+              for (let i = 0; i < 9; i++) setTimeout(() => playDeerGrunt(0.26, 128 - i), i * 300);
+              setTimeout(() => playDeerGrunt(0.85, 108), 3000);
+              setTimeout(() => playDoeBleat(0.7), 4200);
+            },
+            intervalSec: Math.round(baseInterval * 0.8),
+            volumeNote: 'Medium'
+          };
+        }
+        return {
+          title: 'NS Post-Rut / Late Season Deer – Soft Contact + Bleats',
+          description: 'Very soft grunts and doe/fawn bleats near food sources. Over-calling educates NS deer fast.',
+          sequenceFn: () => {
+            playDeerGrunt(0.4, 140);
+            setTimeout(() => playDoeBleat(0.55), 1100);
+          },
+          intervalSec: Math.round(baseInterval * 1.5),
+          volumeNote: 'Soft'
+        };
+      }
+
+      if (animal === 'moose') {
+        return {
+          title: 'Cape Breton Moose – Cow Call / Bull Grunt (Limited Season)',
+          description: 'Mainland moose are endangered – do NOT call them. Cape Breton is draw-only when open. Long cow calls + occasional bull grunts. Best on calm cold mornings.',
+          sequenceFn: () => {
+            playMooseCall();
+            if (Math.random() > 0.6) setTimeout(() => playMooseCall(), 2800);
+          },
+          intervalSec: Math.round(baseInterval * 1.1),
+          volumeNote: 'Medium–loud'
+        };
+      }
+
+      if (animal === 'bear') {
+        return {
+          title: 'NS Black Bear – Soft Grunts / Sucking Sounds',
+          description: 'Bears respond to soft grunts and distressed cub/sow sounds. Use sparingly. Best early fall and near bait (where legal). Cold weather concentrates activity.',
+          sequenceFn: () => {
+            playBearGrunt();
+            setTimeout(() => playBearGrunt(), 900);
+          },
+          intervalSec: Math.round(baseInterval * 1.4),
+          volumeNote: 'Soft–medium'
+        };
+      }
+
+      if (animal === 'coyote') {
+        return {
+          title: 'NS Coyote – Howls + Prey Distress (Year-round)',
+          description: 'Coyotes are open year-round in NS with no bag limit on hunting. Howls work best on calm cold nights/mornings. In wind use stronger, cleaner sounds.',
+          sequenceFn: () => {
+            playCoyoteHowl();
+            if (Math.random() > 0.45) setTimeout(() => playCoyoteHowl(), 3200);
+          },
+          intervalSec: Math.round(baseInterval * 0.85),
+          volumeNote: windyOrRain ? 'Loud' : 'Medium'
+        };
+      }
+
+      if (animal === 'fox') {
+        return {
+          title: 'NS Red Fox – Barks / Distress',
+          description: 'Sharp barks and rabbit distress work well. Foxes respond best in colder weather and at dawn/dusk. Keep sequences short.',
+          sequenceFn: () => {
+            playFoxBark();
+            setTimeout(() => playFoxBark(), 1400);
+          },
+          intervalSec: Math.round(baseInterval * 1.0),
+          volumeNote: 'Medium'
+        };
+      }
+
+      if (animal === 'bobcat') {
+        return {
+          title: 'NS Bobcat – Scream / Prey Distress',
+          description: 'Bobcats are secretive. High-pitched screams and rabbit distress. Long waits between sequences. Best in winter with snow for tracking.',
+          sequenceFn: () => {
+            playBobcatScream();
+            setTimeout(() => playHareSqueal(), 1800);
+          },
+          intervalSec: Math.round(baseInterval * 1.6),
+          volumeNote: 'Medium'
+        };
+      }
+
+      if (animal === 'raccoon') {
+        return {
+          title: 'NS Raccoon – Chitter / Distress',
+          description: 'Chittering and young distress calls. Most effective at night near water or corn. Short sequences.',
+          sequenceFn: () => playRaccoonChitter(),
+          intervalSec: Math.round(baseInterval * 0.9),
+          volumeNote: 'Medium'
+        };
+      }
+
+      if (animal === 'turkey') {
+        if (phase === 'spring' || phase === 'peak') {
+          return {
+            title: 'NS Spring Turkey – Yelps + Occasional Gobble',
+            description: '4–6 yelps every 10–15 min. In rain gobbling drops – call more aggressively when weather breaks. Confirm current NS turkey season status.',
+            sequenceFn: () => {
+              playTurkeyYelp();
+              if (Math.random() > 0.65) setTimeout(() => playTurkeyGobble(), 2800);
+            },
+            intervalSec: Math.round(baseInterval * 0.7),
+            volumeNote: windyOrRain ? 'Loud' : 'Medium'
+          };
+        }
+        return {
+          title: 'NS Fall Turkey – Soft Assembly Yelps',
+          description: 'Soft yelps to gather birds. Keep volume low.',
+          sequenceFn: () => playTurkeyYelp(),
+          intervalSec: Math.round(baseInterval * 1.15),
+          volumeNote: 'Soft'
+        };
+      }
+
+      if (animal === 'grouse') {
+        return {
+          title: 'NS Ruffed Grouse – Drumming / Soft Clucks',
+          description: 'Drumming simulation for locating. Soft clucks/whines for close work. Best early morning in fall.',
+          sequenceFn: () => playGrouseDrum(),
+          intervalSec: Math.round(baseInterval * 1.3),
+          volumeNote: 'Soft–medium'
+        };
+      }
+
+      if (animal === 'hare') {
+        return {
+          title: 'NS Snowshoe Hare – Distress Squeal',
+          description: 'High-pitched distress works for predators or to locate. Use sparingly. Best with snow cover for tracking.',
+          sequenceFn: () => {
+            playHareSqueal();
+            setTimeout(() => playHareSqueal(), 700);
+          },
+          intervalSec: Math.round(baseInterval * 1.2),
+          volumeNote: 'Medium'
+        };
+      }
+
+      if (animal === 'goose') {
+        return {
+          title: 'NS Canada Goose – Honks / Greeting Calls',
+          description: 'Classic honks and greeting sequences. Best on calm days near feeding fields or water. Federal permit required for waterfowl.',
+          sequenceFn: () => {
+            playGooseHonk();
+            setTimeout(() => playGooseHonk(), 600);
+            setTimeout(() => playGooseHonk(), 1400);
+          },
+          intervalSec: Math.round(baseInterval * 0.6),
+          volumeNote: windyOrRain ? 'Loud' : 'Medium–loud'
+        };
+      }
+
+      if (animal === 'duck') {
+        return {
+          title: 'NS Duck – Quacks / Feeding Chatter',
+          description: '3–5 quacks or feeding chatter. Best early morning on calm water. Federal Migratory Bird permit required.',
+          sequenceFn: () => playDuckQuack(),
+          intervalSec: Math.round(baseInterval * 0.55),
+          volumeNote: 'Medium'
+        };
+      }
+
+      // fallback
+      return {
+        title: 'General Contact Call',
+        description: 'Soft contact sequence.',
+        sequenceFn: () => playDeerGrunt(0.5, 130),
+        intervalSec: baseInterval,
+        volumeNote: 'Medium'
+      };
+    }
+
+    // ---------- UI & Timer ----------
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const recCard = document.getElementById('recCard');
+    const recommendationEl = document.getElementById('recommendation');
+    const statusEl = document.getElementById('status');
+    const countdownEl = document.getElementById('countdown');
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function updateCountdown() {
+      const remaining = Math.max(0, Math.ceil((nextCallTime - Date.now()) / 1000));
+      countdownEl.textContent = formatTime(remaining);
+    }
+
+    function doCall(rec) {
+      if (!isPlaying) return;
+      statusEl.textContent = '🔊 Playing call sequence…';
+      rec.sequenceFn();
+      setTimeout(() => {
+        if (isPlaying) statusEl.textContent = 'Listening… (hit STOP the second you see movement)';
+      }, 4500);
+      nextCallTime = Date.now() + currentIntervalSec * 1000;
+    }
+
+    function startSequence() {
+      ensureCtx();
+      const animal = document.getElementById('animal').value;
+      const phase = document.getElementById('phase').value;
+      const weather = document.getElementById('weather').value;
+
+      const rec = getRecommendation(animal, phase, weather);
+      currentIntervalSec = rec.intervalSec;
+
+      recommendationEl.innerHTML = `
+        <strong>${rec.title}</strong><br>
+        ${rec.description}<br><br>
+        <strong>Volume:</strong> ${rec.volumeNote}<br>
+        <strong>Interval:</strong> ~${Math.round(rec.intervalSec / 60)} min
+      `;
+      recCard.style.display = 'block';
+      startBtn.style.display = 'none';
+      stopBtn.classList.add('visible');
+      isPlaying = true;
+      statusEl.textContent = 'Starting first sequence…';
+
+      doCall(rec);
+
+      intervalId = setInterval(() => { if (isPlaying) doCall(rec); }, currentIntervalSec * 1000);
+      countdownId = setInterval(updateCountdown, 250);
+      nextCallTime = Date.now() + currentIntervalSec * 1000;
+      updateCountdown();
+    }
+
+    function stopSequence() {
+      isPlaying = false;
+      if (intervalId) clearInterval(intervalId);
+      if (countdownId) clearInterval(countdownId);
+      intervalId = null;
+      countdownId = null;
+      statusEl.textContent = 'Stopped. Stay still and get ready.';
+      countdownEl.textContent = '--:--';
+      stopBtn.classList.remove('visible');
+      startBtn.style.display = 'block';
+      startBtn.textContent = 'Start New Sequence';
+    }
+
+    startBtn.addEventListener('click', startSequence);
+    stopBtn.addEventListener('click', stopSequence);
+
+    window.addEventListener('beforeunload', (e) => {
+      if (isPlaying) { e.preventDefault(); e.returnValue = ''; }
+    });
+  </script>
+</body>
+</html>
